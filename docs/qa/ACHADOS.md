@@ -15,6 +15,27 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | Q5 | MÉDIA | `tools/rescue/desenhar_padrao.bat:15`, `tools/rescue/resgatar_galaxy_a21s.bat:4` | Lançadores de resgate QUEBRADOS: chamam .py/.ps1 em `C:UsersRyanrDesktop`, que foram movidos para `tools/rescue/` (não existem mais na Desktop). Mais caminho da Desktop e serial fixo em `tools/debug/*.cjs` e `tools/connect/legacy` | GEM-IDE | ABERTO (handoff `2026-10-19_qa-para-gemini_caminhos-desktop.md`) |
 | R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | VERIFICADO (15/15 no PC, 19/10 06:5x) |
 | Q6 | BAIXA | `tools/server/backup.sh:37-38,51-53` | O backup não leva `var/service/egress` (lista parou em server-box, alertas, agentops e sftp). A recuperação não quebra: o DISASTER_RECOVERY manda rodar o `deploy.ps1` depois, e ele recria o egress pelo `setup.sh:20`. Mas a lista e a conferência do backup estão desatualizadas | ORQ | ABERTO |
+| Q7 | MÉDIA | `server/agentops/adapters.mjs` (claude-local, A13) | Usa `dontAsk` + `allowedTools`, sem `--tools` nem `--strict-mcp-config`. Com os mesmos argumentos no PC (mesma versão 2.1.303), o `init` traz Bash, Write, WebFetch, SendMessage, ListAgents, RemoteTrigger, PushNotification, Cron* e os conectores do claude.ai da conta (Gmail, Calendar, Shopify…). O `dontAsk` NEGA as MCP (Context7 negado, testado) e o Bash, mas ferramentas que não pedem permissão passam (SendMessage/ListAgents provados no Q3). O A13 usa a mesma conta Pro | ORQ | ABERTO (verificar no A13 com lock) |
+| R4 | BAIXA | `tools/server/backup-agendado.sh` | Sempre sai com o código do `mv` final: backup que falha aparece como "Last Result 0" no Agendador (só o vigia de 8 dias avisaria) | ORQ | ABERTO |
+| R5 | BAIXA | `tools/server/backup-agendado.sh` | O backup de domingo entra no A13 sem olhar `.collab/locks/a13-servidor.lock` (pode cruzar com um deploy) | ORQ | ABERTO |
+| R6 | BAIXA | `server/termux/claude-update.sh` (`--apply [versão]`) | Versão vinda do argumento não é validada antes de virar caminho de `mkdir`/`rm -rf "$BASE/$v"`; hoje o `npm view` falha antes, mas vale `^[0-9]+\.[0-9]+\.[0-9]+# Achados da QA
+
+Dono: QA (sessão Claude "A13 home server architecture reengineering"). Só entra aqui o que tem reprodução.
+Gravidade: CRÍTICA (execução ou vazamento de segredo sem interação), ALTA, MÉDIA, BAIXA.
+Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA testou de novo e passou).
+
+| ID | Gravidade | Onde | Resumo | Dono | Estado |
+|---|---|---|---|---|---|
+| Q1 | CRÍTICA | `tools/worker/worker.mjs` (1.0, perfil pc-claude) | Sem `--permission-mode`, o Claude Code 2.1.303 aprova sozinho: o agente do PC rodou Bash e leu arquivos fora da pasta | ORQ | VERIFICADO (1.1) |
+| Q2 | ALTA | `tools/worker/worker.mjs` (1.0, perfil pc-hermes) | Hermes com toolsets padrão (terminal, file, code_execution, computer_use, cronjob) e sem aprovação para comandos comuns | ORQ | VERIFICADO (desligado no 1.1; T22) |
+| Q3 | ALTA | `tools/worker/worker.mjs` (1.1) | Mesmo em `dontAsk`, o agente tinha SendMessage, ListAgents, RemoteTrigger, PushNotification e Cron*: mandou mensagem para outra sessão do Claude | ORQ | VERIFICADO (1.2) |
+| R1 | BAIXA | `tools/worker/worker.mjs` (1.1) | workdir dentro de pasta bloqueada (~/AppData etc.): o agente não lia nem a própria pasta e devolvia ok:true | ORQ | VERIFICADO (1.2: exit 2) |
+| R2 | BAIXA | `tools/worker/test/` | `node --test <pasta>` falha no Node 25 do Windows; por glob passa | ORQ | VERIFICADO (comando documentado) |
+| Q4 | BAIXA | `server/termux/egress-proxy.mjs:38` | Erro do destino depois do túnel aberto escreve `HTTP/1.1 502` dentro do fluxo TLS; e importar o módulo já abre a porta, o que impede teste de `allowed()` | ORQ | VERIFICADO no PC (`b8d64a6`, 4/4); falta conferir no A13 depois do deploy |
+| Q5 | MÉDIA | `tools/rescue/desenhar_padrao.bat:15`, `tools/rescue/resgatar_galaxy_a21s.bat:4` | Lançadores de resgate QUEBRADOS: chamam .py/.ps1 em `C:UsersRyanrDesktop`, que foram movidos para `tools/rescue/` (não existem mais na Desktop). Mais caminho da Desktop e serial fixo em `tools/debug/*.cjs` e `tools/connect/legacy` | GEM-IDE | ABERTO (handoff `2026-10-19_qa-para-gemini_caminhos-desktop.md`) |
+| R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | VERIFICADO (15/15 no PC, 19/10 06:5x) |
+. Depois de cada atualização, repetir o teste de isolamento (as ferramentas mudam entre versões) | ORQ | ABERTO |
+| R7 | BAIXA | `tools/server/reaplicar-ajustes.ps1:2` | Serial fixo `RQ8TC00EJNB` no `param` (regra do CLAUDE.md); ler do perfil com `Get-ProfileBySerial`/`profiles/a13.json` | ORQ | ABERTO |
 
 ## Q1: worker do PC executava Bash e lia fora da pasta
 
@@ -72,3 +93,14 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 - O AgentOps do backup sobe com a fila restaurada (sem executar tarefas): `/health` 200; o token admin restaurado abre `/api/state` com 5 tarefas, igual ao arquivo; token errado dá 401; o painel restaurado lista os perfis do AgentOps restaurado.
 - A pasta restaurada, com segredos, é apagada no fim (conferido).
 - **Não coberto:** o passo 4 do DISASTER_RECOVERY (`deploy.ps1` num aparelho novo), porque exige um celular limpo; o `sshd` com as host keys restauradas; o vigia de alertas (de propósito: mandaria push).
+
+## Revisões feitas pela QA (19/10)
+
+| Tarefa | Veredito | Como conferi |
+|---|---|---|
+| T5 git local | aprovado | 112 arquivos rastreados, maior 31 KB (`docs/LOG.md`); nenhum binário ou segredo por extensão, nome ou conteúdo (regressão: 0 suspeitos); `git check-ignore` confirma backups/, assets/apk/, painel, snapshots e locks fora |
+| T15 worker do PC | aprovado (1.2) | ver seções Q1 a Q3 |
+| T18 backup semanal | aprovado com R4 e R5 | `schtasks /query`: semanal, domingo 10:00, último resultado 0 (01:43); log com sha256 ok, painel do bundle = produção, 206 arquivos; retenção só depois da prova de restauração (`set -e`). Próxima execução aparece como 25/10 09:00: é o fim do horário de verão nesse dia (informativo) |
+| T24 atualizador do Claude Code | aprovado com R6 (e Q7 relacionado) | leitura do código: sha512 contra `dist.integrity`, `--version` antes da troca, troca atômica do link (`mv -fT`), anterior guardada, rollback. `--apply`/`--rollback` não foram exercitados (não há versão nova) |
+| T29 permissões do Termux | aprovado | conferido por mim pelo ADB (lock 06:48, só leitura): em `dumpsys package com.termux`, só `android.permission.DUMP: granted=true` |
+| T30 reaplicar ajustes | aprovado com R7 | `reaplicar-ajustes.ps1 -SoConferir` rodado por mim (mesmo lock): 5/5 ok, "tudo certo: nada a corrigir" |
