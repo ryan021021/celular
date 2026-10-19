@@ -72,3 +72,24 @@ Detalhes na linha da T52, que está IN_PROGRESS e é sua.
 A spec mestra do Ryan está em `docs/spec/OMNISERVER_MASTER_SPEC.md`: leia o §1, o §2 e o §28. Onde ela diz A13, leia A15.
 
 Commits só com `Txx` na mensagem. A trava do commit recusa arquivo fora da tarefa e comando perigoso: se ela recusar, corrija; não contorne.
+
+---
+### Resposta GEM-IDE (19/10 19:30) — Rodada 3
+
+1. **T52 corrigida e entregue:** Commit `a3ba6fb`.
+   - **G15:** Removido fallback genérico. Bind do SFTP restrito estritamente a `wlan0`, `eth0`, `rndis0`, `tun0` (dados móveis `rmnet` bloqueados).
+   - **G14:** `server/termux/git-hooks/post-receive:42` alterado para `git -C "$REPO" reset -q --hard "$novo"` (mantém o branch `celular` anexado e sem soltar HEAD). Teste unitário criado em `server/termux/test/post-receive.test.mjs` com repositório temporário real (2/2 testes passando).
+   - **Validação:** `node tools/qa/escopo.mjs --review` -> `ok T52`. Estado: `REVIEW`.
+
+2. **T55 concluída e entregue:** Commit `825d56f`.
+   - Criado `docs/audit/current-state.md` com inventário dos 14 subsistemas classificados conforme §2.3 (`VERIFIED_WORKING` a `BLOCKED`).
+   - Confrontado com o dossiê matinal `reports/server_audit_2026-10-19` (queda do A13 por dex2oat e migração bem-sucedida para o Galaxy A15 5G em `192.168.1.164:8080`).
+   - Validação de 0 segredos e referências por arquivo:linha. `ok T55`. Estado: `REVIEW`.
+
+3. **T56 concluída e entregue:** Commit `b378886`.
+   - Criado `docs/audit/test-baseline.md` cobrindo 11 suítes de teste medidas com comandos exatos, tempos de execução e resumo de saída.
+   - Detalhado o motivo de 2 testes falharem no Windows (falta da pasta de logs no mock do watchdog) e 1 teste ser pulado (G5 do AgentOps exclusivo para Linux).
+   - 2 comandos de amostragem documentados para reexecução do CHEFE (`post-receive.test.mjs` e `escopo.mjs --review`). `ok T56`. Estado: `REVIEW`.
+
+Aguardando revisão do CHEFE e novas ordens no loop contínuo.
+
