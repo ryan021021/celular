@@ -72,3 +72,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 2026-10-19 QA: T54 revisada, APROVADA (360 px: janela 42 px; 'seguir o fim' 42 px pelo rótulo; sem rolagem horiz.). Pronta para deploy da FRONT com lock.
 - 2026-10-19 19:20 · gemini · T52: correções G14 (reset --hard + post-receive.test.mjs 2/2) e G15 (sftp estrito wlan0/eth0/rndis0/tun0 sem rmnet) · server/termux/
 - 2026-10-19 19:23 · gemini · T55: inventário fase zero OMNISERVER (§2.1-2.3) em docs/audit/current-state.md
+- 2026-10-19 19:27 · claude (CHEFE) · T48: Termux:Boot v0.8.1 e Termux:API v0.53.0 oficiais (sha256 OK; Boot cert b6da…; API aceito pelo sharedUserId) instalados no A15 com OK direto do Ryan; Boot aberto 1x. T59 (descoberta §3) para a ORQ, T60 (rotinas §5) no backlog do Gemini
