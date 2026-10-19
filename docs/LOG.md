@@ -101,3 +101,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:57 · claude (BACK) · T62 REVIEW (revisora QA): contrato no README do painel + GET /api/v1/capabilities (token, cache 10 min, 503 sem_descoberta); commit f1a8799 em claude/painel-v2; 142/142 da suíte
 - 2026-10-19 20:01 · front (claude) · T70: profiles/schema.json + tools/qa/perfis.mjs + teste de perfil quebrado (commit 910a661); 4/4 perfis, regressão VERDE com etapa perfis; regressao.mjs ainda sem commit (junto com a etapa 6 do T68) · REVIEW revisor CHEFE
 - 2026-10-19 20:01 · claude (CHEFE) · trava da fila no hook (LOG só acrescenta; não rebaixa tarefa não citada); pegou 2906217 (Gemini) e dd91a6c (CHEFE); 2 linhas do LOG restauradas
+- 2026-10-19 20:03 · gemini · T68: varredura de alegações sem evidência (P0 R5) em tools/qa/alegacoes.mjs + 5/5 testes em alegacoes.test.mjs + etapa 6 na regressao.mjs (AVISO) · tools/qa/**
+- 2026-10-19 20:03 · claude (CHEFE) · T60 DONE (correções re-conferidas, 11/11)
