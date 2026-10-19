@@ -37,9 +37,10 @@ export function prepareWorkdir(name, profile) {
   return dir;
 }
 
-function runProcess(cmd, args, { cwd, env, signal, maxBytes = 256 * 1024 }) {
+function runProcess(cmd, args, { cwd, env, signal, input = null, maxBytes = 256 * 1024 }) {
   return new Promise(resolvePromise => {
-    const child = spawn(cmd, args, { cwd, env, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(cmd, args, { cwd, env, detached: true, stdio: [input == null ? "ignore" : "pipe", "pipe", "pipe"] });
+    if (input != null) { child.stdin.on("error", () => {}); child.stdin.end(input); }
     let out = "", err = "";
     const take = (buf, chunk) => (buf.length < maxBytes ? buf + chunk.toString("utf8") : buf);
     child.stdout.on("data", c => { out = take(out, c); });
@@ -58,10 +59,13 @@ function runProcess(cmd, args, { cwd, env, signal, maxBytes = 256 * 1024 }) {
 // PushNotification e os conectores da conta (Gmail, Agenda…): o dontAsk só nega o que pede permissão (achado Q7).
 export const BASE_TOOLS = ["Read", "Grep", "Glob"];
 
-/** Argumentos do Claude Code para uma tarefa (sem o binário). Texto da tarefa entra como argumento único, nunca por shell. */
-export function claudeArgs(prompt, profile, cwd) {
+/**
+ * Argumentos do Claude Code para uma tarefa (sem o binário). O TEXTO DA TAREFA NÃO ENTRA AQUI: vai pelo stdin.
+ * Como argumento, um texto começando com "-" virava opção do CLI (achado R8 da QA: "-c", "--version"…).
+ */
+export function claudeArgs(profile, cwd) {
   const tools = profile.tools?.length ? profile.tools : BASE_TOOLS;
-  const args = ["-p", prompt, "--output-format", "json",
+  const args = ["-p", "--output-format", "json",
     // dontAsk: nega tudo que não está em allowedTools (o padrão novo do Claude Code é "auto", que aprova sozinho)
     "--permission-mode", "dontAsk",
     // --restricted ignora o settings da pasta: por isso o --settings explícito (provado pela QA no worker)
@@ -83,14 +87,14 @@ export function claudeLocal({ ccDir = join(HOME, "opt", "claude-code", "current"
     async run({ task, profile, signal }) {
       if (!existsSync(bin)) return { ok: false, retryable: false, error: "Claude Code não instalado" };
       const cwd = prepareWorkdir(task.profile, profile);
-      const args = [bin, ...claudeArgs(task.prompt, profile, cwd)];
+      const args = [bin, ...claudeArgs(profile, cwd)];
       const env = {
         HOME, PATH: process.env.PATH, LANG: "C.UTF-8", TMPDIR: process.env.TMPDIR || join(HOME, "..", "usr", "tmp"),
         USE_BUILTIN_RIPGREP: "0", DISABLE_AUTOUPDATER: "1", SHELL: process.env.SHELL || "/data/data/com.termux/files/usr/bin/bash",
         // musl não acha DNS no Android: sai pelo proxy local (só domínios da Anthropic)
         HTTPS_PROXY: "http://127.0.0.1:8091", HTTP_PROXY: "http://127.0.0.1:8091", NO_PROXY: "127.0.0.1,localhost",
       };
-      const r = await runProcess(loader, args, { cwd, env, signal });
+      const r = await runProcess(loader, args, { cwd, env, signal, input: task.prompt });
       let parsed = null;
       try { parsed = JSON.parse(r.out); } catch {}
       if (/Not logged in|Please run \/login|Invalid API key/i.test(r.out + r.err)) {
