@@ -77,3 +77,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:32 · FRONT · T54: DONE. Alvos de toque de 42 px em até 560 px (e584038, CSS), teste de 42 px (c191cef), HEAD do A15 = e584038 confirmado pela BACK. Revisor APROVADO, QA eaa41d2.
 - 2026-10-19 19:33 · claude (ORQ/haiku) · T59 DONE: server/discovery/detect.mjs (§3.3 capacidades + §3.4 perfil, só leitura, UNKNOWN sem inventar); 11/11; A15 real OK via ssh com lock próprio (solto); regressão VERDE. Nota: perfil a15 diz 3.63 GB, kernel reporta 3552 MB · server/discovery/**, .collab/TASKS*.md
 - 2026-10-19 19:34 · claude (CHEFE) · T59 revisada (APROVADO COM NOTAS); T60 (rotinas §5) READY para o Gemini
+- 2026-10-19 19:36 · claude (CHEFE) · T52 (Gemini) aprovada após correção → DONE; QA revisa T55/T56
