@@ -210,3 +210,32 @@ test("claude-local: sessão só com as ferramentas do perfil, sem MCP e com o se
   assert.equal(padrao[padrao.indexOf("--tools") + 1], BASE_TOOLS.join(","));
   assert.doesNotMatch(a.join(" "), /dangerously|bypassPermissions|acceptEdits/);
 });
+
+test("G4: tarefa reenfileirada (prazo vencido ou falha do worker) sai sem claimedBy, leaseId e leaseUntil", async t => {
+  const { app, call } = await setup(t);
+  const { task } = await (await call("/api/tasks", { method: "POST", json: { profile: "pc", prompt: "no PC" } })).json();
+  const c1 = await (await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} })).json();
+  assert.ok(app.store.get(task.id).leaseId);
+  await new Promise(r => setTimeout(r, 150)); app.tick();
+  let cur = app.store.get(task.id);
+  assert.equal(cur.status, "queued");
+  assert.deepEqual([cur.claimedBy, cur.leaseId, cur.leaseUntil], [null, null, null], "prazo vencido");
+  await new Promise(r => setTimeout(r, 5));
+  const c2 = await (await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} })).json();
+  assert.notEqual(c2.task.leaseId, c1.task.leaseId);
+  await call("/api/worker/result", { method: "POST", token: WORKER, json: { id: c2.task.id, leaseId: c2.task.leaseId, ok: false, error: "x" } });
+  cur = app.store.get(task.id);
+  assert.equal(cur.status, "failed", "2 tentativas esgotadas");
+});
+
+test("G5: saída acima de 256 KB com código 0 não vira falha (runProcess avisa o corte)", { skip: process.platform === "win32" }, async () => {
+  const { mkdirSync, writeFileSync, chmodSync } = await import("node:fs");
+  const { claudeLocal } = await import("../adapters.mjs");
+  const ccDir = mkdtempSync(join(tmpdir(), "cc-"));
+  writeFileSync(join(ccDir, "claude"), "");
+  writeFileSync(join(ccDir, "ld-musl-aarch64.so.1"), "#!/bin/sh\nhead -c 400000 /dev/zero | tr '\0' 'a'\n");
+  chmodSync(join(ccDir, "ld-musl-aarch64.so.1"), 0o755);
+  const r = await claudeLocal({ ccDir }).run({ task: { prompt: "x", profile: "nada" }, profile: {}, signal: new AbortController().signal });
+  assert.equal(r.ok, true);
+  assert.match(r.output, /saída cortada em 256 KB/);
+});

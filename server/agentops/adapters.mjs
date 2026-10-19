@@ -42,7 +42,8 @@ function runProcess(cmd, args, { cwd, env, signal, input = null, maxBytes = 256 
     const child = spawn(cmd, args, { cwd, env, detached: true, stdio: [input == null ? "ignore" : "pipe", "pipe", "pipe"] });
     if (input != null) { child.stdin.on("error", () => {}); child.stdin.end(input); }
     let out = "", err = "";
-    const take = (buf, chunk) => (buf.length < maxBytes ? buf + chunk.toString("utf8") : buf);
+    let truncated = false;
+    const take = (buf, chunk) => { if (buf.length < maxBytes) return buf + chunk.toString("utf8"); truncated = true; return buf; };
     child.stdout.on("data", c => { out = take(out, c); });
     child.stderr.on("data", c => { err = take(err, c); });
     const kill = () => {
@@ -51,7 +52,7 @@ function runProcess(cmd, args, { cwd, env, signal, input = null, maxBytes = 256 
     };
     if (signal.aborted) kill(); else signal.addEventListener("abort", kill, { once: true });
     child.on("error", e => resolvePromise({ code: -1, out, err: `${err}\n${e.message}` }));
-    child.on("close", code => resolvePromise({ code, out, err }));
+    child.on("close", code => resolvePromise({ code, out, err, truncated }));
   });
 }
 
@@ -100,6 +101,9 @@ export function claudeLocal({ ccDir = join(HOME, "opt", "claude-code", "current"
       if (/Not logged in|Please run \/login|Invalid API key/i.test(r.out + r.err)) {
         return { ok: false, retryable: false, error: "Claude Code sem login no A13 (rode `claude` e /login)" };
       }
+      // saída acima de 256 KB cortada com código 0: o JSON não fecha, mas a tarefa terminou (achado G5)
+      if (r.code === 0 && !parsed && r.truncated) return { ok: true, output: `${r.out}
+[saída cortada em 256 KB]` };
       if (r.code === 0 && parsed && !parsed.is_error) return { ok: true, output: parsed.result ?? r.out };
       return { ok: false, output: parsed?.result ?? r.out, error: (parsed?.subtype || r.err || `código ${r.code}`).toString() };
     },

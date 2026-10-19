@@ -220,7 +220,7 @@ export function createRunner({ store, profiles, adapters, redact = s => s, concu
       const error = truncate(redact(res.error || ""), 4000);
       if (res.ok) finish(task, { status: "succeeded", output, error: "" }, "task.succeeded");
       else if (task.attempts < task.maxAttempts) {
-        Object.assign(task, { status: "queued", output, error: error || "worker relatou falha", notBefore: now() + backoffMs(task.attempts, profiles[task.profile]?.backoffMs, undefined, rand) });
+        Object.assign(task, { status: "queued", claimedBy: null, leaseId: null, leaseUntil: null, output, error: error || "worker relatou falha", notBefore: now() + backoffMs(task.attempts, profiles[task.profile]?.backoffMs, undefined, rand) });
         store.save(); store.event("task.retry", { id, attempt: task.attempts });
       } else finish(task, { status: "failed", output, error: error || "worker relatou falha" }, "task.failed");
       return true;
@@ -229,7 +229,7 @@ export function createRunner({ store, profiles, adapters, redact = s => s, concu
       let n = 0;
       for (const t of store.state.tasks) if (t.status === "running" && t.leaseUntil && t.leaseUntil < now()) {
         n++;
-        if (t.attempts < t.maxAttempts) Object.assign(t, { status: "queued", error: "worker não respondeu no prazo", notBefore: now() + backoffMs(t.attempts, profiles[t.profile]?.backoffMs, undefined, rand) });
+        if (t.attempts < t.maxAttempts) Object.assign(t, { status: "queued", claimedBy: null, leaseId: null, leaseUntil: null, error: "worker não respondeu no prazo", notBefore: now() + backoffMs(t.attempts, profiles[t.profile]?.backoffMs, undefined, rand) });
         else Object.assign(t, { status: "failed", error: "worker não respondeu no prazo", finishedAt: now() });
         store.event("task.lease_expired", { id: t.id });
       }
