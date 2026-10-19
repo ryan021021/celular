@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Perfil de aparelho (profiles/*.json)",
+  "description": "Contrato mínimo de um perfil. Validado por tools/qa/perfis.mjs (e pela regressão). Campos extras são permitidos; o _template.json fica de fora (começa com _).",
+  "type": "object",
+  "required": ["id", "name", "brand"],
+  "additionalProperties": true,
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9_]+$", "minLength": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "brand": { "type": "string", "minLength": 1 },
+    "model": { "type": "string" },
+    "serial": { "type": ["string", "null"] },
+    "status": { "type": "string" },
+    "notes": { "type": "string" },
+    "scrcpy_args": { "type": "array", "items": { "type": "string" } },
+    "hardware": {
+      "type": "object",
+      "properties": {
+        "cpu": { "type": "string" },
+        "architecture": { "type": "string" },
+        "ram_total": { "type": "string" },
+        "storage_free": { "type": "string" }
+      }
+    },
+    "network": {
+      "type": "object",
+      "properties": {
+        "ip": { "type": "string" },
+        "wifi_adb_port": { "type": "integer" },
+        "ssh_port": { "type": "integer" },
+        "ssh_user": { "type": "string" },
+        "ssh_key": { "type": "string" }
+      }
+    }
+  }
+}
