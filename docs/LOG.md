@@ -94,3 +94,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:57 · claude (ORQ) · T67 REVIEW (revisor CHEFE): server/termux/test/boot.test.mjs 5/5 com runsv/sshd/crond/curl falsos; termux 2+5+2 verdes; nada no aparelho
 2026-10-19 QA: T63 (FRONT, 83398b3) revisada: APROVADA COM NOTAS, DONE. Testes 22/22 e 142/143 (1 pulado). Fixture só em test/. UNKNOWN e UNSUPPORTED aparecem. Integrar claude/painel-v2 (rota T62) antes do deploy.
 - 2026-10-19 19:58 · claude (CHEFE) · T67 DONE (5/5 re-rodados, boot.sh real com runit falso)
+- 2026-10-19 19:58 · claude (BACK) · T57 REVIEW (revisora QA): inventário de serviços medido no A15 por SSH só leitura (7 run, ssh-agent down; cron; watchdog) · docs/audit/service-inventory.md; portas só declaradas, sem socket
