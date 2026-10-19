@@ -96,3 +96,13 @@ Não usamos o "Agent Teams" experimental: custa mais e a coordenação já é fe
 - **Entrega:** `/fechar-tarefa <Txx> <evidência>` roda `verificador` e `revisor` em paralelo. Tarefa não crítica aprovada vai direto para DONE. Tarefa crítica (aparelho, `profiles/`, `server/termux`, `tools/server`, deploy, auth, rede, segredos) vai para REVIEW com a QA.
 - **Distribuição:** o CHEFE usa `/despachar`, que só acorda sessão parada que tem trabalho.
 - **Gemini:** pedidos no fim do handoff aberto dele; o Ryan cola uma linha no Antigravity.
+
+## 11. Supervisão do CHEFE (20/10, pedido do Ryan)
+O CHEFE (Opus) não codifica: confere. A cada tarefa que chega em REVIEW, ele (ou o QA, também Opus) faz, nesta ordem e pelo diff:
+1. **Roda** `node tools/qa/regressao.mjs` e os testes da tarefa — nunca confia no "passou" do executor.
+2. **Reproduz** o critério "deu certo se…" da tarefa; sem isso, devolve para IN_PROGRESS com o motivo em 1 linha.
+3. **Confere o escopo**: `git show --stat` só pode ter os arquivos autorizados da tarefa; qualquer outro → reprova.
+4. **Segurança**: segredo no diff, porta/exposição nova, `--yolo`/`-Force` fora de lugar, ADB destrutivo → reprova e avisa o Ryan.
+5. **Registra** o veredito (APROVADO/REPROVADO + motivo) na linha da tarefa; só então vai a DONE.
+Auditoria do **Gemini (GEM-IDE)**: igual, porém sempre mais rígida — ele não é revisado por si mesmo e não roda nada no A13 sem lock. Entregas dele só chegam em `main` depois dessa conferência; o CHEFE lê o handoff e o diff, não a conversa.
+Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esforço de cada sessão conforme o §9, contexto > 200 mil → pedir `/compact`, sessão parada ou repetindo tarefa → reatribuir. Acesso amplo do Ryan não muda os limites: credenciais novas, gastos, roteador, exposição à internet e apagar dados continuam só com OK explícito dele.
