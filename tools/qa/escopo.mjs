@@ -95,10 +95,13 @@ function modoReview() {
     // cada commit vale contra todas as Txx que a mensagem dele cita (commit de duas tarefas vale para as duas)
     const erros = [], avisos = [];
     for (const c of commits) {
-      const ids2 = [...new Set(git('show', '-s', '--format=%B', c).match(/\bT\d+\b/g) || [id])];
+      const msg = git('show', '-s', '--format=%B', c);
+      const ids2 = [...new Set(msg.match(/\bT\d+\b/g) || [id])];
       const arquivos = git('show', '--name-only', '--format=', c).split('\n').filter(Boolean);
       const res = conferir(ids2, arquivos, git('show', '-U0', '--format=', c), textos);
-      erros.push(...res.erros.map(e => `${c} ${e}`));
+      // OK-RYAN não zera a conferência: vira aviso para o CHEFE confirmar com o Ryan
+      if (/OK-RYAN:/.test(msg)) res.avisos.push(...res.erros.map(e => `${c} liberado por OK-RYAN (confirmar com o Ryan): ${e}`));
+      else erros.push(...res.erros.map(e => `${c} ${e}`));
       for (const a of res.avisos) if (!avisos.includes(a)) avisos.push(a);
     }
     if (erros.length) ruim++;
