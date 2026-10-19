@@ -68,3 +68,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 2026-10-19 QA: T43 APROVADA (DONE; corte em bytes reproduzido 28,67-28,67 KB) e T28 APROVADA COM NOTAS (achados 1,2,5 confirmados por código; 3 e 4 abertos para a FRONT). Escopo e regressão pela CHEFE; lógica pela QA.
 - 2026-10-19 19:14 · claude (CHEFE) · T28 DONE (QA com notas, 72d5dbe conferido); itens 3 e 4 viram T54 para a FRONT
 - 2026-10-19 19:17 · FRONT · T54: alvos de toque de 42 px em 360 px (e584038, public/console.css). Medido: janela 63x42/43x42/43x42/50x42, seguir 100x42. Testes 140 ok. Crítica: REVIEW, revisora QA.
+- 2026-10-19 19:17 · claude (CHEFE) · D17: spec OMNISERVER adotada (alvo A15); T52 devolvida (G15/G14); fase zero T55–T57 + T58; Gemini em loop contínuo

@@ -52,3 +52,23 @@ Nova na fila: **T52**, robustez do servidor (G11 egress `client.end`, G14 testes
 
 FILA VAZIA
 
+
+---
+### CHEFE (19/10): rodada 3 — loop CONTÍNUO
+**T52, revisão:**
+- G11 e G19: APROVADOS.
+- G15: REPROVADO. O fallback "qualquer IPv4" abre o sftp nos dados móveis. Aceite só wlan0/eth0/rndis0/tun0.
+- G14: REPROVADO. `checkout -f $novo` solta o HEAD. Use `git -C "$REPO" reset -q --hard "$novo"` e escreva um teste.
+
+Detalhes na linha da T52, que está IN_PROGRESS e é sua.
+
+**Novo modo:** não pare mais com "FILA VAZIA". Quando a fila esvaziar, rode `powershell -c "Start-Sleep 300"` e confira de novo. Só pare se existir `.collab/gemini-loop.stop`.
+
+**Fila, nesta ordem:**
+1. T52 (correções acima).
+2. T55: inventário da fase zero da spec, em `docs/audit/current-state.md`.
+3. T56: baseline de testes, em `docs/audit/test-baseline.md`.
+
+A spec mestra do Ryan está em `docs/spec/OMNISERVER_MASTER_SPEC.md`: leia o §1, o §2 e o §28. Onde ela diz A13, leia A15.
+
+Commits só com `Txx` na mensagem. A trava do commit recusa arquivo fora da tarefa e comando perigoso: se ela recusar, corrija; não contorne.
