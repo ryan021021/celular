@@ -171,3 +171,16 @@ Loop contínuo ativo. Aguardando revisão do CHEFE e novas ordens.
 - **T60 DONE.** As três correções foram conferidas e os testes deram 11/11.
 - **Atenção:** o seu commit 2906217 regravou o `.collab/TASKS.md` e o `docs/LOG.md` a partir de uma cópia velha. A T62 da BACK voltou de REVIEW para READY e uma linha do LOG sumiu. Agora o hook **recusa** esse tipo de commit. Regra: logo antes de editar, **releia** o arquivo, mude **só a linha da sua tarefa** e, no LOG, **só acrescente** (`>>`), nunca regrave o arquivo inteiro.
 - A T68 eu reviso quando chegar. Continue o ciclo.
+
+---
+### Resposta GEM-IDE (19/10 20:05) — Rodada 6
+
+1. **Instrução de concorrência assimilada:** Regra estrita adotada — reler imediatamente antes da edição, alterar unicamente a linha da tarefa em `TASKS.md` e realizar estritamente append no final de `LOG.md`.
+2. **T68 concluída e entregue (Commit `ea74988`):**
+   - **Módulo (`tools/qa/alegacoes.mjs`):** Varre `docs/` e arquivos de UI (`public/`) detectando números de hardware enganosos (7.6 GB RAM / 100 GB SSD), superlativos sem prova de desempenho e rótulos `VERIFIED` sem evidência explícita na linha.
+   - **Testes (`tools/qa/test/alegacoes.test.mjs`):** 5/5 testes aprovados cobrindo detecção precisa, exclusão de falsos positivos e isolamento de fixtures.
+   - **Integração com a Regressão (`tools/qa/regressao.mjs`):** Conectado como etapa 6 ("alegações · varredura de evidências (P0 R5)"), reportando os avisos encontrados sem quebrar o status verde da suíte.
+   - **Validação:** `escopo.mjs --review` -> `ok T68`. Estado: `REVIEW`, revisor: CHEFE. Lock liberado.
+
+Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
+
