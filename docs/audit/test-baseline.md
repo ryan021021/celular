@@ -21,7 +21,7 @@
 | **Regras QA & Escopo de Commits** | `node --test tools/qa/test/*.test.mjs` | 5 / 5 / 0 / 0 | 0.12 s | ✅ **PASSOU** | Valida trava de escopo de tarefas (§11), bloqueio de caminhos da Desktop em scripts e detecção de comandos perigosos em diffs de commit. |
 | **Worker Remoto PC** | `node --test tools/worker/test/*.test.mjs` | 9 / 9 / 0 / 0 | 0.37 s | ✅ **PASSOU** | Modo `dontAsk`, isolamento de workdir, perfil `pc-claude`, corte de payload por busca binária em bytes UTF-8 (`fitResult`). |
 | **Coletor ADB (Métricas)** | `node --test tools/server/adb-coletor.test.mjs` | 3 / 3 / 0 / 0 | 0.13 s | ✅ **PASSOU** | Normalização de CPU por core pelo último quadro do top, anonimização de processos (sem argumentos/segredos) e parsing seguro de sensores térmicos do HAL. |
-| **Painel Web (Server-Box)** | `node --test server/panel/server-box/test/*.test.mjs` | 130 / 129 / 0 / 1 | 2.72 s | ✅ **PASSOU** | 129 testes aprovados (141 na suíte completa incluindo v2/rotas). Cobre CSP estrita, autenticação por token/cookie com salt, `/api/v1/live` SSE, sanitização de logs e ergonomia de toque. 1 teste pulado (Digest Stats sem pasta configurada). |
+| **Painel Web (Server-Box)** | `node --test server/panel/server-box/test/*.test.mjs` | 130 / 129 / 0 / 1 | 2.72 s | ✅ **PASSOU** | 129 testes aprovados (a cópia server-box-v2 tem suíte própria; as duas juntas: 269, 267 ok, 2 pulados). Cobre CSP estrita, autenticação por token/cookie com salt, `/api/v1/live` SSE, sanitização de logs e ergonomia de toque. 1 teste pulado (Digest Stats sem pasta configurada). |
 
 ---
 

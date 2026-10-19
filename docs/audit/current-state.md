@@ -12,7 +12,7 @@
 
 | Subsistema | Caminho Principal | Estado | Evidência / Prova | Observações |
 | :--- | :--- | :--- | :--- | :--- |
-| **Painel Web (Server-Box / Console)** | `server/panel/server-box/` | `VERIFIED_WORKING` | `test/*.test.mjs` (141 testes ok); `GET /health` HTTP 200 em `http://192.168.1.164:8080/` | Branch `celular` em produção no A15; branch `claude/painel-v2` (`3c1916b`) com nosniff e ações via FIFO. |
+| **Painel Web (Server-Box / Console)** | `server/panel/server-box/` | `VERIFIED_WORKING` | `test/*.test.mjs` (130 testes: 129 ok, 1 pulado; medido pelo CHEFE); `GET /health` HTTP 200 em `http://192.168.1.164:8080/` | Branch `celular` em produção no A15; branch `claude/painel-v2` (`3c1916b`) com nosniff e ações via FIFO. |
 | **AgentOps (Orquestrador de Tarefas)** | `server/agentops/` | `VERIFIED_WORKING` | `server/agentops/test/agentops.test.mjs` (17/18 ok, 1 pulado); `server/agentops/README.md` | Porta 8090. Escalonamento estrito por prioridade (0–9) e desempate FIFO (`core.mjs:181,209`). |
 | **Egress Proxy (Saída Claude Code)** | `server/termux/egress-proxy.mjs` | `VERIFIED_WORKING` | `server/termux/test/egress-proxy.test.mjs` (5/5 testes ok) | Porta 8091. Whitelist estrita (`anthropic.com`, `claude.ai`, `claude.com`). Protegido contra socket fechado (G11). |
 | **SFTP Server Confinado** | `server/termux/sv/sftp/run` | `IMPLEMENTED_UNVERIFIED` | `server/termux/sv/sftp/run:6` (bind estrito a `wlan0/eth0/rndis0/tun0`) | Porta 8023. Rclone servindo `~/shared`. Falta teste fim-a-fim de transferência no A15. |
