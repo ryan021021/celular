@@ -1,0 +1,9 @@
+@uname_s=Linux
+@uname_r=5.10.209-android14
+@abi=arm64-v8a
+@prefix=/data/data/com.termux/files/usr
+@uid=10304
+@inicio_meminfo
+MemAvailable:    1523400 kB
+SwapTotal:       2097148 kB
+@fim_meminfo

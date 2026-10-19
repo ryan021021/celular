@@ -1,0 +1,7 @@
+@uname_m=aarch64
+@cores=oito
+@home_df=lixo sem colunas
+@inicio_meminfo
+MemTotal: abc kB
+lixo qualquer
+@fim_meminfo

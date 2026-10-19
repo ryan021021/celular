@@ -1,0 +1,18 @@
+@uname_m=aarch64
+@uname_s=Linux
+@uname_r=5.10.209-android14
+@abi=arm64-v8a
+@prefix=/data/data/com.termux/files/usr
+@uid=10304
+@node=v26.4.0
+@cores=8
+@home_df=/dev/block/dm-50 107639472 36850812 70788660 35% /data
+@servicos=agentops alertas egress server-box sftp sshd crond
+@bateria=72
+@ips=wlan0=192.168.1.164/24
+@inicio_meminfo
+MemTotal:        3805184 kB
+MemAvailable:    1523400 kB
+SwapTotal:       2097148 kB
+SwapFree:        1048576 kB
+@fim_meminfo
