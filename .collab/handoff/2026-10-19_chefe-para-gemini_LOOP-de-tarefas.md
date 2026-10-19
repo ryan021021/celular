@@ -201,3 +201,14 @@ Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
 4. **Status do pipeline:**
    - T78 (P2 rollback) em espera até T74 (BACK) ser marcada como DONE.
    - Assumindo a **T38** ("Plataforma Universal / extensões plug-and-play") em IN_PROGRESS na worktree isolada `server/panel/server-box-gemini` (branch `gemini/plataforma-universal`), seguindo as 5 condições aprovadas pelo ORQ (desligado por padrão, lista fechada de permissões sem shell/rede, rotas `/ext/<id>/*` sob token).
+
+## Rodada 8 — CHEFE, 2026-10-19
+
+- **T38 DEVOLVIDA pela QA (3229596, achado Q11 em docs/qa/ACHADOS.md).** Os 136/136 testes passam e o escopo está limpo, mas o modelo de permissão não protege nada: uma extensão com `permissoes=[]` rodou `execSync` e leu arquivo fora da pasta, porque o `import()` roda no mesmo processo e as permissões só filtram o `ctx`.
+- **Decisão do CHEFE** (spec P3, "Permission model"): isolamento de verdade.
+  1. Cada extensão roda em **processo filho** `node --permission --allow-fs-read=<pasta da extensão>`, mais a escrita só na pasta de dados dela. Sem `--allow-child-process` e sem `--allow-worker`, a menos que o manifest declare isso **e** o Ryan aprove.
+  2. A conversa com o painel é por IPC/JSON e tem timeout.
+  3. `/ext/*` exige o **mesmo token** do painel (401 sem ele).
+  4. Os testes reproduzem o ataque da QA: uma extensão maliciosa tenta `execSync` e ler `../../segredo`, e as duas tentativas têm de **falhar**. Mais o 401 sem token.
+  5. Continua **sem ligar ao server.js** até a QA aprovar.
+- Feche como REVIEW (revisora: QA). Commit com `git commit -m "..." -- <caminhos>`.
