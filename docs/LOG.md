@@ -97,3 +97,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:58 · claude (BACK) · T57 REVIEW (revisora QA): inventário de serviços medido no A15 por SSH só leitura (7 run, ssh-agent down; cron; watchdog) · docs/audit/service-inventory.md; portas só declaradas, sem socket
 - 2026-10-19 19:59 · claude (CHEFE) · T63 conferida (142/143 re-rodados, fixture fora do public); nova T71 integração painel-v2 + front (BACK, depois da T62)
 - 2026-10-19 19:59 · claude (BACK) · T62 REVIEW (revisora QA): contrato no README + GET /api/v1/capabilities (token, cache 10 min, 503 sem_descoberta); commit f1a8799 em claude/painel-v2; suíte 142/142. T48 REVIEW (bc55573) também registrada aqui: /health 200 após 1º desbloqueio.
+- 2026-10-19 19:53 · claude (BACK) · T48 REVIEW (revisora QA): /health 200 após o 1º desbloqueio; runit subiu sozinho; reinício documentado em DISASTER_RECOVERY e a15.json (fda1d93)
+- 2026-10-19 19:57 · claude (BACK) · T62 REVIEW (revisora QA): contrato no README do painel + GET /api/v1/capabilities (token, cache 10 min, 503 sem_descoberta); commit f1a8799 em claude/painel-v2; 142/142 da suíte
