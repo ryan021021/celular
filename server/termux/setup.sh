@@ -17,7 +17,7 @@ pgrep -x sshd >/dev/null || sshd
 
 # Painel como servico runit (religa na hora se cair)
 HERE="$(cd "$(dirname "$0")" && pwd)"
-pkill -f "node $HOME/servidor/panel/server-box/server.js" 2>/dev/null
+pkill -f "node $HOME/servidor/panel/server-box/server.js" 2>/dev/null || true  # set -e: sem processo antigo (aparelho novo) o pkill sai 1
 for s in server-box alertas agentops sftp egress; do
   rm -rf "$SVDIR/$s" && cp -r "$HERE/sv/$s" "$SVDIR/$s"
   chmod +x "$SVDIR/$s/run" "$SVDIR/$s/log/run"
