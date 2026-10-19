@@ -26,7 +26,7 @@
     "--video-bit-rate=4M"
   ],
   "runtimes": {
-    "node": "v24.18.0",
+    "node": "v26.4.0",
     "npm": "11.21.1",
     "python": "3.14.6",
     "git": "2.56.0",

@@ -1,5 +1,6 @@
-﻿$adb = "C:\Users\Ryanr\AppData\Local\Microsoft\WinGet\Packages\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\scrcpy-win64-v4.1\adb.exe"
-$scrcpy = "C:\Users\Ryanr\AppData\Local\Microsoft\WinGet\Packages\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\scrcpy-win64-v4.1\scrcpy.exe"
+. (Join-Path $PSScriptRoot "..\common.ps1") 2>$null
+$adb = if (Get-Command Find-Adb -ErrorAction SilentlyContinue) { Find-Adb } else { "adb" }
+$scrcpy = if (Get-Command scrcpy -ErrorAction SilentlyContinue) { "scrcpy" } else { Join-Path (Split-Path $adb) "scrcpy.exe" }
 
 Clear-Host
 Write-Host "==================================================================" -ForegroundColor Cyan
@@ -56,8 +57,11 @@ while ($true) {
         Write-Host "==================================================================" -ForegroundColor Green
         Write-Host "Abrindo a tela com Scrcpy..."
         
+        $targetDir = Join-Path $PSScriptRoot "..\..\assets\screenshots\sessao-a21s"
+        if (-not (Test-Path $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
+        $targetFile = Join-Path $targetDir "a21s_sucesso.png"
         & $adb shell screencap -p /sdcard/a21s_sucesso.png 2>$null
-        & $adb pull /sdcard/a21s_sucesso.png C:\Users\Ryanr\Desktop\a21s_sucesso.png 2>$null
+        & $adb pull /sdcard/a21s_sucesso.png $targetFile 2>$null
         
         & $scrcpy --stay-awake
         break

@@ -1,5 +1,6 @@
 const { SerialPort } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 // We can send AT commands via PowerShell or .NET System.IO.Ports.SerialPort
 const script = `
@@ -27,4 +28,4 @@ try {
 }
 `;
 
-fs.writeFileSync('C:/Users/Ryanr/Desktop/test_com6.ps1', script);
+fs.writeFileSync(path.join(__dirname, 'test_com6.ps1'), script);

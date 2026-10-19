@@ -1,6 +1,6 @@
 # 📱 Bare-Metal Phone Server Suite (Android → Linux 24/7)
 
-Ambiente autônomo para transformar smartphones com tela danificada em servidores Linux de alto desempenho, eliminando custos mensais com VPS na nuvem.
+Ambiente autônomo para transformar smartphones com tela danificada em servidores Linux locais e estáveis, eliminando custos mensais com VPS na nuvem.
 
 ---
 
@@ -8,7 +8,7 @@ Ambiente autônomo para transformar smartphones com tela danificada em servidore
 
 Para interagir com o servidor sem complicações, use os lançadores diretos:
 - **`CONECTAR_SSH.bat`**: Conecta instantaneamente ao terminal Linux via Wi-Fi ou USB com chave criptográfica ED25519 (sem pedir senha).
-- **`ESPELHAR_TELA.bat`**: Abre o espelhamento de tela e controle por mouse e teclado via Scrcpy (60 FPS, sem crash de áudio).
+- **`ESPELHAR_TELA.bat`**: Abre o espelhamento de tela e controle por mouse e teclado via Scrcpy configurado para o perfil do aparelho.
 - **`PAINEL_CENTRAL.bat`**: Menu interativo com métricas de CPU/RAM, reconexão Wi-Fi ADB e diagnóstico.
 
 ---
@@ -17,7 +17,7 @@ Para interagir com o servidor sem complicações, use os lançadores diretos:
 
 | Aparelho | Modelo | Processador | RAM / Armazenamento | Status | Conexão |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 7.6 GB RAM / 100 GB SSD | **ONLINE (Servidor Ativo)** | `192.168.1.127:8022` |
+| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 3,6 GB RAM (+4 GB RAM Plus) / 109 GB Flash | **ONLINE (Servidor Ativo)** | `192.168.1.127:8022` |
 | **Galaxy A21s** | `SM-A217M` | Exynos 850 (8 Cores) | 3.0 GB RAM / 32 GB | **Resgate Pendente** | Requer ativação ADB |
 | **Oppo A78** | `CPH2565` | Snapdragon 680 (8 Cores) | 8.0 GB RAM / 128 GB UFS 2.2 | **Reserva de Hardware** | USB 2.0 (sem Alt Mode) |
 

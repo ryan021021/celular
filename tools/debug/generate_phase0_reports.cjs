@@ -2,15 +2,18 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const reportsDir = 'C:\\Users\\Ryanr\\Desktop\\celular\\reports\\2026-10-18';
+const profilePath = path.join(__dirname, '..', '..', 'profiles', 'a13.json');
+const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
+const targetSerial = profile.serial;
+const reportsDir = path.join(__dirname, '..', '..', 'reports', '2026-10-18');
 if (!fs.existsSync(reportsDir)) {
   fs.mkdirSync(reportsDir, { recursive: true });
 }
 
-const adb = process.env.LOCALAPPDATA + '\\Microsoft\\WinGet\\Packages\\Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe\\scrcpy-win64-v4.1\\adb.exe';
-const targetSerial = 'RQ8TC00EJNB';
-const sshKey = 'C:\\Users\\Ryanr\\.ssh\\id_ed25519';
-const sshTarget = 'u0_a271@192.168.1.127';
+const adbWinget = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe', 'scrcpy-win64-v4.1', 'adb.exe');
+const adb = fs.existsSync(adbWinget) ? adbWinget : 'adb';
+const sshKey = path.join(process.env.USERPROFILE || process.env.HOME || '', '.ssh', 'id_ed25519');
+const sshTarget = `${profile.network.ssh_user}@${profile.network.ip}`;
 
 function sshExec(cmd) {
   try {
@@ -32,7 +35,7 @@ function adbExec(cmd) {
 const baselineMd = `# A13 HOME VPS — RELATÓRIO DE BASELINE (FASE 0)
 **Data/Hora:** 2026-10-18T23:59:00Z  
 **Dispositivo:** Samsung Galaxy A13 (SM-A135M / a13ub)  
-**Serial:** RQ8TC00EJNB  
+**Serial:** ${targetSerial}  
 **Kernel:** Linux 4.19.198-28701120-abA135MUBSDDZB3 (armv8l 32-bit userspace)  
 **SO:** Android 14 / One UI 6.1 (Security Patch 2024-06-01 / Build DDZB3)  
 **Runtime:** Termux 0.118.0 + Termux:Boot + Termux:API  
@@ -106,7 +109,7 @@ const secAuditMd = `# AUDITORIA DE SEGURANÇA E PLANO DE CONTROLE (FASE 1)
 ---
 
 ## 3. Auditoria ADB
-- **Depuração USB:** Conectada via cabo USB com host PC autorizado (\`RQ8TC00EJNB\`).
+- **Depuração USB:** Conectada via cabo USB com host PC autorizado (\`${targetSerial}\`).
 - **ADB over Wi-Fi (Porta 5555):** DESATIVADO fora de janelas de manutenção. Não exposto na rede.
 - **Autorizações:** Host PC identificado e autorizado permanentemente pelo desenvolvedor.
 `;
