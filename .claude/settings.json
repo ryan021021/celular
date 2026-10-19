@@ -1,4 +1,8 @@
 {
+  "env": {
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25",
+    "ECC_HOOKS_ENABLED": "false"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -24,11 +28,17 @@
       }
     ]
   },
-  "env": {
-    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25"
-  },
   "enabledPlugins": {
     "shopify-ai-toolkit@claude-plugins-official": false,
-    "trackbee-claude-plugin@trackbee-claude-plugin": false
+    "trackbee-claude-plugin@trackbee-claude-plugin": false,
+    "ecc@ecc": true
+  },
+  "pluginConfigs": {
+    "ecc@ecc": {
+      "options": {
+        "hooks_enabled": false,
+        "hook_profile": "minimal"
+      }
+    }
   }
 }

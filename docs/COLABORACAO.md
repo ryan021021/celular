@@ -84,6 +84,9 @@ Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto
 | `android-adb` | sonnet | ADB | diagnóstico, cadastro de aparelho, ajustes (tem memória do projeto) |
 | `termux-infra` | sonnet | Bash/edita | runit, sshd, deploy, backup, egress (tem memória do projeto) |
 | `seguranca` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
+| `cacador-falhas` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
+
+Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks dele desligados. A config global do Claude fica no padrão de fábrica. Os agentes do ECC (`ecc:code-reviewer`, `ecc:network-troubleshooter`, `ecc:planner` e outros) seguem a regra do §9: só com pedido do Ryan.
 
 Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
 
