@@ -15,4 +15,5 @@ Argumentos: $ARGUMENTS
    - Tarefa **crítica** (mexe no aparelho, `profiles/`, `server/termux`, `tools/server`, painel em produção, deploy, auth, rede ou segredos): vira **REVIEW** com `revisora: QA`, e o veredito do revisor vai na evidência.
 4. **LOG** (append, sem ler): `echo "- $(date '+%Y-%m-%d %H:%M') · <agente> · <Txx>: <até ~250 caracteres>" >> docs/LOG.md`
 5. **Commit** só dos seus arquivos: `git add -- <arquivos> .collab/TASKS.md .collab/TASKS_FEITAS.md docs/LOG.md` e `git -c user.name="<agente>" commit -m "<AGENTE>: <Txx> ..." -- <os mesmos>`. Nunca `add -A`, `reset --hard` nem `stash` sem tag.
-6. Apague o seu lock. Mensagem ao CHEFE só se ele precisar agir.
+5b. Se o commit for recusado pela trava (§11, escopo ou perigo), corrija. Não use `OK-RYAN` por conta própria.
+6. Apague o seu lock e **sempre** avise o CHEFE (sessão "CHEFE · coordenação do time"; o id sai do `list_sessions`) em uma linha: `Txx → DONE|REVIEW, commit <hash>`. É o que fecha o ciclo: o CHEFE confere e despacha a próxima. Depois encerre o turno.
