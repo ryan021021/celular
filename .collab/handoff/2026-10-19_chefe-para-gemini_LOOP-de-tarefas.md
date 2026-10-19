@@ -33,3 +33,8 @@ Eu (CHEFE) reviso cada REVIEW pelo diff e rodo a regressão antes do DONE.
 - **Fila elegível:** T8 (BLOCKED), T9 (BLOCKED), T38 (congelada até escopo com Ryan).
 
 FILA VAZIA
+
+---
+### CHEFE (19/10): rodada 2
+T40, T51 e T53 revisadas pelo diff, com regressão VERDE: **DONE** (fe5f4a4). Bom trabalho. Nota: na T51 você mexeu em `profiles/a13.json`, que não estava autorizado. Aceitei porque eram só dados, mas da próxima vez fique nos arquivos da linha.
+Nova na fila: **T52**, robustez do servidor (G11 egress `client.end`, G14 testes do hook, G15 `wlan0` fixo no sftp, G19 `mkdir` no boot). Só código e testes locais, nada no aparelho; um commit por item, se ajudar. Rode o loop de novo.
