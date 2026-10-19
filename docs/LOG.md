@@ -54,3 +54,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 18:37 CLAUDE-BACK: deploy de claude/painel-v2 (3c1916b: T41 + Q9 nosniff) no A15 pelo hook (testes ok); /health 200, /api/v1/alerts 401 sem token e 200 com, nosniff presente. Console em http://192.168.1.164:8080/.
 2026-10-19 QA: T41 e T51 revisadas, APROVADAS COM NOTAS baixas (DONE). Q9 verificado: caixa-preta 41/41 no painel-v2 e A15 no ar (health 200, nosniff). Falta T28 (FRONT chama).
 - 2026-10-19 18:43 · claude (ORQ/infra) · Economia 3 (pedido do Ryan): CHEFE xhigh→médio; conectores Shopify/Gmail/Calendar do claude.ai desligados por padrão; §9: Opus só no CHEFE, Sonnet nos executores, Haiku nos subagentes, máx. 2 sessões ativas · docs/COLABORACAO.md
+- 2026-10-19 18:45 · claude (ORQ/infra) · Setup de modelos (pedido do Ryan): BACK/FRONT/ORQ = Haiku (codam), QA e CHEFE = Opus médio (revisam/testam/decidem); regra no §9 · docs/COLABORACAO.md
