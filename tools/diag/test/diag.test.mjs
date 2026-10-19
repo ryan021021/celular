@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { diagnosticar, interpretarSaidaSsh, formatarTexto } from "../diag.mjs";
+import { diagnosticar, interpretarSaidaSsh, formatarTexto, formatarMB, SCRIPT_DIAG } from "../diag.mjs";
 
 // Rodar com: node --test tools/diag/test/diag.test.mjs  (respostas falsas: nada é consultado de verdade)
 const AGORA = 1_800_000_000_000;
@@ -18,7 +18,11 @@ const SAIDA_OK = (over = {}) => [
   "SERVICO agentops run: agentops: (pid 1) 90s",
   "SERVICO alertas run: alertas: (pid 2) 80s",
   `DISCO ${over.disco ?? 5_000_000}`,
-  over.bateria === undefined ? "BATERIA 80" : over.bateria === null ? "BATERIA " : `BATERIA ${over.bateria}`,
+  // bateria pelo termux-battery-status (JSON). over.bateria null = comando ausente; "ERRO" = comando sem leitura
+  over.bateria === undefined ? 'BATERIA_TERMUX {"percentage": 80, "status": "DISCHARGING"}'
+    : over.bateria === null ? "BATERIA_TERMUX_AUSENTE"
+    : over.bateria === "ERRO" ? "BATERIA_TERMUX_ERRO"
+    : `BATERIA_TERMUX {"percentage": ${over.bateria}, "status": "DISCHARGING"}`,
   over.backup === undefined ? `BACKUP {"at": ${AGORA - 3 * 3600_000}, "file": "a15-x.tar.gz.enc", "files": 3}` : over.backup === null ? "BACKUP " : `BACKUP ${over.backup}`,
 ].join("\n");
 
@@ -107,10 +111,46 @@ test("nenhum backup registrado é aviso; marcador ilegível também", async () =
   assert.match(porId(ruim, "backup").motivo, /ilegível/);
 });
 
-test("bateria não medida é unknown e não muda o código", async () => {
+test("sem termux-battery-status: bateria é N/D com motivo, sem valor, e não muda o código", async () => {
   const rel = await diagnosticar({ perfil, fetchFn: painel(), sshFn: ssh(SAIDA_OK({ bateria: null })), agora: () => AGORA });
-  assert.equal(porId(rel, "bateria").estado, "unknown");
+  const b = porId(rel, "bateria");
+  assert.equal(b.estado, "unknown");
+  assert.equal(b.valor, null);
+  assert.match(b.motivo, /termux-battery-status não existe/);
   assert.equal(rel.codigo, 0);
+});
+
+test("termux-battery-status existe mas sem leitura: N/D com motivo", async () => {
+  const rel = await diagnosticar({ perfil, fetchFn: painel(), sshFn: ssh(SAIDA_OK({ bateria: "ERRO" })), agora: () => AGORA });
+  assert.equal(porId(rel, "bateria").estado, "unknown");
+  assert.match(porId(rel, "bateria").motivo, /não devolveu leitura/);
+});
+
+test("bateria vinda do termux-battery-status tem fonte e unidade %", async () => {
+  const rel = await diagnosticar({ perfil, fetchFn: painel(), sshFn: ssh(SAIDA_OK()), agora: () => AGORA });
+  const b = porId(rel, "bateria");
+  assert.equal(b.valor, 80);
+  assert.equal(b.unidade, "%");
+  assert.match(b.fonte, /termux-battery-status/);
+});
+
+test("termux-battery-status com JSON quebrado ou sem percentage não inventa valor", () => {
+  assert.equal(interpretarSaidaSsh("BATERIA_TERMUX {ruim").bateria, null);
+  assert.match(interpretarSaidaSsh("BATERIA_TERMUX {ruim").bateriaMotivo, /ilegível/);
+  assert.equal(interpretarSaidaSsh('BATERIA_TERMUX {"status":"X"}').bateria, null);
+});
+
+test("o script do aparelho não lê mais o sysfs da bateria", () => {
+  assert.doesNotMatch(SCRIPT_DIAG, /power_supply/);
+  assert.match(SCRIPT_DIAG, /termux-battery-status/);
+});
+
+test("disco mostra a unidade: MB abaixo de 1 GB, GB a partir disso; JSON traz unidade MB", async () => {
+  const rel = await diagnosticar({ perfil, fetchFn: painel(), sshFn: ssh(SAIDA_OK()), agora: () => AGORA });
+  assert.equal(porId(rel, "disco").unidade, "MB");
+  assert.match(formatarTexto(rel), /\[OK\] disco: 4,8 GB \(4883 MB\)/);
+  assert.equal(formatarMB(500), "500 MB");
+  assert.equal(formatarMB(1024), "1,0 GB (1024 MB)");
 });
 
 test("bateria baixa é aviso", async () => {
@@ -146,7 +186,7 @@ test("saída em JSON é o relatório inteiro, com código e itens", async () => 
 });
 
 test("interpretarSaidaSsh lê disco em KB, bateria e backup, e ignora linhas estranhas", () => {
-  const r = interpretarSaidaSsh("lixo\nDISCO 2048\nBATERIA 55\nBACKUP {\"at\": 1}\n");
+  const r = interpretarSaidaSsh('lixo\nDISCO 2048\nBATERIA_TERMUX {"percentage": 55}\nBACKUP {"at": 1}\n');
   assert.equal(r.disco, 2);
   assert.equal(r.bateria, 55);
   assert.equal(r.backup, '{"at": 1}');

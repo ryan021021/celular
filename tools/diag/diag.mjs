@@ -1,7 +1,8 @@
 // Diagnóstico do servidor (T69, OMNISERVER §20.3). Só leitura: não mexe no aparelho.
 //   node tools/diag/diag.mjs [--perfil a15] [--json]
 // Lê /health, /ready e /api/v1/capabilities do painel, e por SSH os serviços (runit), o disco,
-// a bateria e o último backup. Cada item traz valor, fonte e estado (ok | aviso | falha | unknown).
+// a bateria (só termux-battery-status; sem ele, N/D com motivo) e o último backup. Cada item traz valor,
+// unidade (disco em MB, bateria em %), fonte e estado (ok | aviso | falha | unknown).
 // Nada sai sem fonte. Código de saída: 0 ok · 1 aviso (inclui o que não deu para medir) · 2 falha.
 // Endpoints que ainda não existem (ready, capabilities da T62) ficam unknown e não mudam o código.
 import { spawn } from "node:child_process";
@@ -20,28 +21,51 @@ export const SCRIPT_DIAG = `
 export SVDIR="$PREFIX/var/service"
 for s in $(ls "$PREFIX/var/service" 2>/dev/null); do echo "SERVICO $s $(sv status "$s" 2>&1 | head -n 1)"; done
 df -Pk "$HOME" 2>/dev/null | tail -n 1 | awk '{print "DISCO " $4}'
-echo "BATERIA $(cat /sys/class/power_supply/battery/capacity 2>/dev/null)"
+if command -v termux-battery-status >/dev/null 2>&1; then
+  B=$(termux-battery-status 2>/dev/null | tr -d '\\n')
+  if [ -n "$B" ]; then echo "BATERIA_TERMUX $B"; else echo "BATERIA_TERMUX_ERRO"; fi
+else
+  echo "BATERIA_TERMUX_AUSENTE"
+fi
 echo "BACKUP $(cat "$HOME/servidor/backup-ultimo.json" 2>/dev/null)"
 `;
 
-const item = (id, valor, estado, fonte, motivo = null, obrigatorio = false) => ({ id, valor, estado, fonte, motivo, obrigatorio });
+const item = (id, valor, estado, fonte, motivo = null, obrigatorio = false, unidade = null) => ({ id, valor, estado, fonte, motivo, obrigatorio, unidade });
 const naoMedido = (id, fonte, motivo, obrigatorio = false) => item(id, null, "unknown", fonte, motivo, obrigatorio);
+
+/** Lê o JSON do termux-battery-status. Sem campo percentage numérico, não há valor: vira motivo. */
+function lerBateriaTermux(json) {
+  try {
+    const p = Number(JSON.parse(json).percentage);
+    return Number.isFinite(p) ? { valor: p, motivo: null } : { valor: null, motivo: "termux-battery-status sem campo percentage" };
+  } catch {
+    return { valor: null, motivo: "termux-battery-status devolveu saída ilegível" };
+  }
+}
 
 /** Interpreta a saída do SCRIPT_DIAG. Função pura: testável sem aparelho. */
 export function interpretarSaidaSsh(saida) {
-  const r = { servicos: [], disco: null, bateria: null, backup: null };
+  const r = { servicos: [], disco: null, bateria: null, bateriaMotivo: "sem leitura de bateria no aparelho", backup: null };
   for (const l of String(saida || "").split("\n")) {
     let m;
     if ((m = l.match(/^SERVICO (\S+) ?(.*)$/))) r.servicos.push({ nome: m[1], status: m[2].trim() });
     else if ((m = l.match(/^DISCO (\d+)$/))) r.disco = Number(m[1]) / 1024;
-    else if ((m = l.match(/^BATERIA (\d{1,3})$/))) r.bateria = Number(m[1]);
+    else if (l.startsWith("BATERIA_TERMUX ")) { const b = lerBateriaTermux(l.slice(15)); r.bateria = b.valor; r.bateriaMotivo = b.motivo; }
+    else if (l === "BATERIA_TERMUX_AUSENTE") r.bateriaMotivo = "termux-battery-status não existe no aparelho (precisa do pacote termux-api e do app Termux:API)";
+    else if (l === "BATERIA_TERMUX_ERRO") r.bateriaMotivo = "termux-battery-status existe mas não devolveu leitura";
     else if (l.startsWith("BACKUP ")) r.backup = l.slice(7).trim() || null;
   }
   return r;
 }
 
+/** Disco em MB com a unidade para humanos: GB a partir de 1 GB. Só formata; o valor do JSON continua em MB. */
+export function formatarMB(mb) {
+  return mb >= 1024 ? `${(mb / 1024).toFixed(1).replace(".", ",")} GB (${mb} MB)` : `${mb} MB`;
+}
+
 function itensSsh(saida, erro, agora) {
-  const fonteSsh = "SSH no aparelho (sh -s): sv status, df -Pk, /sys/class/power_supply, backup-ultimo.json";
+  const fonteSsh = "SSH no aparelho (sh -s): sv status, df -Pk, termux-battery-status, backup-ultimo.json";
+  const fonteBat = "termux-battery-status (Termux:API) no aparelho";
   if (erro) {
     return [
       naoMedido("servicos", fonteSsh, `não medido: ${erro}`, true),
@@ -67,12 +91,12 @@ function itensSsh(saida, erro, agora) {
   else {
     const mb = Math.round(d.disco);
     const estado = mb < LIMITE_DISCO_MB.falha ? "falha" : mb < LIMITE_DISCO_MB.aviso ? "aviso" : "ok";
-    out.push(item("disco", mb, estado, fonteSsh, estado === "ok" ? null : `espaço livre abaixo de ${LIMITE_DISCO_MB[estado]} MB`, true));
+    out.push(item("disco", mb, estado, fonteSsh, estado === "ok" ? null : `espaço livre abaixo de ${LIMITE_DISCO_MB[estado]} MB`, true, "MB"));
   }
 
-  // bateria: em % (ausente em aparelho sem sysfs de bateria = não medido, não é aviso)
-  if (d.bateria === null) out.push(naoMedido("bateria", fonteSsh, "não medida: sem leitura em /sys/class/power_supply/battery/capacity"));
-  else out.push(item("bateria", d.bateria, d.bateria < LIMITE_BATERIA ? "aviso" : "ok", fonteSsh, d.bateria < LIMITE_BATERIA ? `abaixo de ${LIMITE_BATERIA}%` : null));
+  // bateria: em % vinda só do termux-battery-status; sem ele é não medida (não é aviso)
+  if (d.bateria === null) out.push(naoMedido("bateria", fonteBat, `não medida: ${d.bateriaMotivo}`));
+  else out.push(item("bateria", d.bateria, d.bateria < LIMITE_BATERIA ? "aviso" : "ok", fonteBat, d.bateria < LIMITE_BATERIA ? `abaixo de ${LIMITE_BATERIA}%` : null, false, "%"));
 
   // último backup: idade pelo marcador que o tools/server/backup.sh grava
   if (!d.backup) out.push(item("backup", null, "aviso", fonteSsh, "nenhum backup registrado (backup-ultimo.json ausente)", true));
@@ -163,7 +187,10 @@ const ROTULO = { ok: "OK", aviso: "AVISO", falha: "FALHA", unknown: "N/D" }; // 
 export function formatarTexto(rel) {
   const linhas = [`Diagnóstico de ${rel.alvo} em ${rel.gerado_em}`];
   for (const i of rel.itens) {
-    const valor = i.valor === null ? "—" : typeof i.valor === "object" ? JSON.stringify(i.valor) : String(i.valor);
+    const valor = i.valor === null ? "—"
+      : typeof i.valor === "object" ? JSON.stringify(i.valor)
+      : i.unidade === "MB" ? formatarMB(i.valor)
+      : i.unidade ? `${i.valor}${i.unidade}` : String(i.valor);
     linhas.push(`[${ROTULO[i.estado]}] ${i.id}: ${valor}`);
     linhas.push(`      fonte: ${i.fonte}${i.motivo ? ` · ${i.motivo}` : ""}`);
   }
