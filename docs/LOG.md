@@ -44,3 +44,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 18:18 · claude (CHEFE) · Q10 da QA: adb-guard agora bloqueia a EXECUÇÃO de aplicar_tweaks_ocultos/reativar_apps_essenciais/resgatar_galaxy_a21s/desenhar_padrao (git/grep/cat passam); `settings put` segue liberado de propósito (DISASTER_RECOVERY e reaplicar-ajustes); teste 4/4. Agentes conferidos após reinício (explorador/haiku ok).
 2026-10-19 QA: Q10 fechado (2558bfd): adb-guard bloqueia execução dos scripts que mudam o aparelho; furo residual: cópia renomeada do script. Próximo: revisão T43/T45/T49.
 2026-10-19 FRONT: T40 e T51 do Gemini revisadas: APROVADO COM NOTAS (ficam em REVIEW). T40: travar o script com exit 1; T51: fonte do eMMC, 128 GB do A15, a13.json e online_server do a15 na T48.
+2026-10-19 QA: revisão T43 (REVIEW, falta corrigir: limite em bytes, não caracteres), T45 e T49 APROVADAS (DONE). Subagente revisor usado, 1 chamada por grupo.
