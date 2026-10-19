@@ -25,7 +25,7 @@ Comando no PC (Git Bash, raiz do projeto): `bash tools/server/backup.sh`. Destin
 ## Reconstruir do zero
 1. **Aparelho:** instalar Termux, Termux:Boot e Termux:API da mesma fonte (APKs em `assets/apk/`, builds do GitHub, mesma assinatura), abrir o Termux:Boot uma vez, isentar os três da economia de bateria.
 2. **Acesso:** no Termux, `pkg install openssh && sshd`; autorizar a chave do PC (`.collab/fichas/T8_novo_aparelho.md`, passo 5).
-3. **Restaurar:** no PC, `bash tools/server/backup.sh --restaurar backups/<mais recente>.enc C:/temp/restauro`; copiar `servidor/`, `.termux/` e as host keys (`etc/ssh/ssh_host_*`) de volta (a impressão digital do SSH continua a mesma).
+3. **Restaurar:** no PC, `bash tools/server/backup.sh --restaurar backups/<mais recente>.enc /c/temp/restauro` (no Git Bash use caminho MSYS `/c/...`: o `tar` do MSYS lê `C:` como host remoto); copiar `servidor/`, `.termux/` e as host keys (`etc/ssh/ssh_host_*`) de volta (a impressão digital do SSH continua a mesma).
 4. **Instalar:** `tools/server/deploy.ps1 -Device <perfil>` (pacotes, serviços runit `server-box`, `alertas`, `agentops`, `sftp`, `egress`, hook, cron) e conferir com `-Step Health`.
 5. **Claude Code:** `npm pack @anthropic-ai/claude-code-linux-arm64-musl@<versão>`, carregador `ld-musl-aarch64.so.1` do pacote `musl` do Alpine (aarch64), wrapper `$PREFIX/bin/claude` — passo a passo em `docs/AGENT_RUNTIME_MATRIX.md`. Depois `claude` → `/login`.
 6. **Android (ADB):** reaplicar `settings_enable_monitor_phantom_procs=false`, `protect_battery=1`, `stay_on_while_plugged_in=0`, `screen_off_timeout=30000`, `adb_wifi_enabled=0`; manter `double_tap_to_wake`/`lift_to_wake` ligados (o aparelho não tem botão para a tela).
