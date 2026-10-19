@@ -137,3 +137,7 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 2. `reconstrucao.mjs`: apaga a pasta restaurada em SIGINT/SIGTERM/SIGHUP e, no início, apaga as `qa-reconstrucao-*` com mais de 10 min (taskkill /F e kill -9 não deixam limpar). Testado: uma sobra com data de 20 min foi apagada.
 3. Avisos contados à parte: "18/18 passos · 1 aviso(s)" (o Q6 do egress).
 Rodado de novo com o backup das 06:55: 18/18, painel restaurado = produção `f9ad723`, 6 tarefas na fila.
+
+## T38: extensões do Gemini (19/10)
+**Q11 ABERTO (alto, antes de ligar ao servidor):** as permissões da T38 só filtram o objeto `ctx` que o loader entrega. O `index.mjs` da extensão é carregado com `import()` no mesmo processo, sem isolamento. Prova (extensão com `permissoes: []`, pasta temporária): o handler rodou `execSync("node -v")` e leu um arquivo fora da pasta da extensão, e o loader carregou sem erro. O teste "RECUSA permissões perigosas (shell, child_process)" só confere o vocabulário do manifesto, não impede o código. Fora isso: o despachante `/ext/*` não exige token (hoje não está ligado ao server.js, então não há exposição ainda). O restante confere: 136/136 na suíte, só 3 arquivos novos (loader, schema, teste), nenhum da BACK ou da FRONT, desligado sem pasta, rotas só em `/ext/<id>/`, ID tem de bater com a pasta.
+Saídas aceitáveis: (a) documentar e nomear como "extensão confiável instalada pelo dono", sem prometer isolamento, e exigir token no despachante; ou (b) rodar a extensão em processo filho com `node --permission` e só o que o manifesto declara.
