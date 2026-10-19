@@ -21,6 +21,15 @@ if [ "${1:-}" != "--restaurar" ]; then
   [ -f "$PERFIL" ] || { echo "sem perfil $PERFIL"; exit 1; }
   S_IP="$(perfil ip)"; S_USER="$(perfil ssh_user)"; S_PORT="$(perfil ssh_port)"
   [ -n "$S_IP" ] && [ -n "$S_USER" ] || { echo "perfil $DEVICE sem network.ip/ssh_user"; exit 1; }
+  # T82: network.ip e so uma dica (o celular troca de rede). O achador confere a chave de host publica do perfil e devolve o IP atual.
+  # Sem achador ou sem resposta, segue com o IP do perfil e o ssh mostra o erro.
+  ACHADOR="$ROOT/tools/lib/achar-aparelho.mjs"
+  if [ -f "$ACHADOR" ] && command -v node >/dev/null 2>&1 && IP_ACHADO="$(node "$(win "$ACHADOR")" --perfil "$DEVICE" 2>/dev/null)" && [ -n "$IP_ACHADO" ]; then
+    [ "$IP_ACHADO" = "$S_IP" ] || echo "IP atual do aparelho: $IP_ACHADO (o perfil diz $S_IP)"
+    S_IP="$IP_ACHADO"
+  else
+    echo "achador nao encontrou o aparelho; usando o IP do perfil ($S_IP)"
+  fi
   SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 -i "$HOME/.ssh/id_ed25519" -p "${S_PORT:-8022}" "$S_USER@$S_IP")
 fi
 decifra() { openssl enc -d "${CIFRA[@]}" -pass "file:$(win "$KEY")" -in "$(win "$1")"; }

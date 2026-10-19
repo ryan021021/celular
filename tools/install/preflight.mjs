@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } from "
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
+import { resolverPerfil } from "../lib/achar-aparelho.mjs";
 import { SCRIPT_LEITURA, lerSaida, montarCapacidades, montarRelatorio, coletarLocal, UNKNOWN } from "../../server/discovery/detect.mjs";
 
 export const GO = "go", AVISO = "aviso", NOGO = "nogo";
@@ -134,6 +135,7 @@ export function relatorioSemLeitura(alvo, erro) {
 const ROTULO = { [GO]: "GO", [AVISO]: "AVISO", [NOGO]: "NO-GO" };
 export function formatarTexto(rel) {
   const linhas = [`Preflight · alvo ${rel.alvo}`];
+  if (rel.achado) linhas.push(rel.achado.ip ? `Aparelho achado em ${rel.achado.ip} (via ${rel.achado.via}${rel.achado.verificado ? ", identidade provada" : ", identidade não provada"})` : `Achador: ${rel.achado.erro}`);
   for (const i of rel.itens) {
     linhas.push(`[${ROTULO[i.estado]}] ${i.nome}: ${i.valor ?? "—"} — ${i.motivo}`);
     if (i.corrigir && i.estado !== GO) linhas.push(`      como corrigir: ${i.corrigir}`);
@@ -179,10 +181,18 @@ export async function coletarEsteComputador({ executor = executar } = {}) {
   return { relatorio, extras: r.ok ? lerSaida(r.saida).dados : {} };
 }
 
-export async function preflight({ perfil = null, coletaAparelho = coletarAparelho, coletaLocal = coletarEsteComputador } = {}) {
+/**
+ * `resolver(perfil)` (T82) troca network.ip pelo IP achado: no CLI é o achador (tools/lib/achar-aparelho.mjs).
+ * Fica de fora por padrão para os testes não varrerem a rede. Sem achar, segue com o IP do perfil e a leitura falha com motivo.
+ */
+export async function preflight({ perfil = null, coletaAparelho = coletarAparelho, coletaLocal = coletarEsteComputador, resolver = null } = {}) {
   try {
+    let achado = null;
+    if (perfil && resolver) ({ perfil, achado } = await resolver(perfil));
     const { relatorio, extras } = perfil ? await coletaAparelho(perfil) : await coletaLocal();
-    return avaliar({ relatorio, extras, alvo: perfil?.id ?? "local" });
+    const rel = avaliar({ relatorio, extras, alvo: perfil?.id ?? "local" });
+    if (achado) rel.achado = achado.ok ? { ip: achado.ip, via: achado.via, verificado: achado.verificado } : { erro: achado.erro };
+    return rel;
   } catch (e) {
     return relatorioSemLeitura(perfil?.id ?? "local", e.message);
   }
@@ -207,7 +217,7 @@ if (ehCli) {
       catch { console.error("[preflight] a15-discovery.lock já existe: outra leitura em curso"); return 2; }
     }
     try {
-      const rel = await preflight({ perfil });
+      const rel = await preflight({ perfil, resolver: resolverPerfil });
       console.log(args.includes("--json") ? JSON.stringify(rel, null, 2) : formatarTexto(rel));
       return rel.codigo;
     } finally { if (idPerfil) try { unlinkSync(lockPath); } catch {} }

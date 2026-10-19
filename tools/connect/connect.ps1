@@ -31,6 +31,22 @@ if (-not (Test-Path $scrcpy)) {
     if ($scrcpyCmd) { $scrcpy = $scrcpyCmd.Source } else { $scrcpy = "scrcpy" }
 }
 
+# T82: network.ip e so uma dica (o celular troca de rede). O achador confere a chave de host publica do perfil e devolve o IP atual.
+# Roda uma vez por execucao, so quando alguem precisa do IP. Se nao achar, segue com o IP do perfil.
+$script:ipResolvido = $false
+function Resolve-AparelhoIp {
+    if ($script:ipResolvido) { return }
+    $script:ipResolvido = $true
+    if (-not (Get-Command node -ErrorAction SilentlyContinue)) { return }
+    $prevEap = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+    $achado = & node (Join-Path $projectRoot "tools\lib\achar-aparelho.mjs") --perfil $Device 2>$null
+    $codigo = $LASTEXITCODE; $ErrorActionPreference = $prevEap
+    if ($codigo -eq 0 -and "$achado" -match '^\d{1,3}(\.\d{1,3}){3}$') {
+        if ("$achado" -ne "$($profile.network.ip)") { Write-Host "[achar] IP atual: $achado (o perfil diz $($profile.network.ip))" -ForegroundColor Yellow }
+        $profile.network.ip = "$achado"
+    } else { Write-Host "[AVISO] Achador nao encontrou o aparelho; usando o IP do perfil ($($profile.network.ip))." -ForegroundColor Yellow }
+}
+
 function Show-Header {
     Clear-Host
     Write-Host "====================================================================" -ForegroundColor Cyan
@@ -39,12 +55,13 @@ function Show-Header {
     Write-Host " Status:     $($profile.status.ToUpper())" -ForegroundColor Green
     Write-Host " Hardware:   $($profile.hardware.cpu) | $($profile.hardware.ram_total)" -ForegroundColor Gray
     Write-Host " Armazenam.: $($profile.hardware.storage_free) livres" -ForegroundColor Gray
-    Write-Host " Rede Local: $($profile.network.ip):$($profile.network.ssh_port)" -ForegroundColor Cyan
+    Write-Host " Rede Local: $($profile.network.ip):$($profile.network.ssh_port) (IP do perfil e so dica)" -ForegroundColor Cyan
     Write-Host "====================================================================`n" -ForegroundColor Cyan
 }
 
 function Connect-SSH {
     Write-Host "[*] Iniciando sessao SSH com $($profile.name)..." -ForegroundColor Yellow
+    Resolve-AparelhoIp
     $ip = $profile.network.ip
     $port = $profile.network.ssh_port
     $user = $profile.network.ssh_user
@@ -89,6 +106,7 @@ function Start-Mirror {
     $proc = Start-Process -FilePath $scrcpy -ArgumentList $argsList -PassThru -Wait
     if ($proc.ExitCode -ne 0) {
         Write-Host "[!] USB falhou. Tentando conectar espelhamento via Wi-Fi ADB..." -ForegroundColor Yellow
+        Resolve-AparelhoIp
         $wifiTarget = "$($profile.network.ip):$($profile.network.wifi_adb_port)"
         $wifiArgs = @("--tcpip=$wifiTarget") + $profile.scrcpy_args
         Start-Process -FilePath $scrcpy -ArgumentList $wifiArgs -Wait
@@ -102,6 +120,7 @@ function Show-Status {
     & $adb devices -l
 
     Write-Host "`n--- Metricas do Sistema (via SSH) ---" -ForegroundColor Cyan
+    Resolve-AparelhoIp
     $ip = $profile.network.ip
     $port = $profile.network.ssh_port
     $user = $profile.network.ssh_user
@@ -121,6 +140,7 @@ function Show-Status {
 
 function Enable-WifiAdb {
     Write-Host "[*] Ativando ADB sobre TCP/IP (Porta $($profile.network.wifi_adb_port))..." -ForegroundColor Yellow
+    Resolve-AparelhoIp
     & $adb -s $profile.serial tcpip $profile.network.wifi_adb_port
     Start-Sleep -Seconds 1
     & $adb connect "$($profile.network.ip):$($profile.network.wifi_adb_port)"

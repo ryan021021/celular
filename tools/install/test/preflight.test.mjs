@@ -1,6 +1,10 @@
 import test from "node:test";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import assert from "node:assert/strict";
 import { montarCapacidades, montarRelatorio } from "../../../server/discovery/detect.mjs";
+import { resolverPerfil, impressaoDeChave } from "../../lib/achar-aparelho.mjs";
 import { avaliar, preflight, formatarTexto, coletarAparelho, SCRIPT_EXTRA, relatorioSemLeitura } from "../preflight.mjs";
 
 // Rodar com: node --test tools/install/test/preflight.test.mjs  (relatórios falsos: nada é consultado de verdade)
@@ -174,4 +178,35 @@ test("saída em texto: itens, como corrigir só quando não é GO, e resultado f
   assert.match(t, /como corrigir: instale o Termux:Boot/);
   assert.match(t, /Resultado: NO-GO \(código 2\)/);
   assert.doesNotMatch(formatarTexto(avaliar(montar())), /como corrigir/);
+});
+
+test("T82: com o IP do perfil errado, o preflight lê o aparelho no IP que o achador encontrou", async () => {
+  const DIGITAL = impressaoDeChave("AAAAC3NzaC1lZDI1NTE5AAAAIBGJQ9qZPF9eB4nbXnKf8apPdtGkpNM6AQtTrNWYv7NI");
+  const rede = {
+    portaAberta: async ip => ip === "192.168.1.170", impressao: async () => ({ impressao: DIGITAL }),
+    ipPeloAdb: async () => ({ erro: "adb sem aparelho" }), interfaces: () => ({ w: [{ family: "IPv4", address: "192.168.1.50", internal: false }] }),
+  };
+  const perfil = { id: "a15", network: { ip: "192.168.1.99", ssh_port: 8022, ssh_user: "u", ssh_hostkey_sha256: `SHA256:${DIGITAL}` } };
+  const lidos = [];
+  const rel = await preflight({
+    perfil,
+    resolver: p => resolverPerfil(p, { rede, cacheDir: mkdtempSync(join(tmpdir(), "pf-")) }),
+    coletaAparelho: async p => { lidos.push(p.network.ip); return montar({}, "a15"); },
+  });
+  assert.deepEqual(lidos, ["192.168.1.170"], "leu o aparelho no IP errado do perfil");
+  assert.equal(rel.codigo, 0);
+  assert.deepEqual(rel.achado, { ip: "192.168.1.170", via: "varredura", verificado: true });
+  assert.match(formatarTexto(rel), /Aparelho achado em 192\.168\.1\.170 \(via varredura, identidade provada\)/);
+  assert.equal(perfil.network.ip, "192.168.1.99", "alterou o perfil original");
+});
+
+test("T82: se o achador não acha, o preflight tenta o IP do perfil e vira NO-GO com o motivo", async () => {
+  const rede = { portaAberta: async () => false, impressao: async () => ({ erro: "x" }), ipPeloAdb: async () => ({ erro: "sem adb" }), interfaces: () => ({}) };
+  const rel = await preflight({
+    perfil: { id: "a15", network: { ip: "192.168.1.99", ssh_hostkey_sha256: "SHA256:abc" } },
+    resolver: p => resolverPerfil(p, { rede, cacheDir: mkdtempSync(join(tmpdir(), "pf-")) }),
+    coletaAparelho: async () => { throw new Error("tempo esgotado"); },
+  });
+  assert.equal(rel.codigo, 2);
+  assert.match(rel.itens[0].motivo, /tempo esgotado/);
 });

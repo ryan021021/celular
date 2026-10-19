@@ -33,13 +33,20 @@ function git(args, cwd) {
 }
 
 /** Monta o mundo falso: projeto temporário com o backup.sh, perfil a15 de mentira, ssh falso e a pasta que imita o A15. */
-function montar({ sem = [] } = {}) {
+function montar({ sem = [], achador = null } = {}) {
   const raiz = mkdtempSync(join(tmpdir(), "bkp-"));
   const projeto = join(raiz, "projeto"), home = join(raiz, "home"), bin = join(raiz, "bin"), aparelho = join(raiz, "aparelho");
   mkdirSync(join(projeto, "tools", "server"), { recursive: true });
   mkdirSync(join(projeto, "profiles"));
   mkdirSync(home); mkdirSync(bin);
   copyFileSync(BACKUP_SH, join(projeto, "tools", "server", "backup.sh"));
+  // T82: achador falso no lugar do real (que varreria a rede): imprime o IP "atual" do A15 quando recebe --perfil a15
+  if (achador) {
+    mkdirSync(join(projeto, "tools", "lib"), { recursive: true });
+    writeFileSync(join(projeto, "tools", "lib", "achar-aparelho.mjs"), `const i = process.argv.indexOf("--perfil");
+if (process.argv[i + 1] === "a15") { console.log(${JSON.stringify(achador)}); } else process.exitCode = 1;
+`);
+  }
   writeFileSync(join(projeto, "profiles", "a15.json"), JSON.stringify({ id: "a15", network: { ip: "192.0.2.15", ssh_port: 8022, ssh_user: "u0_a999" } }));
 
   for (const f of ESSENCIAIS.filter(f => !sem.includes(f))) {
@@ -59,9 +66,10 @@ function montar({ sem = [] } = {}) {
   writeFileSync(join(aparelho, "servidor", ".inventario", "commit.txt"), "abc1234 painel falso\n");
 
   // ssh falso: o comando do tar devolve a pasta do A15 falso; o do registro só grava o texto recebido
-  const registro = join(raiz, "registro-no-aparelho.txt");
+  const registro = join(raiz, "registro-no-aparelho.txt"), argsSsh = join(raiz, "args-ssh.txt");
   writeFileSync(join(bin, "ssh"), `#!/bin/sh
-for a; do cmd="$a"; done
+for a; do alvo="$cmd"; cmd="$a"; done
+echo "$alvo" >> "$ARGS_SSH"
 case "$cmd" in
   *"tar -czf"*) cd "$APARELHO" && tar -czf - servidor .termux .ssh etc var ;;
   *backup-ultimo.json*) printf '%s' "$cmd" > "$REGISTRO" ;;
@@ -69,12 +77,13 @@ case "$cmd" in
 esac
 `, { mode: 0o755 });
 
-  const env = { ...process.env, HOME: fw(home), SERVER_DEVICE: "a15", APARELHO: fw(aparelho), REGISTRO: fw(registro), PATH: `${fw(bin)}:${process.env.PATH}` };
+  const env = { ...process.env, HOME: fw(home), SERVER_DEVICE: "a15", APARELHO: fw(aparelho), REGISTRO: fw(registro), ARGS_SSH: fw(argsSsh), PATH: `${fw(bin)}:${process.env.PATH}` };
   const script = fw(join(projeto, "tools", "server", "backup.sh"));
   const rodar = (...args) => spawnSync("bash", [script, ...args], { env, encoding: "utf8", timeout: 180000, windowsHide: true });
   const backups = join(projeto, "backups");
   const arquivoEnc = () => (existsSync(backups) ? readdirSync(backups).find(f => f.endsWith(".tar.gz.enc")) : undefined);
-  return { raiz, home, aparelho, backups, registro, env, script, rodar, arquivoEnc };
+  const alvosSsh = () => (existsSync(argsSsh) ? readFileSync(argsSsh, "utf8") : "").split("\n").filter(Boolean).map(l => l.match(/\S+@\S+/)?.[0]);
+  return { raiz, home, aparelho, backups, registro, alvosSsh, env, script, rodar, arquivoEnc };
 }
 
 test("backup do A15: cifra, confere sha256, restaura em pasta temporária e registra o backup (sem tocar no aparelho)", { skip: SEM_FERRAMENTAS }, () => {
@@ -148,4 +157,24 @@ test("perfil sem network.ssh_user é recusado antes de qualquer conexão", { ski
   assert.equal(r.status, 1);
   assert.match(r.stdout, /sem network\.ip\/ssh_user/);
   assert.ok(!existsSync(m.registro));
+});
+
+test("T82: com o IP do perfil errado, o backup usa o IP que o achador encontrou", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar({ achador: "192.168.1.170" }); // o perfil diz 192.0.2.15, o aparelho está em 192.168.1.170
+  const r = m.rodar();
+  assert.equal(r.status, 0, `${r.stdout}
+${r.stderr}`);
+  assert.match(r.stdout, /IP atual do aparelho: 192\.168\.1\.170 \(o perfil diz 192\.0\.2\.15\)/);
+  const alvos = m.alvosSsh();
+  assert.ok(alvos.length >= 2, "esperava as duas idas ao aparelho (tar e registro)");
+  assert.ok(alvos.every(a => a === "u0_a999@192.168.1.170"), `ssh foi para o IP do perfil: ${alvos}`);
+});
+
+test("T82: sem achador (ou se ele não achar), o backup segue com o IP do perfil e avisa", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar(); // sem tools/lib/achar-aparelho.mjs no projeto de teste
+  const r = m.rodar();
+  assert.equal(r.status, 0, `${r.stdout}
+${r.stderr}`);
+  assert.match(r.stdout, /achador nao encontrou o aparelho; usando o IP do perfil \(192\.0\.2\.15\)/);
+  assert.ok(m.alvosSsh().every(a => a === "u0_a999@192.0.2.15"));
 });
