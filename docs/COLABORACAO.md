@@ -70,7 +70,7 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Cache:** não trocar de modelo nem de esforço no meio da sessão (perde o cache e reprocessa tudo). Troque só depois de `/clear` ou em sessão nova.
 - **Uma tarefa por contexto:** terminou e fechou a tarefa (`/fechar-tarefa`)? Rode `/clear` antes da próxima, a menos que ela dependa do que acabou de ser feito. O estado fica em TASKS/LOG/commit, não no histórico.
 - **Plugins e conectores fora do projeto:** os plugins de Shopify/Trackbee ficam desligados neste projeto (`.claude/settings.json`). Conectores da conta (meta-ads, Hostinger, Gmail…) só o Ryan desliga.
-- **Modelo/esforço (19/10, CHEFE):** CHEFE = Opus; ORQ, BACK, FRONT e QA = Sonnet, esforço médio. Ninguém troca de modelo sozinho; subir só com OK do Ryan ou do CHEFE. Sessão sem tarefa fica parada (sem polling) até o CHEFE chamar.
+- **Modelo/esforço (19/10, Ryan):** CHEFE = Opus, esforço **médio** (supervisiona, decide e revisa pelo diff; não escreve código nem lê arquivo grande). ORQ, BACK, FRONT e QA = **Sonnet**, esforço médio (baixo em tarefa mecânica). Subagentes (verificador, explorador) = Haiku. Nunca xhigh/max sem OK do Ryan. **No máximo 2 sessões trabalhando ao mesmo tempo**; as outras ficam paradas (sem polling) até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
 Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto isolado, ferramentas mínimas, modelo barato onde dá), skills em `.claude/skills/` e uma trava em `.claude/hooks/`. Fica no git e vale para toda sessão Claude aberta na raiz do projeto.
