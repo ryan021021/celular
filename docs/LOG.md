@@ -65,3 +65,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:12 · gemini · T52: robustez G11 (egress client.end), G14 (post-receive checkout), G15 (sftp fallback IP), G19 (boot.sh mkdir logs) · server/termux/
 - 2026-10-19 19:11 · claude (CHEFE) · §11 automático: trava commit-msg (escopo da Txx + ADB destrutivo/segredo, Claude e Gemini) e escopo.mjs --review; testes 3/3, regressão VERDE
 - 2026-10-19 19:13 · claude (CHEFE) · ciclo fechado: /fechar-tarefa sempre avisa o CHEFE, que confere (escopo+regressão+revisão) e despacha; QA revisando T28 e T43
+2026-10-19 QA: T43 APROVADA (DONE; corte em bytes reproduzido 28,67-28,67 KB) e T28 APROVADA COM NOTAS (achados 1,2,5 confirmados por código; 3 e 4 abertos para a FRONT). Escopo e regressão pela CHEFE; lógica pela QA.
