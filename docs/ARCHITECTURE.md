@@ -13,7 +13,7 @@ O que ainda não foi para produção está marcado **(branch)**. Detalhes que j�
 | RAM física | 3,62 GiB (`MemTotal` 3.886.809.088 B) | `/proc/meminfo` |
 | Swap | 4 GiB: é o "RAM Plus" do Android, **não é RAM** | `/proc/meminfo SwapTotal` |
 | Disco | 109 GB, 102 GB livres | `df -k /data` |
-| Node | v24.18.0 (`nodejs-lts`) | `node --version` |
+| Node | v26.4.0 (pacote `nodejs` 26.4.0-1; era v24.18.0 do `nodejs-lts` até 19/10) | `node --version`, `dpkg -l`, `/proc/<pid>/exe` dos serviços (19/10, 06:50) |
 | Bateria | 82%, sem carregar (proteção em 80%), 27–31 °C | `termux-battery-status` |
 
 **Limites do Android sem root** (todos testados, por isso o painel mostra "indisponível" e não inventa número):
