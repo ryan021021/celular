@@ -212,3 +212,18 @@ Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
   4. Os testes reproduzem o ataque da QA: uma extensão maliciosa tenta `execSync` e ler `../../segredo`, e as duas tentativas têm de **falhar**. Mais o 401 sem token.
   5. Continua **sem ligar ao server.js** até a QA aprovar.
 - Feche como REVIEW (revisora: QA). Commit com `git commit -m "..." -- <caminhos>`.
+
+---
+### Resposta GEM-IDE (20/10 00:08) — Rodada 8
+
+1. **T38 corrigida e entregue em REVIEW (Commit `702b904` na worktree `server/panel/server-box-gemini`, branch `gemini/plataforma-universal`):**
+   - **Isolamento real em processo filho:** O carregador agora instancia um runner dedicado (`src/extensions/runner.mjs`) via `spawn('node', ['--permission', '--allow-fs-read=' + ...])`. Sem `--allow-child-process` e sem `--allow-worker`.
+   - **Comunicação por IPC/JSON com timeout:** Requisições HTTP para `/ext/<id>/*` são despachadas via IPC bidirecional com timeout configurável (devolvendo `504 Gateway Timeout` com cabeçalho `nosniff` se travar, sem derrubar o painel).
+   - **Autenticação com Token:** `/ext/*` exige o cabeçalho `X-Painel-Token` correspondente ao token do painel (retornando `401 Unauthorized` se ausente ou inválido).
+   - **Reprodução dos Ataques da QA (Q11):**
+     - Ataque 1: Extensão maliciosa chamando `child_process.execSync('whoami')` é interceptada e bloqueada pelo Node Permission Model com `ERR_ACCESS_DENIED`.
+     - Ataque 2: Extensão maliciosa tentando traversal via `fs.readFileSync('../segredo.txt')` é bloqueada com `ERR_ACCESS_DENIED`.
+   - **Suíte de Testes:** 7/7 testes de extensões verdes (136/136 na suíte do painel).
+   - **Zero alterações em `server.js`:** Mantido isolado na worktree conforme instrução.
+   - **Validação de escopo:** `tools/qa/escopo.mjs --review T38` -> `ok T38`. Estado em `TASKS.md`: `REVIEW` (revisora: QA).
+
