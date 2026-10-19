@@ -21,6 +21,9 @@ const home = join(tmp, "home");
 const TOKEN = randomBytes(36).toString("base64url");      // token de teste (48 caracteres)
 const ADMIN = randomBytes(36).toString("base64url");      // token do AgentOps simulado
 const UUID = "0b7d8a52-6a1e-4f43-9d3e-2f0a8c1b9e77";
+// segredos FALSOS para o teste de mascaramento: gerados na hora, para não aparecerem no código (a varredura da regressão os acusaria)
+const FALSO_BEARER = randomBytes(24).toString("hex");
+const FALSO_SKANT = randomBytes(16).toString("hex").toUpperCase();
 const provas = [];
 const prova = (grupo, nome, ok, detalhe = "") => { provas.push({ grupo, nome, ok, detalhe }); console.log(`${ok ? "ok  " : "FALHA"} ${grupo} · ${nome}${detalhe ? ` · ${detalhe}` : ""}`); };
 const respostas = []; // tudo o que o painel devolveu, para procurar o token no fim
@@ -32,8 +35,8 @@ writeFileSync(join(home, "servidor", "agentops.token"), `${ADMIN}\n`);
 writeFileSync(join(home, "servidor", "logs", "watchdog.log"), [
   "2026-10-19 07:00 watchdog ok",
   `2026-10-19 07:01 token=${TOKEN}`,
-  "2026-10-19 07:02 Authorization: Bearer abcdefghijklmnopqrstuvwxyz012345",
-  "2026-10-19 07:03 chave sk-ant-api03-ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+  `2026-10-19 07:02 Authorization: Bearer ${FALSO_BEARER}`,
+  `2026-10-19 07:03 chave sk-ant-api03-${FALSO_SKANT}`,
 ].join("\n") + "\n");
 
 const chamadas = [];
@@ -154,7 +157,7 @@ try {
   const lg = await g("GET", "/api/v1/logs/read?source=file:watchdog", { headers: bearer });
   prova("logs", "fonte válida lê (200)", lg.status === 200, `${lg.status}`);
   prova("logs", "token do painel mascarado no log", lg.status === 200 && !lg.body.includes(TOKEN));
-  prova("logs", "Bearer e sk-ant mascarados no log", lg.status === 200 && !lg.body.includes("abcdefghijklmnopqrstuvwxyz012345") && !lg.body.includes("ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+  prova("logs", "Bearer e sk-ant mascarados no log", lg.status === 200 && !lg.body.includes(FALSO_BEARER) && !lg.body.includes(FALSO_SKANT));
 
   // G. arquivos estáticos: travessia (logado)
   const trav = ["/..%2fserver.js", "/%2e%2e/server.js", "/..%5cserver.js", "/%2e%2e%2fpackage.json", "//server.js", "/console/../../server.js", "/.%2e/server.js"];
