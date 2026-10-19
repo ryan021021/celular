@@ -16,7 +16,11 @@ server/panel/server-box-*/
 tools/debug/snapshots_a13/
 
 # Estado de sessões e locks (efêmeros)
-.claude/
+.claude/*
+!.claude/agents/
+!.claude/skills/
+!.claude/hooks/
+!.claude/settings.json
 .collab/locks/*.lock
 
 # Temporários

@@ -64,7 +64,26 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Escrever sem ler:** LOG com append (`>>` / `Add-Content`), 1 linha de até ~300 caracteres; detalhes ficam no commit/handoff. Tarefa nova DONE: mover a linha para `TASKS_FEITAS.md`.
 - **Saída curta:** filtrar comandos (`| tail -n 30`, `--quiet`); testes: só resumo e falhas. Nada de despejar log/JSON inteiro.
 - **Sem espera ativa:** proibido `/loop`, ScheduleWakeup, `sleep` ou releitura periódica para esperar outra sessão. Deixe o handoff/TASKS e encerre o turno.
-- **Sem subagentes** (Agent/Explore) e sem pesquisa web, salvo pedido do Ryan.
+- **Subagentes:** só os do projeto (§10), que são baratos e devolvem resumo. Agent genérico, Explore e pesquisa web só com pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
 - **Contexto > 300 mil tokens:** termine a tarefa atual, registre o estado em TASKS/handoff e peça ao Ryan um `/compact` (ou sessão nova).
 - **Modelo/esforço (19/10, CHEFE):** CHEFE = Opus; ORQ, BACK, FRONT e QA = Sonnet, esforço médio. Ninguém troca de modelo sozinho; subir só com OK do Ryan ou do CHEFE. Sessão sem tarefa fica parada (sem polling) até o CHEFE chamar.
+
+## 10. Time de especialistas (19/10, CHEFE)
+Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto isolado, ferramentas mínimas, modelo barato onde dá), skills em `.claude/skills/` e uma trava em `.claude/hooks/`. Fica no git e vale para toda sessão Claude aberta na raiz do projeto.
+
+| Subagente | Modelo | Ferramentas | Quando usar |
+|---|---|---|---|
+| `explorador` | haiku | só leitura | "onde está X?" sem encher o contexto |
+| `verificador` | haiku | Bash sem editar | regressão e testes: devolve só o resumo e as falhas |
+| `revisor` | sonnet | Bash/leitura, sem editar | revisão cruzada pelo diff |
+| `simplificador` | sonnet | edita | limpar o código da tarefa sem mudar o comportamento |
+| `android-adb` | sonnet | ADB | diagnóstico, cadastro de aparelho, ajustes (tem memória do projeto) |
+| `termux-infra` | sonnet | Bash/edita | runit, sshd, deploy, backup, egress (tem memória do projeto) |
+| `seguranca` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
+
+Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
+
+Trava (`adb-guard`): bloqueia comando ADB destrutivo (uninstall, clear, disable, reboot, compile, wm density, policy_control, rm -rf, fastboot). Só passa com o OK do Ryan e o marcador `# OK-RYAN: <motivo>` no comando. Teste: `node --test .claude/hooks/adb-guard.test.mjs`.
+
+Não usamos o "Agent Teams" experimental: custa mais e a coordenação já é feita pelo CHEFE com as sessões.
