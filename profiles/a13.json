@@ -4,7 +4,7 @@
   "brand": "Samsung",
   "model": "SM-A135M",
   "serial": "RQ8TC00EJNB",
-  "status": "online_server",
+  "status": "offline",
   "hardware": {
     "cpu": "Samsung Exynos 850 (8 Cores)",
     "architecture": "armv8l (32-bit userspace / 64-bit kernel 4.19)",
@@ -27,9 +27,6 @@
   ],
   "runtimes": {
     "node": "v26.4.0",
-    "npm": "11.21.1",
-    "python": "3.14.6",
-    "git": "2.56.0",
     "openssh": "10.6p1"
   },
   "notes": "Servidor bare-metal 24/7 em producao. Termux whitelisted de economia de bateria. Conexao SSH via Wi-Fi direta ou USB port-forward."

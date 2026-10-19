@@ -17,9 +17,10 @@ Para interagir com o servidor sem complicações, use os lançadores diretos:
 
 | Aparelho | Modelo | Processador | RAM / Armazenamento | Status | Conexão |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 3,6 GB RAM (+4 GB RAM Plus) / 109 GB Flash | **ONLINE (Servidor Ativo)** | `192.168.1.127:8022` |
+| **Galaxy A15 5G** | `SM-A156B` | Dimensity 6100+ (8 Cores) | 4.0 GB RAM (3.63 GB física) / 128 GB Flash (105 GB /data) | **Em Migração (T48)** | USB / ADB autorizada |
+| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 3,6 GB RAM (+4 GB RAM Plus) / 109 GB Flash (eMMC 5.1) | **Offline** | `192.168.1.127:8022` |
 | **Galaxy A21s** | `SM-A217M` | Exynos 850 (8 Cores) | 3.0 GB RAM / 32 GB | **Resgate Pendente** | Requer ativação ADB |
-| **Oppo A78** | `CPH2565` | Snapdragon 680 (8 Cores) | 8.0 GB RAM / 128 GB UFS 2.2 | **Reserva de Hardware** | USB 2.0 (sem Alt Mode) |
+| **Oppo A78** | `CPH2565` | Snapdragon 680 (8 Cores) | 8.0 GB RAM / 128 GB Flash (UFS 2.2) | **Reserva de Hardware** | USB 2.0 (sem Alt Mode) |
 
 ---
 
@@ -62,11 +63,8 @@ celular/
 
 ---
 
-## 🛠️ Runtimes Instalados no Galaxy A13
-- **Node.js**: `v26.4.0`
-- **NPM**: `11.21.1`
-- **Python**: `3.14.6`
-- **Git**: `2.56.0`
-- **cURL**: `8.23.0`
-- **OpenSSH**: `10.6p1` na porta `8022`
-- **Background Persistence**: Monitor de processos fantasma desativado (`settings_enable_monitor_phantom_procs=false`), isenção de economia de bateria (`dumpsys deviceidle whitelist +com.termux`) e `termux-wake-lock` permanente.
+## 🛠️ Runtimes e Serviços Verificados
+- **Node.js**: `v26.4.0` (pacote `nodejs 26.4.0-1`; fonte: `docs/ARCHITECTURE.md:16`, `profiles/a13.json:28`)
+- **OpenSSH**: `10.6p1` na porta `8022` (fonte: `docs/ARCHITECTURE.md:68`, `server/termux/setup.sh:8`)
+- **rclone**: SFTP para partilha confinado a `~/shared` na porta `8023` (fonte: `docs/ARCHITECTURE.md:75`, `server/termux/setup.sh:8`)
+- **Background Persistence**: Monitor de processos fantasma desativado (`settings_enable_monitor_phantom_procs=false`), isenção de economia de bateria (`dumpsys deviceidle whitelist +com.termux`) e `termux-wake-lock` permanente (fonte: `docs/ARCHITECTURE.md:72`, `tools/server/reaplicar-ajustes.ps1:18`).
