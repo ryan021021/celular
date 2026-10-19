@@ -154,7 +154,15 @@ test('Rotina health_check: avalia endpoints simulados', async () => {
   assert.equal(res.endpoints['http://127.0.0.1:8090/health'].status, 503);
 });
 
-test('Rotina disk_check: detecta estado saudável e alerta de espaço crítico', async () => {
+test('Rotina disk_check: detecta estado saudável, crítico e UNKNOWN sem leitor (P0 R5)', async () => {
+  // Sem leitor: NUNCA deve inventar número; devolve UNKNOWN
+  const semLeitor = await diskCheckRoutine.action();
+  assert.equal(semLeitor.ok, false);
+  assert.equal(semLeitor.status, 'UNKNOWN');
+  assert.equal(semLeitor.totalBytes, null);
+  assert.equal(semLeitor.freeBytes, null);
+  assert.match(semLeitor.reason, /nenhum leitor/);
+
   // Cenário saudável (>15% livre)
   const okDisk = await diskCheckRoutine.action({
     getDiskUsage: async () => ({ totalBytes: 100_000, freeBytes: 50_000 })
@@ -171,7 +179,15 @@ test('Rotina disk_check: detecta estado saudável e alerta de espaço crítico',
   assert.match(critDisk.alert, /crítico/);
 });
 
-test('Rotina battery_check: detecta temperatura e bateria baixa', async () => {
+test('Rotina battery_check: detecta normal, térmica e UNKNOWN sem leitor (P0 R5)', async () => {
+  // Sem leitor: NUNCA deve inventar número; devolve UNKNOWN
+  const semLeitor = await batteryCheckRoutine.action();
+  assert.equal(semLeitor.ok, false);
+  assert.equal(semLeitor.status, 'UNKNOWN');
+  assert.equal(semLeitor.percent, null);
+  assert.equal(semLeitor.temperatureC, null);
+  assert.match(semLeitor.reason, /nenhum leitor/);
+
   // Cenário normal
   const normal = await batteryCheckRoutine.action({
     getBatteryStatus: async () => ({ percent: 80, plugged: true, tempC: 25.0 })
@@ -185,6 +201,58 @@ test('Rotina battery_check: detecta temperatura e bateria baixa', async () => {
   });
   assert.equal(hot.ok, false);
   assert.equal(hot.status, 'THERMAL_THROTTLED');
+});
+
+test('Self-healing Circuit Breaker §5.4: resultado ok:false conta como falha e aciona circuit breaker', async () => {
+  let fakeTime = 2_000_000;
+  const now = () => fakeTime;
+
+  // Rotina que retorna { ok: false } sem lançar exceção
+  const failingResultRoutine = {
+    ...healthCheckRoutine,
+    id: 'failing_result_routine',
+    minIntervalMs: 5_000,
+    maxRetries: 2,
+    action: async () => ({ ok: false, error: 'serviço indisponível 503' })
+  };
+
+  const scheduler = createScheduler({ routines: [failingResultRoutine], now, log: () => {} });
+
+  // 1ª falha com ok:false
+  const r1 = await scheduler.runRoutine('failing_result_routine');
+  assert.equal(r1.ok, false);
+  assert.equal(r1.status, 'FAILED');
+  assert.equal(scheduler.getRoutineState('failing_result_routine').consecutiveFailures, 1);
+
+  // Avança além do minIntervalMs
+  fakeTime += 10_000;
+  // 2ª falha com ok:false -> atinge maxRetries (2) -> DEGRADED
+  const r2 = await scheduler.runRoutine('failing_result_routine');
+  assert.equal(r2.ok, false);
+  assert.equal(r2.status, 'DEGRADED');
+  assert.equal(scheduler.getRoutineState('failing_result_routine').consecutiveFailures, 2);
+
+  // Tentativa durante janela de backoff
+  fakeTime += 2_000;
+  const r3 = await scheduler.runRoutine('failing_result_routine');
+  assert.equal(r3.skipped, true);
+  assert.match(r3.reason, /circuit breaker: routine in backoff/);
+});
+
+test('Timeout §5.3: limpa timer de timeout com clearTimeout', async () => {
+  const quickRoutine = {
+    ...healthCheckRoutine,
+    id: 'quick_routine',
+    timeoutMs: 10_000,
+    action: async () => ({ ok: true, fast: true })
+  };
+
+  const scheduler = createScheduler({ routines: [quickRoutine] });
+  const start = Date.now();
+  const res = await scheduler.runRoutine('quick_routine');
+  assert.equal(res.ok, true);
+  // Garante que não ficou esperando os 10.000ms do timeout
+  assert.ok(Date.now() - start < 1000, 'Execução deve ser imediata e sem timeout pendente');
 });
 
 test('Rotina backup_verify: valida metadados sem tocar no arquivo', async () => {

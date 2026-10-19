@@ -62,8 +62,28 @@ export const diskCheckRoutine = {
   maxRetries: 2,
   privilege: 'user',
   idempotent: true,
-  action: async ({ getDiskUsage = async () => ({ totalBytes: 105 * 1024 * 1024 * 1024, freeBytes: 74 * 1024 * 1024 * 1024 }) } = {}) => {
+  action: async ({ getDiskUsage = null } = {}) => {
+    if (!getDiskUsage || typeof getDiskUsage !== 'function') {
+      return {
+        ok: false,
+        status: 'UNKNOWN',
+        reason: 'nenhum leitor de disco disponivel ou injetado',
+        totalBytes: null,
+        freeBytes: null,
+        freePercentage: null
+      };
+    }
     const usage = await getDiskUsage();
+    if (!usage || typeof usage.totalBytes !== 'number' || typeof usage.freeBytes !== 'number') {
+      return {
+        ok: false,
+        status: 'UNKNOWN',
+        reason: 'leitor de disco retornou dados invalidos',
+        totalBytes: null,
+        freeBytes: null,
+        freePercentage: null
+      };
+    }
     const freePct = usage.totalBytes > 0 ? (usage.freeBytes / usage.totalBytes) * 100 : 0;
     const warning = freePct < 15;
     const critical = freePct < 5;
@@ -96,17 +116,37 @@ export const batteryCheckRoutine = {
   maxRetries: 2,
   privilege: 'user',
   idempotent: true,
-  action: async ({ getBatteryStatus = async () => ({ percent: 85, plugged: true, tempC: 28.5 }) } = {}) => {
+  action: async ({ getBatteryStatus = null } = {}) => {
+    if (!getBatteryStatus || typeof getBatteryStatus !== 'function') {
+      return {
+        ok: false,
+        status: 'UNKNOWN',
+        reason: 'nenhum leitor de bateria disponivel ou injetado',
+        percent: null,
+        plugged: null,
+        temperatureC: null
+      };
+    }
     const batt = await getBatteryStatus();
-    const highTemp = batt.tempC >= 45.0;
+    if (!batt || typeof batt.percent !== 'number') {
+      return {
+        ok: false,
+        status: 'UNKNOWN',
+        reason: 'leitor de bateria retornou dados invalidos',
+        percent: null,
+        plugged: null,
+        temperatureC: null
+      };
+    }
+    const highTemp = batt.tempC != null && batt.tempC >= 45.0;
     const lowBattery = !batt.plugged && batt.percent <= 15;
 
     return {
       ok: !highTemp && !lowBattery,
       status: highTemp ? 'THERMAL_THROTTLED' : lowBattery ? 'LOW_BATTERY' : 'NORMAL',
       percent: batt.percent,
-      plugged: batt.plugged,
-      temperatureC: batt.tempC,
+      plugged: Boolean(batt.plugged),
+      temperatureC: batt.tempC ?? null,
       alert: highTemp ? `Temperatura elevada (${batt.tempC}°C)` : lowBattery ? `Bateria baixa (${batt.percent}%)` : null
     };
   }

@@ -77,12 +77,21 @@ export function createScheduler({ routines = [], now = Date.now, maxHistory = 50
       status: 'RUNNING'
     };
 
+    let timer;
     try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Timeout de ${routine.timeoutMs}ms excedido`)), routine.timeoutMs);
+      });
+
       // Execução com timeout
       const result = await Promise.race([
         routine.action({ ...args, now, dryRun: false }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout de ${routine.timeoutMs}ms excedido`)), routine.timeoutMs))
+        timeoutPromise
       ]);
+
+      if (result && result.ok === false) {
+        throw new Error(result.error || result.reason || result.status || 'rotina reportou falha (ok:false)');
+      }
 
       st.lastRunAt = currentTime;
       st.consecutiveFailures = 0;
@@ -91,7 +100,7 @@ export function createScheduler({ routines = [], now = Date.now, maxHistory = 50
 
       auditEntry.finishedAt = now();
       auditEntry.durationMs = auditEntry.finishedAt - auditEntry.startedAt;
-      auditEntry.ok = result.ok ?? true;
+      auditEntry.ok = true;
       auditEntry.result = result;
 
       return { ok: true, result };
@@ -116,6 +125,7 @@ export function createScheduler({ routines = [], now = Date.now, maxHistory = 50
 
       return { ok: false, error: err.message, status: st.status };
     } finally {
+      if (timer) clearTimeout(timer);
       running.delete(id);
       history.push(auditEntry);
       if (history.length > maxHistory) history.shift();

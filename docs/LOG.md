@@ -90,4 +90,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:52 · front (claude) · T63: cartão Aparelho no console (commit 83398b3, branch claude/painel-v2-front); 142 ok/0 falhas/1 pulado; 360/768/1440 px ok; teclado ok; fixture marcada como teste; REVIEW revisora QA
 - 2026-10-19 19:54 · claude (ORQ) · T61 rodada real no A15: snapshot em ~/servidor/estado/ultimo.json, 2ª rodada comparou (exit 0, informativo); lock próprio criado e removido
 - 2026-10-19 19:55 · claude (CHEFE) · T48 T61 T65 DONE (re-medidos: reinício, detect no A15, testes); fixtures da T65 em pedaços; escopo --review mostra OK-RYAN como aviso a confirmar
-- 2026-10-19 19:57 · claude (BACK) · T62 REVIEW (revisora QA): contrato no README do painel + GET /api/v1/capabilities (token, cache 10 min, 503 sem_descoberta); commit f1a8799 em claude/painel-v2; 142/142 da suíte
+- 2026-10-19 19:57 · gemini · T60: correções da Rodada 5 (disk/battery UNKNOWN sem leitor, ok:false aciona circuit breaker, clearTimeout no finally; 11/11 testes ok) · server/routines/**
