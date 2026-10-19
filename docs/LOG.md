@@ -132,3 +132,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-20 00:11 · claude (CHEFE) · T80 DONE (achador real acha .170 em 2 s); T81 autorizada em deploy.ps1; nova T82 (achador em connect, backup e preflight, ORQ)
 - 2026-10-20 00:40 · claude (BACK) · T81 REVIEW (QA): netguard.mjs a cada 5 min, 39/39
 - 2026-10-20 00:14 � gemini � T78: versao.mjs implementado com listagem de versoes e rollback via hook post-receive (dry-run seguro por padrao, execucao apenas com --confirmar); 5/5 testes em versao.test.mjs; REVIEW (QA) � tools/server/versao.mjs, tools/server/test/versao.test.mjs (commit c671e6e)
+- 2026-10-20 00:16 · claude (QA) · T38 APROVADA com condições (702b904): ataque Q11 falha com node --permission, 401 ok, nada ligado ao server.js; Q12 (fail-open sem validarAuth, env herdado) antes de ligar
