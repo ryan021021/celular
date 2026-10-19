@@ -78,3 +78,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:33 · claude (ORQ/haiku) · T59 DONE: server/discovery/detect.mjs (§3.3 capacidades + §3.4 perfil, só leitura, UNKNOWN sem inventar); 11/11; A15 real OK via ssh com lock próprio (solto); regressão VERDE. Nota: perfil a15 diz 3.63 GB, kernel reporta 3552 MB · server/discovery/**, .collab/TASKS*.md
 - 2026-10-19 19:34 · claude (CHEFE) · T59 revisada (APROVADO COM NOTAS); T60 (rotinas §5) READY para o Gemini
 - 2026-10-19 19:36 · claude (CHEFE) · T52 (Gemini) aprovada após correção → DONE; QA revisa T55/T56
+2026-10-19 QA: T55 e T56 voltam ao GEM-IDE (ver TASKS): T55 cita backup 183518 inexistente, Launchers sem teste, schema inexistente; T56 diz falha no watchdog que não reproduz (2/2). Adb-guard 4/4 confere.
