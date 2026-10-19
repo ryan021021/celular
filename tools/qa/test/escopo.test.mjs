@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { linhaDa, padroes, foraDoEscopo, perigos } from '../escopo.mjs';
+import { linhaDa, padroes, foraDoEscopo, perigos, fila } from '../escopo.mjs';
 
 const tasks = [
   '| T60 | x | GEM-IDE | — | `server/termux/**`, `README.md` | READY | t | — | — |',
@@ -31,4 +31,15 @@ test('comando perigoso acrescentado em código trava; comentário e doc não', (
   assert.equal(achados.length, 2);
   assert.match(achados[0], /compile/);
   assert.match(achados[1], /segredo/);
+});
+
+test('fila: cópia velha do TASKS que rebaixa tarefa não citada trava; a citada e o LOG append-only passam', () => {
+  const linha = (id, est) => `| ${id} | x | BACK | — | \`a\` | ${est} | nota |`;
+  const diff = (a, b, arq = '.collab/TASKS.md') => `--- a/${arq}\n+++ b/${arq}\n-${a}\n+${b}\n`;
+  assert.equal(fila(diff(linha('T62', 'REVIEW'), linha('T62', 'READY')), ['T60']).length, 1);
+  assert.equal(fila(diff(linha('T62', 'REVIEW'), linha('T62', 'READY')), ['T62']).length, 0); // devolução pelo revisor cita a tarefa
+  assert.equal(fila(diff(linha('T62', 'READY'), linha('T62', 'REVIEW')), []).length, 0);       // avanço passa
+  assert.equal(fila(diff(linha('T62', 'IN_PROGRESS'), linha('T62', 'BLOCKED')), []).length, 0);
+  assert.equal(fila('--- a/docs/LOG.md\n+++ b/docs/LOG.md\n-- 2026 linha antiga\n', ['T1']).length, 1);
+  assert.equal(fila('--- a/docs/LOG.md\n+++ b/docs/LOG.md\n+- 2026 linha nova\n', ['T1']).length, 0);
 });

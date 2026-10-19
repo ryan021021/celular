@@ -59,6 +59,24 @@ export function perigos(diff) {
   return achados;
 }
 
+// controle da fila: ninguém rebaixa o estado de tarefa que não cita (cópia velha do TASKS) nem apaga linha do LOG (append-only)
+const ORDEM = ['BACKLOG', 'READY', 'IN_PROGRESS', 'TESTING', 'REVIEW', 'DONE'];
+export function fila(diff, ids) {
+  const achados = [], antes = new Map(), depois = new Map(); let arq = '';
+  for (const l of diff.split(/\r?\n/)) {
+    if (l.startsWith('+++ ') || l.startsWith('--- ')) { if (l.startsWith('+++ ')) arq = l.replace(/^\+\+\+ (b\/)?/, ''); continue; }
+    if (arq === 'docs/LOG.md' && l.startsWith('-')) achados.push(`apagou linha do LOG (só acrescentar): ${l.slice(1, 80)}`);
+    if (arq !== '.collab/TASKS.md' || !/^[-+]\| T\d+ \|/.test(l)) continue;
+    const c = l.slice(1).split('|'); (l[0] === '-' ? antes : depois).set(c[1].trim(), c[6]?.trim());
+  }
+  for (const [id, era] of antes) {
+    const virou = depois.get(id);
+    if (ids.includes(id) || virou === undefined || virou === 'BLOCKED' || era === 'BLOCKED') continue;
+    if (ORDEM.indexOf(virou) < ORDEM.indexOf(era)) achados.push(`${id} voltou de ${era} para ${virou} sem ser citada (TASKS sobrescrito com cópia velha?)`);
+  }
+  return achados;
+}
+
 function textosTarefas(r) {
   return ['.collab/TASKS.md', '.collab/TASKS_FEITAS.md'].map(f => { try { return readFileSync(`${r}/${f}`, 'utf8'); } catch { return ''; } });
 }
@@ -70,6 +88,7 @@ function conferir(ids, arquivos, diff, textos) {
   if (fora === null && ids.length) avisos.push(`escopo indefinido para ${ids.join(' ')} (sem arquivos entre crases)`);
   if (fora?.length) erros.push(`fora dos arquivos autorizados de ${ids.join(' ')}: ${fora.join(', ')}`);
   for (const p of perigos(diff)) erros.push(`perigo: ${p}`);
+  for (const p of fila(diff, ids)) erros.push(`fila: ${p}`);
   return { erros, avisos };
 }
 

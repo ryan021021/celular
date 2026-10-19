@@ -16,6 +16,8 @@ import { tmpdir } from "node:os";
 import { join, dirname, resolve, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DESKTOP } from "./regras.mjs";
+import { varrerArquivos } from "./alegacoes.mjs";
+import { validarPerfis } from "./perfis.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PAINEL = join(ROOT, "server", "panel", "server-box");
@@ -155,6 +157,23 @@ varrerSegredos("repositório raiz", rastreados, ROOT);
     });
   }
   registrar("regras", "sem caminho da Desktop nem serial fixo", achados.length === 0, { resumo: `${scripts.length} scripts, ${achados.length} ocorrência(s)`, achados });
+}
+
+// 6. alegações sem evidência (P0 R5 / T68): varredura em docs/ e UI (aviso, não quebra a suíte)
+{
+  const docsEUI = rastreados.filter(f => {
+    const e = ext(f);
+    return (f.startsWith("docs/") && e === ".md") || f === "README.md" || (f.includes("public/") && (e === ".html" || e === ".js"));
+  });
+  const achados = varrerArquivos(docsEUI, ROOT).map(a => `${a.arquivo}:${a.linha} (${a.padrao})`);
+  registrar("alegações", "varredura de evidências (P0 R5)", true, { resumo: `${achados.length} aviso(s)`, achados });
+}
+
+// 7. perfis: profiles/*.json contra profiles/schema.json (T70, P1 R7)
+{
+  const perfis = validarPerfis();
+  const achados = perfis.flatMap(p => p.erros.map(e => `${p.arquivo}: ${e}`));
+  registrar("perfis", "profiles/*.json contra schema.json", achados.length === 0, { resumo: `${perfis.length} perfil(is), ${achados.length} erro(s)`, achados });
 }
 
 // resumo
