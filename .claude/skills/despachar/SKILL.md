@@ -2,6 +2,7 @@
 name: despachar
 description: Só para o CHEFE do projeto celular — lê a fila da equipe e manda a cada sessão parada a próxima tarefa em mensagens curtas, sem acordar quem não tem trabalho.
 ---
+0. `node tools/qa/escopo.mjs --review` e `node tools/qa/regressao.mjs`. Tarefa em REVIEW com FALHA volta para o dono com o motivo. Não confie no "passou" de ninguém (§11).
 1. `node .claude/hooks/estado-equipe.mjs` e `list_sessions` (veja `isRunning`).
 2. Para cada agente com algo em `revisar:` ou READY e com a sessão **parada**, mande uma mensagem de até 3 linhas: a tarefa, os arquivos, o critério de pronto, "feche com /fechar-tarefa" e "não precisa responder".
 3. Não mande nada para quem está rodando (a mensagem só entra na fila e custa um turno) nem para quem não tem tarefa.

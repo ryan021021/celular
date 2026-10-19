@@ -1,0 +1,3 @@
+#!/bin/sh
+# trava do CHEFE (§11): escopo da tarefa + comandos perigosos. Ver tools/qa/escopo.mjs
+exec node "$(git rev-parse --show-toplevel)/tools/qa/escopo.mjs" --msg "$1"

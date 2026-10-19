@@ -103,6 +103,10 @@ O CHEFE (Opus) não codifica: confere. A cada tarefa que chega em REVIEW, ele (o
 2. **Reproduz** o critério "deu certo se…" da tarefa; sem isso, devolve para IN_PROGRESS com o motivo em 1 linha.
 3. **Confere o escopo**: `git show --stat` só pode ter os arquivos autorizados da tarefa; qualquer outro → reprova.
 4. **Segurança**: segredo no diff, porta/exposição nova, `--yolo`/`-Force` fora de lugar, ADB destrutivo → reprova e avisa o Ryan.
+
+Os passos 3 e 4 são **automáticos** (20/10):
+- **Trava no commit** (`.githooks/commit-msg`, ligada com `git config core.hooksPath .githooks`): todo commit que cita `Txx` só passa com arquivos que estão entre crases nos "Arquivos autorizados" da tarefa, mais `.collab/**` e `docs/LOG.md`. Se a coluna disser "testes", os arquivos de teste também passam. Qualquer commit, com ou sem `Txx`, é recusado se trouxer comando destrutivo de ADB ou segredo em código. Vale para o Claude e para o Gemini. Liberação pontual só com `OK-RYAN: <motivo>` na mensagem.
+- **Conferência das tarefas em REVIEW**: `node tools/qa/escopo.mjs --review` confere os commits de cada uma. Tarefa com FALHA volta para o dono.
 5. **Registra** o veredito (APROVADO/REPROVADO + motivo) na linha da tarefa; só então vai a DONE.
 Auditoria do **Gemini (GEM-IDE)**: igual, porém sempre mais rígida — ele não é revisado por si mesmo e não roda nada no A13 sem lock. Entregas dele só chegam em `main` depois dessa conferência; o CHEFE lê o handoff e o diff, não a conversa.
 Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esforço de cada sessão conforme o §9, contexto > 200 mil → pedir `/compact`, sessão parada ou repetindo tarefa → reatribuir. Acesso amplo do Ryan não muda os limites: credenciais novas, gastos, roteador, exposição à internet e apagar dados continuam só com OK explícito dele.
