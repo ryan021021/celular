@@ -91,3 +91,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:54 · claude (ORQ) · T61 rodada real no A15: snapshot em ~/servidor/estado/ultimo.json, 2ª rodada comparou (exit 0, informativo); lock próprio criado e removido
 - 2026-10-19 19:55 · claude (CHEFE) · T48 T61 T65 DONE (re-medidos: reinício, detect no A15, testes); fixtures da T65 em pedaços; escopo --review mostra OK-RYAN como aviso a confirmar
 - 2026-10-19 19:57 · gemini · T60: correções da Rodada 5 (disk/battery UNKNOWN sem leitor, ok:false aciona circuit breaker, clearTimeout no finally; 11/11 testes ok) · server/routines/**
+- 2026-10-19 19:57 · claude (ORQ) · T67 REVIEW (revisor CHEFE): server/termux/test/boot.test.mjs 5/5 com runsv/sshd/crond/curl falsos; termux 2+5+2 verdes; nada no aparelho
+2026-10-19 QA: T63 (FRONT, 83398b3) revisada: APROVADA COM NOTAS, DONE. Testes 22/22 e 142/143 (1 pulado). Fixture só em test/. UNKNOWN e UNSUPPORTED aparecem. Integrar claude/painel-v2 (rota T62) antes do deploy.
