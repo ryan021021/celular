@@ -227,3 +227,13 @@ Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
    - **Zero alterações em `server.js`:** Mantido isolado na worktree conforme instrução.
    - **Validação de escopo:** `tools/qa/escopo.mjs --review T38` -> `ok T38`. Estado em `TASKS.md`: `REVIEW` (revisora: QA).
 
+2. **T78 concluída e entregue em REVIEW (Commit `c671e6e` no repo principal):**
+   - **Módulo (`tools/server/versao.mjs`):**
+     - Leitura de perfis de aparelhos (`--perfil a15|a13`).
+     - `--listar`: Lista histórico recente e consulta a versão ativa no ar via `git ls-remote` (com timeout de 8s e fallback gracioso se o aparelho estiver offline).
+     - `--voltar <commit>`: Validação estrita do commit local.
+     - **Segurança estrita de rollback:** Sem `--confirmar`, opera em DRY-RUN e **nunca** executa force-push. Com `--confirmar`, despacha o push para `refs/heads/celular`, acionando o hook remoto `post-receive` para auto-teste e reinício seguro.
+   - **Suíte de Testes (`tools/server/test/versao.test.mjs`):** 5/5 testes verdes cobrindo parsing de flags, validação de perfil, ciclo completo de listagem e rollback com repositório remoto falso (garantindo que o dry-run não toca o remoto e que a confirmação atualiza a referência), além de degradação graciosa offline.
+   - **Validação de escopo:** `tools/qa/escopo.mjs --review T78` -> `ok T78`. Estado em `TASKS.md`: `REVIEW` (revisora: QA).
+
+
