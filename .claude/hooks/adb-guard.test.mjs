@@ -21,6 +21,14 @@ test('bloqueia destrutivos', () => {
     'fastboot flash boot x.img', 'adb.exe shell pm clear com.termux']) assert.equal(roda(c), 2, c);
 });
 
+test('Q10: bloqueia scripts que mudam o aparelho só quando executados', () => {
+  for (const c of ['powershell -NoProfile -File tools\\debug\\aplicar_tweaks_ocultos.ps1',
+    '& .\\tools\\debug\\reativar_apps_essenciais.ps1 -Device a15', 'tools/rescue/desenhar_padrao.bat',
+    'cd x; ./tools/debug/aplicar_tweaks_ocultos.ps1']) assert.equal(roda(c), 2, c);
+  for (const c of ['git add tools/debug/aplicar_tweaks_ocultos.ps1', 'grep -n Serial tools/debug/reativar_apps_essenciais.ps1',
+    'git log -- tools/rescue/desenhar_padrao.bat']) assert.equal(roda(c), 0, c);
+});
+
 test('OK do Ryan libera e entrada inválida falha aberta', () => {
   assert.equal(roda('adb reboot # OK-RYAN: teste autorizado'), 0);
   assert.equal(spawnSync('node', [guard], { input: 'não é json' }).status, 0);

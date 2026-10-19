@@ -5,7 +5,18 @@ import { readFileSync } from 'node:fs';
 
 let cmd = '';
 try { cmd = JSON.parse(readFileSync(0, 'utf8'))?.tool_input?.command ?? ''; } catch { process.exit(0); }
-if (!/\b(adb|fastboot)(\.exe)?\b/i.test(cmd) || /#\s*OK-RYAN:\s*\S/.test(cmd)) process.exit(0);
+if (/#\s*OK-RYAN:\s*\S/.test(cmd)) process.exit(0);
+
+// Q10: scripts que mudam o aparelho chamando o adb por dentro (só quando executados, não em git/grep/cat).
+const scripts = '(aplicar_tweaks_ocultos|reativar_apps_essenciais|resgatar_galaxy_a21s|desenhar_padrao)\\.(ps1|bat)\\b';
+const executa = new RegExp(`(\\b(powershell|pwsh)(\\.exe)?\\b|\\bcmd(\\.exe)?\\s+/c|\\bStart-Process\\b)[^;|]*?${scripts}` +
+  `|(^|[;&|]\\s*)&?\\s*["']?(\\.?[\\\\/])?[\\w\\\\/.:-]*${scripts}`, 'i');
+if (executa.test(cmd)) {
+  process.stderr.write('BLOQUEADO pelo adb-guard (script que muda o aparelho: tools/debug ou tools/rescue). ' +
+    'Exige OK explícito do Ryan, pedido pelo CHEFE; com o OK, repita com "# OK-RYAN: <motivo>" no fim.\n');
+  process.exit(2);
+}
+if (!/\b(adb|fastboot)(\.exe)?\b/i.test(cmd)) process.exit(0);
 
 const perigos = [
   [/\bpm\s+(uninstall|clear|disable(-user)?|hide|suspend)\b/i, 'remover/limpar/desativar pacote'],
