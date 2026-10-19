@@ -185,51 +185,150 @@ function executar(cmd, args, entrada, timeoutMs) {
   });
 }
 
+// ----- §3.5: regressão contra o snapshot anterior -----
+// quebra: o servidor perde o que precisa (arquitetura, Termux, Node). aviso: exige atenção. informativo: mudança normal.
+const ORDEM = { nenhuma: 0, informativo: 1, aviso: 2, quebra: 3 };
+const ARQUITETURA = ['cpu.arch_kernel', 'cpu.arch_userspace'];
+const LIMITE_ESPACO_MB = 1024;
+const valido = c => !!c && (c.status === 'available' || c.status === 'limited');
+
+export function classificarMudancas(anterior, atual) {
+  const mapa = r => new Map((r?.capacidades || []).map(c => [c.capability_id, c]));
+  const A = mapa(anterior), B = mapa(atual);
+  const mudancas = [];
+  const add = (tipo, id, antes, depois, motivo) => mudancas.push({ tipo, capability_id: id, antes, depois, motivo });
+
+  for (const id of new Set([...A.keys(), ...B.keys()])) {
+    const a = A.get(id), b = B.get(id);
+    if (!a) { add('informativo', id, null, b.value, 'capacidade nova no snapshot'); continue; }
+    if (!b) { add('aviso', id, a.value, null, 'capacidade deixou de ser lida'); continue; }
+    const antesOk = valido(a), agoraOk = valido(b);
+    const mudou = JSON.stringify(a.value) !== JSON.stringify(b.value);
+
+    if (ARQUITETURA.includes(id) && antesOk && mudou) { add('quebra', id, a.value, b.value, 'arquitetura mudou: binários e ABI podem deixar de rodar'); continue; }
+    if (id === 'env.termux' && antesOk && mudou) { add('quebra', id, a.value, b.value, 'ambiente deixou de ser o Termux esperado'); continue; }
+    if (id === 'runtime.node') {
+      if (antesOk && !agoraOk) { add('quebra', id, a.value, b.value, 'Node deixou de responder'); continue; }
+      if (antesOk && agoraOk && mudou) { add('aviso', id, a.value, b.value, 'versão do Node mudou'); continue; }
+    }
+    if (id === 'services.runit' && antesOk && agoraOk) {
+      const sumiram = a.value.filter(s => !b.value.includes(s));
+      if (sumiram.length) { add('aviso', id, a.value, b.value, `serviço(s) sumiram do runit: ${sumiram.join(', ')}`); continue; }
+      if (mudou) { add('informativo', id, a.value, b.value, 'serviço novo no runit'); continue; }
+    }
+    if (id === 'storage.home_free_mb' && agoraOk && b.value < LIMITE_ESPACO_MB && !(antesOk && a.value < LIMITE_ESPACO_MB)) {
+      add('aviso', id, a.value, b.value, `espaço livre abaixo de ${LIMITE_ESPACO_MB} MB`); continue;
+    }
+    if (id === 'privilege.root' && antesOk && agoraOk && mudou) { add('aviso', id, a.value, b.value, 'privilégio de root mudou'); continue; }
+    if (antesOk && !agoraOk) { add('aviso', id, a.value, b.value, 'leitura deixou de funcionar'); continue; }
+    if (mudou) add('informativo', id, a.value, b.value, 'mudou (normal para esta medida)');
+  }
+  const pa = anterior?.compatibilidade?.perfil, pb = atual?.compatibilidade?.perfil;
+  if (pa && pb && pa !== pb) add('aviso', 'compatibilidade', pa, pb, 'perfil de compatibilidade mudou');
+
+  const pior = mudancas.reduce((p, m) => (ORDEM[m.tipo] > ORDEM[p] ? m.tipo : p), 'nenhuma');
+  return { pior, mudancas };
+}
+
+// Código de saída: 0 sem mudança ou só informativo, 2 aviso, 4 quebra.
+export const codigoSaida = pior => ({ nenhuma: 0, informativo: 0, aviso: 2, quebra: 4 })[pior];
+
+// ----- coleta -----
 export async function coletarLocal({ executor = executar } = {}) {
   const osApi = { plataforma: os.platform(), arch: os.arch(), memTotalBytes: os.totalmem(), memLivreBytes: os.freemem() };
-  if (os.platform() === 'win32') {
-    const r = await executor('sh', ['-s'], SCRIPT_LEITURA, 10000);
-    return montarRelatorio({ alvo: 'local', caps: montarCapacidades({ saida: r.ok ? r.saida : '', plataforma: 'win32', osApi, erroShell: r.ok ? null : r.erro }) });
-  }
   const r = await executor('sh', ['-s'], SCRIPT_LEITURA, 10000);
   return montarRelatorio({ alvo: 'local', caps: montarCapacidades({ saida: r.ok ? r.saida : '', plataforma: os.platform(), osApi, erroShell: r.ok ? null : r.erro }) });
 }
 
-export async function coletarSsh(perfil, { executor = executar } = {}) {
+const CAMINHO_SNAPSHOT = '$HOME/servidor/estado/ultimo.json';
+
+function argsSsh(perfil, comando) {
   const n = perfil.network || {};
   if (!n.ip || !n.ssh_user) throw new Error('perfil sem network.ip / network.ssh_user');
   const chave = String(n.ssh_key || '').replace(/^~/, os.homedir());
-  const args = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'StrictHostKeyChecking=accept-new',
-    '-i', chave, '-p', String(n.ssh_port || 8022), `${n.ssh_user}@${n.ip}`, 'sh -s'];
-  const r = await executor('ssh', args, SCRIPT_LEITURA, 20000);
+  return ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', '-o', 'StrictHostKeyChecking=accept-new',
+    '-i', chave, '-p', String(n.ssh_port || 8022), `${n.ssh_user}@${n.ip}`, comando];
+}
+
+export async function coletarSsh(perfil, { executor = executar } = {}) {
+  const r = await executor('ssh', argsSsh(perfil, 'sh -s'), SCRIPT_LEITURA, 20000);
+  // sem resposta não há relatório: nada de snapshot cheio de UNKNOWN
+  if (!r.ok) throw new Error(`aparelho não respondeu por SSH (${r.erro})`);
   return montarRelatorio({ alvo: perfil.id || 'remoto', caps: montarCapacidades({ saida: r.ok ? r.saida : '', plataforma: 'android', erroShell: r.ok ? null : r.erro }) });
 }
 
+// Lê o snapshot anterior do aparelho. Ausente ou ilegível -> null (não é erro).
+export async function lerSnapshotSsh(perfil, { executor = executar } = {}) {
+  const r = await executor('ssh', argsSsh(perfil, `cat ${CAMINHO_SNAPSHOT} 2>/dev/null; true`), '', 20000);
+  if (!r.ok || !r.saida.trim()) return null;
+  try { const j = JSON.parse(r.saida); return j && Array.isArray(j.capacidades) ? j : null; } catch { return null; }
+}
+
+// Grava só o arquivo de snapshot em ~/servidor/estado/ (permissão 600). Nada mais é escrito no aparelho.
+export async function gravarSnapshotSsh(perfil, relatorio, { executor = executar } = {}) {
+  const cmd = `umask 077; mkdir -p $HOME/servidor/estado && cat > ${CAMINHO_SNAPSHOT}.tmp && mv ${CAMINHO_SNAPSHOT}.tmp ${CAMINHO_SNAPSHOT}`;
+  const r = await executor('ssh', argsSsh(perfil, cmd), JSON.stringify(relatorio, null, 2) + '\n', 20000);
+  if (!r.ok) throw new Error(`não gravei o snapshot (${r.erro})`);
+}
+
 // ----- CLI -----
-const ehCli = process.argv[1] && import.meta.url === new URL(`file://${resolve(process.argv[1]).replace(/\\/g, '/')}`).href;
+// Uso:
+//   node detect.mjs                          -> descobre este computador
+//   node detect.mjs --comparar <arq.json>    -> compara este computador com um snapshot salvo
+//   node detect.mjs --perfil a15             -> lê o aparelho (SSH, só leitura)
+//   node detect.mjs --perfil a15 --conferir-perfil  -> confere o aparelho com o profiles/<id>.json
+//   node detect.mjs --perfil a15 --comparar auto    -> compara com ~/servidor/estado/ultimo.json e grava o novo
+const ehCli = !!process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (ehCli) {
   const args = process.argv.slice(2);
-  const i = args.indexOf('--perfil');
-  const idPerfil = i >= 0 ? args[i + 1] : null;
-  const aqui = dirname(fileURLToPath(import.meta.url));
-  const raiz = resolve(aqui, '..', '..');
+  const valorDe = flag => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : null; };
+  const idPerfil = valorDe('--perfil');
+  const comparar = valorDe('--comparar');
+  const raiz = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
   const lockPath = join(raiz, '.collab', 'locks', 'a15-discovery.lock');
-  const travar = () => { mkdirSync(dirname(lockPath), { recursive: true }); writeFileSync(lockPath, `claude-orq | T59 | ${agora()} | leitura do A15 (sem escrita)\n`, { flag: 'wx' }); };
+  const travar = () => { mkdirSync(dirname(lockPath), { recursive: true }); writeFileSync(lockPath, `claude-orq | T61 | ${agora()} | leitura do aparelho\n`, { flag: 'wx' }); };
   const soltar = () => { try { unlinkSync(lockPath); } catch {} };
+  const lerArquivo = caminho => JSON.parse(readFileSync(resolve(caminho), 'utf8'));
+
   (async () => {
-    let rel;
-    if (idPerfil) {
-      const pf = join(raiz, 'profiles', `${idPerfil}.json`);
-      if (!existsSync(pf)) { console.error(`[discovery] perfil não encontrado: ${idPerfil}`); process.exit(1); }
-      const perfil = JSON.parse(readFileSync(pf, 'utf8'));
-      try { travar(); } catch { console.error('[discovery] lock a15-discovery.lock já existe: outra leitura em curso'); process.exit(3); }
-      try { rel = await coletarSsh(perfil); } finally { soltar(); }
-      if (args.includes('--comparar')) {
+    if (!idPerfil) {
+      const rel = await coletarLocal();
+      if (comparar) {
+        const c = classificarMudancas(lerArquivo(comparar), rel);
+        console.log(JSON.stringify(c, null, 2));
+        return codigoSaida(c.pior);
+      }
+      console.log(JSON.stringify(rel, null, 2));
+      return 0;
+    }
+
+    const pf = join(raiz, 'profiles', `${idPerfil}.json`);
+    if (!existsSync(pf)) { console.error(`[discovery] perfil não encontrado: ${idPerfil}`); return 1; }
+    const perfil = JSON.parse(readFileSync(pf, 'utf8'));
+    try { travar(); } catch { console.error('[discovery] lock a15-discovery.lock já existe: outra leitura em curso'); return 3; }
+    try {
+      const rel = await coletarSsh(perfil);
+      if (args.includes('--conferir-perfil')) {
         const c = compararPerfil(rel, perfil);
         console.log(JSON.stringify(c, null, 2));
-        process.exit(c.ok ? 0 : 2);
+        return c.ok ? 0 : 2;
       }
-    } else rel = await coletarLocal();
-    console.log(JSON.stringify(rel, null, 2));
-  })().catch(e => { console.error(`[discovery] falhou: ${e.message}`); process.exit(1); });
+      if (comparar === 'auto') {
+        const anterior = await lerSnapshotSsh(perfil);
+        const c = anterior ? classificarMudancas(anterior, rel) : { pior: 'nenhuma', mudancas: [], nota: 'primeiro snapshot: sem referência anterior' };
+        await gravarSnapshotSsh(perfil, rel);
+        console.log(JSON.stringify({ ...c, snapshot: '~/servidor/estado/ultimo.json' }, null, 2));
+        return codigoSaida(c.pior);
+      }
+      if (comparar) {
+        const c = classificarMudancas(lerArquivo(comparar), rel);
+        console.log(JSON.stringify(c, null, 2));
+        return codigoSaida(c.pior);
+      }
+      console.log(JSON.stringify(rel, null, 2));
+      return 0;
+    } finally { soltar(); }
+  })()
+    .then(code => { process.exitCode = code; })
+    .catch(e => { console.error(`[discovery] falhou: ${e.message}`); process.exitCode = 1; });
 }

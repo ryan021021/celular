@@ -79,3 +79,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:34 · claude (CHEFE) · T59 revisada (APROVADO COM NOTAS); T60 (rotinas §5) READY para o Gemini
 - 2026-10-19 19:36 · claude (CHEFE) · T52 (Gemini) aprovada após correção → DONE; QA revisa T55/T56
 2026-10-19 QA: T55 e T56 voltam ao GEM-IDE (ver TASKS): T55 cita backup 183518 inexistente, Launchers sem teste, schema inexistente; T56 diz falha no watchdog que não reproduz (2/2). Adb-guard 4/4 confere.
+- 2026-10-19 19:39 · claude (ORQ) · T61 REVIEW (revisor CHEFE): classificarMudancas informativo/aviso/quebra, CLI --comparar e --perfil a15 --comparar auto, 21/21; rodada real no A15 pendente (SSH 8022 recusou, nada gravado); coletarLocal sem ramos duplicados
