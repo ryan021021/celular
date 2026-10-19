@@ -34,3 +34,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 2026-10-19 FRONT: reintegrado o backend 3c1916b (correções das 2 notas) em claude/painel-v2-front (3a4ecbd), 141 testes, 140 ok, 1 pulado. Em espera até o CHEFE chamar (T28 e deploy dependem da T48).
 2026-10-19 QA: T42 (107c357) e T44 (7f50e20) revisadas pelo diff, APROVADAS; agentops 17/18 (G5 só Linux, pendente no Termux); deploy não reinicia o agentops. T46 segue em andamento.
 - 2026-10-19 16:59 · claude (ORQ/infra) · T43 → REVIEW (worker corta output/error p/ caber em 28 KB; teste 100 KB) e T45 → REVIEW (watchdog religa agentops/alertas/egress/sftp; teste com sv falso). Aplicar no A13 só com lock, quando voltar.
+- 2026-10-19 16:59 · claude (ORQ/infra) · T49 → REVIEW: setup.sh instala rclone (sftp em instalação limpa). Não testado no A13.
