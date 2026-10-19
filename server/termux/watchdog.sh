@@ -24,7 +24,7 @@ for s in agentops alertas egress sftp; do
 done
 
 # Mantem os logs pequenos (ultimas 500 linhas cada)
-for f in "$LOG" "$DIR/logs/boot.log" "$DIR/logs/panel.log"; do
+for f in "$LOG" "$DIR/logs/boot.log" "$DIR/logs/panel.log" "$DIR/logs/netguard.log"; do
   if [ -f "$f" ] && [ "$(wc -l < "$f")" -gt 500 ]; then
     tail -n 500 "$f" > "$f.tmp" && cat "$f.tmp" > "$f" && rm -f "$f.tmp"
   fi

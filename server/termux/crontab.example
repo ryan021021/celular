@@ -1,3 +1,4 @@
 # Instalar no Termux com: crontab crontab.example
 */5 * * * * sh $HOME/servidor/watchdog.sh
+*/5 * * * * node $HOME/servidor/netguard.mjs >> $HOME/servidor/logs/netguard.log 2>&1
 0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1

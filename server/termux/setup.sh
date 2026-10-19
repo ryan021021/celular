@@ -53,7 +53,7 @@ mkdir -p "$HOME/servidor/logs" "$HOME/.termux/boot"
 
 # Cron: tira as linhas antigas do projeto e poe as do crontab.example (outros crons ficam; rodar de novo não duplica)
 if [ -f "$HERE/crontab.example" ]; then
-  ( crontab -l 2>/dev/null | grep -v 'servidor/watchdog.sh' | grep -v 'servidor/logs/clean.log' || true
+  ( crontab -l 2>/dev/null | grep -v 'servidor/watchdog.sh' | grep -v 'servidor/netguard.mjs' | grep -v 'servidor/logs/clean.log' || true
     grep -v '^#' "$HERE/crontab.example" ) | crontab -
 fi
 

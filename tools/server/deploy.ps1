@@ -64,10 +64,10 @@ function Step-Push {
 function Step-Install {
     Write-Host "[3/5] Instalando pacotes, boot e cron ..." -ForegroundColor Cyan
     Remote "cd ~/servidor/termux && sed -i 's/\r$//' *.sh crontab.example && sh setup.sh"
-    Remote "cp ~/servidor/termux/boot.sh ~/.termux/boot/boot.sh && chmod +x ~/.termux/boot/boot.sh && cp ~/servidor/termux/start-services.sh ~/servidor/termux/watchdog.sh ~/servidor/"
+    Remote "cp ~/servidor/termux/boot.sh ~/.termux/boot/boot.sh && chmod +x ~/.termux/boot/boot.sh && cp ~/servidor/termux/start-services.sh ~/servidor/termux/watchdog.sh ~/servidor/termux/netguard.mjs ~/servidor/"
     Remote "cp ~/servidor/termux/git-hooks/post-receive ~/servidor/panel/server-box/.git/hooks/post-receive && chmod +x ~/servidor/panel/server-box/.git/hooks/post-receive"
     # Acrescenta as linhas do projeto SEM apagar crons que ja existem
-    Remote "(crontab -l 2>/dev/null | grep -v 'servidor/watchdog.sh' | grep -v 'servidor/logs/clean.log'; grep -v '^#' ~/servidor/termux/crontab.example) | crontab -"
+    Remote "(crontab -l 2>/dev/null | grep -v 'servidor/watchdog.sh' | grep -v 'servidor/netguard.mjs' | grep -v 'servidor/logs/clean.log'; grep -v '^#' ~/servidor/termux/crontab.example) | crontab -"
     Write-Host "  ! Abra o app Termux:Boot uma vez no celular (so precisa 1 vez)." -ForegroundColor Yellow
 }
 function Step-Start {

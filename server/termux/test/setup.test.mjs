@@ -83,7 +83,7 @@ test("T76: instalação limpa instala os pacotes, habilita os serviços, o cron 
   for (const s of [...SERVICOS, "sshd", "crond"]) assert.ok(existsSync(join(a.prefix, "var", "service", s, "habilitado")), `serviço ${s} habilitado`);
   for (const s of SERVICOS) assert.ok(existsSync(join(a.prefix, "var", "service", s, "run")), `serviço ${s} tem run`);
   assert.ok(existsSync(join(a.prefix, "etc", "ssh", "sshd_config.d", "10-servidor.conf")));
-  assert.deepEqual(cron(a).sort(), [CRON_ALHEIO, "*/5 * * * * sh $HOME/servidor/watchdog.sh", "0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1"].sort());
+  assert.deepEqual(cron(a).sort(), [CRON_ALHEIO, "*/5 * * * * sh $HOME/servidor/watchdog.sh", "*/5 * * * * node $HOME/servidor/netguard.mjs >> $HOME/servidor/logs/netguard.log 2>&1", "0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1"].sort());
   assert.equal(readFileSync(join(a.home, ".ssh", "authorized_keys"), "utf8"), CHAVE, "chave autorizada intacta");
   assert.match(r.stdout, /^OK\./m);
 });
@@ -101,6 +101,7 @@ test("T76: rodar 3 vezes deixa o mesmo estado e não duplica cron, serviços nem
   const linhas = cron(a);
   assert.equal(linhas.filter(l => l.includes("servidor/watchdog.sh")).length, 1);
   assert.equal(linhas.filter(l => l.includes("servidor/logs/clean.log")).length, 1);
+  assert.equal(linhas.filter(l => l.includes("servidor/netguard.mjs")).length, 1);
   assert.equal(linhas.filter(l => l === CRON_ALHEIO).length, 1, "cron de fora preservado");
   assert.equal(readFileSync(join(a.home, ".ssh", "authorized_keys"), "utf8"), CHAVE);
 });
