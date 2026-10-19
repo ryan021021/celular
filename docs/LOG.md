@@ -58,3 +58,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 18:48 · claude (ORQ/infra) · §11 Supervisão do CHEFE (testa, confere escopo/segurança pelo diff, audita Gemini, saúde das sessões) a pedido do Ryan · docs/COLABORACAO.md
 - 2026-10-19 18:49 · FRONT · T28: rodada de QA do console (7 achados em docs/qa, 2 corrigidos no front 8151053 e 36bc3a1). Testes 140 ok, 1 pulado. Crítica: vai para REVIEW com revisora QA. Achados 3 e 4 abertos.
 - 2026-10-19 18:52 · claude (CHEFE) · Sessões renomeadas por sigla; loop do Gemini no Antigravity (handoff LOOP-de-tarefas) + tools/collab/gemini-loop.ps1 (CLI sem login grátis, fica para quando houver chave); T53 (G20) para o Gemini
+- 2026-10-19 18:56 · gemini · T53: documenta prioridade de tarefas (escala 0-9, default 5, ordenação descendente e FIFO) no server/agentops/README.md
