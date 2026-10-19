@@ -56,3 +56,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 18:43 · claude (ORQ/infra) · Economia 3 (pedido do Ryan): CHEFE xhigh→médio; conectores Shopify/Gmail/Calendar do claude.ai desligados por padrão; §9: Opus só no CHEFE, Sonnet nos executores, Haiku nos subagentes, máx. 2 sessões ativas · docs/COLABORACAO.md
 - 2026-10-19 18:45 · claude (ORQ/infra) · Setup de modelos (pedido do Ryan): BACK/FRONT/ORQ = Haiku (codam), QA e CHEFE = Opus médio (revisam/testam/decidem); regra no §9 · docs/COLABORACAO.md
 - 2026-10-19 18:48 · claude (ORQ/infra) · §11 Supervisão do CHEFE (testa, confere escopo/segurança pelo diff, audita Gemini, saúde das sessões) a pedido do Ryan · docs/COLABORACAO.md
+- 2026-10-19 18:49 · FRONT · T28: rodada de QA do console (7 achados em docs/qa, 2 corrigidos no front 8151053 e 36bc3a1). Testes 140 ok, 1 pulado. Crítica: vai para REVIEW com revisora QA. Achados 3 e 4 abertos.
