@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 // Rodar com: node --test tools/worker/test/*.test.mjs  (passar só a pasta falha no Node 25 do Windows)
-import { buildRunner, prepareDir, claudeSettings, DISALLOWED, blockedWorkdir } from "../worker.mjs";
+import { buildRunner, prepareDir, claudeSettings, DISALLOWED, blockedWorkdir, fitResult } from "../worker.mjs";
 
 test("importar o worker não exige worker.json nem roda o loop", () => {
   assert.equal(typeof buildRunner, "function");
@@ -55,4 +55,14 @@ test("workdir dentro de pasta bloqueada é recusado (R1)", () => {
 test("nome de perfil com caminho é recusado", () => {
   assert.throws(() => prepareDir(tmpdir(), "../fora"), /inválido/);
   assert.throws(() => prepareDir(tmpdir(), "a/b"), /inválido/);
+});
+
+test("fitResult: output de 100 KB (com aspas e acentos) cabe no corpo de 32 KB do AgentOps", () => {
+  const res = { ok: true, output: '"é\n'.repeat(35_000), error: "x".repeat(100_000) };
+  const body = JSON.stringify({ id: "t", leaseId: "l", ...fitResult(res) });
+  assert.ok(Buffer.byteLength(body) < 32 * 1024);
+  const r = fitResult(res);
+  assert.equal(r.ok, true);
+  assert.match(r.output, /cortado pelo worker/);
+  assert.deepEqual(fitResult({ ok: true, output: "curto" }), { ok: true, output: "curto" });
 });

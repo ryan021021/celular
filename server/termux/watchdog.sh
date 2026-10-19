@@ -12,6 +12,17 @@ if ! pgrep -x sshd >/dev/null; then
 fi
 sh "$DIR/start-services.sh" >> "$LOG" 2>&1
 
+# Demais servicos do runit (G7): se nao estao em "run:" (caidos ou parados), sobe de novo.
+# Servico com arquivo "down" na pasta foi parado de proposito e nao e religado.
+for s in agentops alertas egress sftp; do
+  [ -d "$SVDIR/$s" ] || continue
+  [ -e "$SVDIR/$s/down" ] && continue
+  case "$(sv status "$s" 2>/dev/null)" in
+    run:*) ;;
+    *) sv up "$s" >/dev/null 2>&1; echo "$(date '+%F %T') $s religado" >> "$LOG" ;;
+  esac
+done
+
 # Mantem os logs pequenos (ultimas 500 linhas cada)
 for f in "$LOG" "$DIR/logs/boot.log" "$DIR/logs/panel.log"; do
   if [ -f "$f" ] && [ "$(wc -l < "$f")" -gt 500 ]; then

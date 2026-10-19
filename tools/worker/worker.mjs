@@ -61,6 +61,23 @@ export function buildRunner(profile, dir) {
 }
 
 /** Workdir dentro de uma pasta bloqueada = agente não lê nem a própria pasta (achado R1 da QA). */
+// O AgentOps recusa corpo > 32 KB (G3): corta output/error até o JSON inteiro caber em ~28 KB
+export const MAX_BODY = 28 * 1024;
+export function fitResult(res, max = MAX_BODY) {
+  const r = { ...res };
+  const note = n => `\n[... cortado pelo worker em ${n} caracteres]`;
+  for (const k of ["output", "error"]) {
+    if (typeof r[k] !== "string") continue;
+    let lim = Math.min(r[k].length, max);
+    while (JSON.stringify({ ...r, [k]: r[k] }).length > max && lim > 0) {
+      lim = Math.floor(lim / 2);
+      r[k] = r[k].slice(0, lim) + note(lim);
+      if (k === "output" && lim <= 0) break;
+    }
+  }
+  return r;
+}
+
 export function blockedWorkdir(workdir, home = homedir()) {
   const norm = p => String(p || "").replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
   const w = norm(workdir), h = norm(home);
@@ -135,7 +152,7 @@ async function cycle(cfg, api, dry) {
     const dir = prepareDir(cfg.workdir, task.profile);
     res = await run(api, buildRunner(task.profile, dir), task.prompt, Math.max(60_000, task.timeoutMs - 30_000), task.leaseId);
   }
-  const r = await api("/api/worker/result", { id: task.id, leaseId: task.leaseId, ...res });
+  const r = await api("/api/worker/result", { id: task.id, leaseId: task.leaseId, ...fitResult(res) });
   console.log(`[worker] resultado ${res.ok ? "ok" : "falha"} entregue (${r.status})`);
 }
 
