@@ -189,7 +189,7 @@ async function main() {
   let tries = 0;
   for (;;) {
     const ssh = spawn("ssh", ["-i", KEY_FILE, "-p", String(prof.network.ssh_port || 8022), "-o", "BatchMode=yes", "-o", "ServerAliveInterval=15",
-      "-o", "IdentitiesOnly=yes", `${prof.network.ssh_user}@${prof.network.ip}`], { stdio: ["pipe", "ignore", "inherit"], windowsHide: true });
+      "-o", "IdentitiesOnly=yes", "-T", `${prof.network.ssh_user}@${prof.network.ip}`], { stdio: ["pipe", "ignore", "inherit"], windowsHide: true });
     let open = true;
     ssh.on("exit", () => { open = false; });
     ssh.stdin.on("error", () => { open = false; });

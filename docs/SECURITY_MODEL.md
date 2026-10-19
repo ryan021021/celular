@@ -9,6 +9,7 @@ Princípio: nada administrativo fica exposto fora da rede de casa, todo acesso e
 | AgentOps | 8090 | Admin e workers | Token admin (`agentops.token`) e token de worker (`agentops-workers.json`) separados; worker só busca/devolve tarefa dos seus perfis |
 | SFTP (arquivos) | 8023 | Chave própria `a13_arquivos` | rclone confinado em `~/shared`; não segue atalhos; chave de admin recusada |
 | ADB | USB | PC autorizado | Depuração sem fio desligada |
+| Coletor ADB → A13 (T27) | 8022 | PC, chave própria `a13_adb_coletor` (aprovada pelo Ryan em 19/10) | Linha no `authorized_keys`: `command="node ~/servidor/panel/server-box/adb-recebe.mjs",restrict,from="192.168.1.116"`. A chave só entrega o snapshot: o comando pedido pelo cliente é ignorado, sem pty, sem encaminhamento (testado em 19/10 01:55). O receptor valida o esquema, limita a linha a 16 KB e a 1 por segundo, grava `~/servidor/adb/latest.json` (600, atômico) e nunca executa nada. **Se o IP do PC mudar (DHCP), o coletor para de entregar** e o painel mostra "sem dados do ADB"; para voltar, atualizar o `from=`. Revogar: apagar a 2ª linha do `authorized_keys` (backup em `authorized_keys.bak-20261019-adb`) |
 
 ## Segredos
 | Segredo | Onde | Permissão | Em backup |
@@ -19,6 +20,7 @@ Princípio: nada administrativo fica exposto fora da rede de casa, todo acesso e
 | Token do worker (cópia) | PC `%USERPROFILE%\.servidor-a13\worker.json` | ACL só do usuário | não |
 | Chave do backup | PC `%USERPROFILE%\.servidor-a13\backup.key` | ACL só do usuário | **guardar cópia fora do PC** |
 | Credenciais do Claude Code | A13 `~/.claude/` (após login) | do Claude Code | não |
+| Chave do coletor ADB (sem senha, para rodar sozinho) | PC `%USERPROFILE%\.ssh\a13_adb_coletor` | ACL: o usuário, SYSTEM e Administradores | não (recriável; só serve para entregar o snapshot) |
 
 Nenhum segredo está no git; logs e saídas de tarefas passam por mascaramento (tokens conhecidos, `sk-ant-…`, `Bearer …`, chaves privadas).
 
