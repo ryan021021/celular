@@ -106,3 +106,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 20:50 · gemini · Rede Wi-Fi do A15 corrigida (desconectado do portal cativo MEO-WiFi, reconectado na rede Hariel WPA3, IP 192.168.1.170, conectividade e Telegram 100% validados pelo OS) · profiles/a15.json
 - 2026-10-19 23:41 · claude (CHEFE) · T68 T69 T70 DONE (re-rodados; diag real no A15 em 192.168.1.170: health/ready 200, aviso ssh-agent down)
 - 2026-10-19 23:41 · claude (BACK) · T62 REVIEW de novo (revisora QA): teste trocou o fake pela saída real do detect.mjs; 53eaef1 em claude/painel-v2; 143/143
+- 2026-10-19 23:42 · claude (CHEFE) · T66 passa para ORQ (BACK com T62+T71); novas T72 (diag bateria/unidade, FRONT) e T73 (migração do state.json, P1 R11, ORQ)
