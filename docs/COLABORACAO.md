@@ -66,7 +66,7 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Sem espera ativa:** proibido `/loop`, ScheduleWakeup, `sleep` ou releitura periódica para esperar outra sessão. Deixe o handoff/TASKS e encerre o turno.
 - **Subagentes:** só os do projeto (§10), que são baratos e devolvem resumo. Agent genérico, Explore e pesquisa web só com pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
-- **Contexto > 300 mil tokens:** termine a tarefa atual, registre o estado em TASKS/handoff e peça ao Ryan um `/compact` (ou sessão nova).
+- **Contexto:** o projeto compacta sozinho aos 25% da janela (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=25` em `.claude/settings.json`, ~250 mil). Antes disso, registre o estado em TASKS/handoff; sessão com muito histórico inútil: `/compact` ou sessão nova.
 - **Modelo/esforço (19/10, CHEFE):** CHEFE = Opus; ORQ, BACK, FRONT e QA = Sonnet, esforço médio. Ninguém troca de modelo sozinho; subir só com OK do Ryan ou do CHEFE. Sessão sem tarefa fica parada (sem polling) até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
