@@ -12,7 +12,7 @@
     "storage_free": "74 GB (105 GB /data)"
   },
   "network": {
-    "ip": "192.168.1.164",
+    "ip": "192.168.1.170",
     "wifi_adb_port": 5555,
     "ssh_port": 8022,
     "ssh_user": "u0_a304",
@@ -24,7 +24,7 @@
   ],
   "notes": "Galaxy A15 5G conectado via USB. Arquitetura nativa 64-bit.",
   "deploy": {
-    "remote": "ssh://u0_a304@192.168.1.164:8022/~/servidor/panel/server-box",
+    "remote": "ssh://u0_a304@192.168.1.170:8022/~/servidor/panel/server-box",
     "branch": "celular",
     "hook": "post-receive roda node --test e reinicia server-box e alertas; rollback se falhar",
     "nota": "chave ~/.ssh/id_ed25519; push: git push <remote> <commit>:celular"
