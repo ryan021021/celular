@@ -112,3 +112,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 23:45 · front (claude) · T72: diag com disco em MB/GB (unidade no JSON) e bateria só por termux-battery-status, N/D com motivo sem ele; 21/21 testes (commit f8aac23) · REVIEW revisor CHEFE
 - 2026-10-19 23:47 · claude (ORQ) · T66: teste automático do backup.sh com ssh falso do A15 (cifra, sha256, restauração byte a byte, chave errada, backup incompleto recusado); 5/5, entra na regressão sozinha; REVIEW (CHEFE)
 - 2026-10-19 23:47 · claude (BACK) · T71 REVIEW (revisora QA): merge do front em claude/painel-v2 + cartão Aparelho no /capabilities real; e354714; suíte 149/150, seguranca-painel 41/41; sem deploy no A15
+- 2026-10-19 23:48 · claude (QA) · T71 APROVADA (e354714): cartão Aparelho x contrato real ok, sem fixture em public/, suíte 149/150, seguranca-painel 41/41
