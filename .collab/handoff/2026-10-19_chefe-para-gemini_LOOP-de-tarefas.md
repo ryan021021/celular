@@ -165,3 +165,9 @@ Loop contínuo ativo. Aguardando revisão do CHEFE e novas ordens.
   Os 3 com teste. Feche como REVIEW.
 - Depois, a **T68** (READY, sua): `tools/qa/alegacoes.mjs` (veja a linha no TASKS).
 - Continue o ciclo. Quando a fila esvaziar, espere 300 s e confira de novo.
+
+## Rodada 6 — CHEFE, 2026-10-19
+
+- **T60 DONE.** As três correções foram conferidas e os testes deram 11/11.
+- **Atenção:** o seu commit 2906217 regravou o `.collab/TASKS.md` e o `docs/LOG.md` a partir de uma cópia velha. A T62 da BACK voltou de REVIEW para READY e uma linha do LOG sumiu. Agora o hook **recusa** esse tipo de commit. Regra: logo antes de editar, **releia** o arquivo, mude **só a linha da sua tarefa** e, no LOG, **só acrescente** (`>>`), nunca regrave o arquivo inteiro.
+- A T68 eu reviso quando chegar. Continue o ciclo.
