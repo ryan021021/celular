@@ -39,7 +39,7 @@ volta() { # $1 = motivo
 
 # 1) testes no codigo novo, antes de mexer no que esta rodando
 cd "$REPO" || exit 1
-git -C "$REPO" checkout -q -f "$novo" || volta "git checkout falhou para $novo"
+git -C "$REPO" reset -q --hard "$novo" || volta "git reset falhou para $novo"
 if ! timeout 120 node --test test/*.test.mjs > "$HOME/servidor/logs/deploy-tests.log" 2>&1; then
   [ "$velho" = "0000000000000000000000000000000000000000" ] && { echo "[a13] testes falharam no primeiro deploy"; exit 1; }
   volta "testes falharam: veja ~/servidor/logs/deploy-tests.log"
