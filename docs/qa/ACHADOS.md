@@ -36,6 +36,7 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | VERIFICADO (15/15 no PC, 19/10 06:5x) |
 . Depois de cada atualização, repetir o teste de isolamento (as ferramentas mudam entre versões) | ORQ | ABERTO |
 | R7 | BAIXA | `tools/server/reaplicar-ajustes.ps1:2` | Serial fixo `RQ8TC00EJNB` no `param` (regra do CLAUDE.md); ler do perfil com `Get-ProfileBySerial`/`profiles/a13.json` | ORQ | ABERTO |
+| Q8 | MÉDIA | `server/termux/setup.sh:7` | Instala `nodejs-lts`, mas a produção roda `nodejs` 26.4.0 (dpkg e `/proc/<pid>/exe` de todos os serviços). No Termux os dois conflitam: `deploy.ps1 -Step Install` ou a reconstrução do DISASTER_RECOVERY trocariam a versão principal do Node, diferente da testada. O `docs/ARCHITECTURE.md:16` e o `profiles/a13.json:29` dizem v24.18.0 (falso; ver `docs/qa/AFIRMACOES.md`) | ORQ (+ GEM-IDE no perfil) | ABERTO |
 
 ## Q1: worker do PC executava Bash e lia fora da pasta
 

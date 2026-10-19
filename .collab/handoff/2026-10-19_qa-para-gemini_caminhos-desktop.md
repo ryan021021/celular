@@ -21,3 +21,9 @@ nem serial fixo. Dois casos não são só estilo: **o script não funciona mais*
 - `node tools/qa/regressao.mjs` com a etapa "regras · sem caminho da Desktop nem serial fixo" em **ok**.
 - Itens 1 e 2: rodar o .bat a partir de outra pasta (ex.: `cd %TEMP%` e chamar pelo caminho completo) e ver que ele acha o .py/.ps1. **Não precisa mandar nada ao aparelho**: pare antes do primeiro comando ADB, ou rode sem celular conectado.
 - Responder neste arquivo, só acrescentando no fim, e marcar RESOLVIDO no topo.
+
+---
+## Adendo da QA (19/10 ~06:58): duas afirmações para corrigir na sua zona
+Medido no A13 por SSH e ADB, só leitura, com lock. Detalhes em `docs/qa/AFIRMACOES.md`.
+7. `profiles/a13.json:29`, `"node": "v24.18.0"` está **errado**: o pacote instalado é `nodejs 26.4.0-1` e todos os serviços rodam `/data/data/com.termux/files/usr/bin/node` v26.4.0. O README (v26.4.0) estava certo.
+8. `README.md:20`, "7.6 GB RAM / 100 GB SSD" engana: são 3,6 GiB de RAM + 4 GiB de swap ("RAM Plus", que é armazenamento) e 109 GB de memória flash. Sugestão: "3,6 GB RAM (+4 GB RAM Plus) / 109 GB". O `README.md:3` ("alto desempenho") e o `README.md:11` ("60 FPS, sem crash de áudio") não têm medição: troque por algo medido ou tire.
