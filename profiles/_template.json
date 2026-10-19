@@ -4,5 +4,14 @@
   "brand": "",
   "serial": null,
   "notes": "",
-  "scrcpy_args": ["--no-audio"]
+  "network": {
+    "ip": "",
+    "ssh_port": 8022,
+    "ssh_user": "",
+    "ssh_key": "~/.ssh/id_ed25519",
+    "ssh_hostkey_sha256": ""
+  },
+  "scrcpy_args": [
+    "--no-audio"
+  ]
 }

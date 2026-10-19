@@ -10,6 +10,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
+import { resolverPerfil, descreverAchado } from "../lib/achar-aparelho.mjs";
 
 const ESTADOS = ["ok", "aviso", "falha", "unknown"];
 const LIMITE_DISCO_MB = { aviso: 1024, falha: 256 };
@@ -212,6 +213,10 @@ if (ehCli) {
       if (!existsSync(pf)) { console.error(`[diag] perfil não encontrado: ${idPerfil}`); return 1; }
       perfil = JSON.parse(readFileSync(pf, "utf8"));
       perfil.id = perfil.id || idPerfil;
+      // T80: network.ip é só uma dica; o achador confere a chave de host e acha o aparelho se o IP mudou
+      const r = await resolverPerfil(perfil);
+      perfil = r.perfil;
+      console.error(`[diag] ${descreverAchado(r.achado)}`);
     }
     const rel = await diagnosticar({ perfil });
     console.log(args.includes("--json") ? JSON.stringify(rel, null, 2) : formatarTexto(rel));

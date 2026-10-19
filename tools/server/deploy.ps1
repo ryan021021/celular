@@ -19,6 +19,18 @@ $dev = Get-Content $profilePath -Raw | ConvertFrom-Json
 $net = $dev.network
 if (-not $net -or -not $net.ip -or -not $net.ssh_user) { Write-Host "[ERRO] Perfil '$Device' sem network.ip / network.ssh_user." -ForegroundColor Red; exit 1 }
 
+# T80: network.ip e so uma dica. O achador (cache, perfil, adb, varredura) confere a chave de host publica do perfil e devolve o IP atual.
+# Em -DryRun nao toca na rede. Se nao achar, segue com o IP do perfil e o erro aparece no passo de SSH.
+if (-not $DryRun -and (Get-Command node -ErrorAction SilentlyContinue)) {
+    $prevEap = $ErrorActionPreference; $ErrorActionPreference = "Continue"
+    $achado = & node (Join-Path $root "tools\lib\achar-aparelho.mjs") --perfil $Device 2>$null
+    $achadoCodigo = $LASTEXITCODE; $ErrorActionPreference = $prevEap
+    if ($achadoCodigo -eq 0 -and $achado -match '^\d{1,3}(\.\d{1,3}){3}$') {
+        if ("$achado" -ne "$($net.ip)") { Write-Host "[achar] IP atual: $achado (o perfil diz $($net.ip))" -ForegroundColor Yellow }
+        $net.ip = "$achado"
+    } else { Write-Host "[AVISO] Nao achei o aparelho pelo achador; usando o IP do perfil ($($net.ip))." -ForegroundColor Yellow }
+}
+
 $port = if ($net.ssh_port) { $net.ssh_port } else { 8022 }
 $key = $net.ssh_key -replace '^~', $env:USERPROFILE
 $target = "$($net.ssh_user)@$($net.ip)"

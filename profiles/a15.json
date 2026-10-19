@@ -16,7 +16,8 @@
     "wifi_adb_port": 5555,
     "ssh_port": 8022,
     "ssh_user": "u0_a304",
-    "ssh_key": "~/.ssh/id_ed25519"
+    "ssh_key": "~/.ssh/id_ed25519",
+    "ssh_hostkey_sha256": "SHA256:y+0ALSTPC1rBOZPBhXz+C0NfZzHSUcY7VDZr0D2lBbw"
   },
   "scrcpy_args": [
     "--no-audio",

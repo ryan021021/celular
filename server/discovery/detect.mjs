@@ -304,7 +304,16 @@ if (ehCli) {
 
     const pf = join(raiz, 'profiles', `${idPerfil}.json`);
     if (!existsSync(pf)) { console.error(`[discovery] perfil não encontrado: ${idPerfil}`); return 1; }
-    const perfil = JSON.parse(readFileSync(pf, 'utf8'));
+    let perfil = JSON.parse(readFileSync(pf, 'utf8'));
+    perfil.id = perfil.id || idPerfil;
+    // T80: network.ip é só uma dica; o achador confere a chave de host e acha o aparelho se o IP mudou.
+    // Import dinâmico: este arquivo também roda fora do repositório (sem tools/lib ao lado).
+    try {
+      const { resolverPerfil, descreverAchado } = await import('../../tools/lib/achar-aparelho.mjs');
+      const r = await resolverPerfil(perfil);
+      perfil = r.perfil;
+      console.error(`[discovery] ${descreverAchado(r.achado)}`);
+    } catch (e) { console.error(`[discovery] achador indisponível (${e.code || e.message}); usando o IP do perfil`); }
     try { travar(); } catch { console.error('[discovery] lock a15-discovery.lock já existe: outra leitura em curso'); return 3; }
     try {
       const rel = await coletarSsh(perfil);

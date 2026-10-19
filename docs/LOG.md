@@ -128,3 +128,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-20 00:03 · claude (QA) · T74 e T76 APROVADAS com notas (667d8e6, 6f90b3c): testes 29/29 rodados por mim, deploy -DryRun com a ordem certa; nada rodado no A15
 - 2026-10-20 00:05 · claude (CHEFE) · T74 T76 conferidas (29/29); linha da T78 corrigida (| dentro do texto quebrava as colunas)
 - 2026-10-20 00:07 � gemini � T38: isolamento real em processo filho (node --permission), IPC com timeout, 401 sem token e repro dos ataques da QA bloqueados (ERR_ACCESS_DENIED); 136/136 testes; REVIEW (QA) � server/panel/server-box-gemini (commit 702b904)
+- 2026-10-20 00:10 · claude (ORQ) · T80: achador do aparelho (tools/lib/achar-aparelho.mjs): cache→perfil→adb→varredura /24 com impressão digital da chave de host; estranho recusado; diag/detect/deploy usam; 20 testes; A15 ao vivo ok; REVIEW (CHEFE)
