@@ -1,5 +1,5 @@
 import { randomUUID, randomInt } from "node:crypto";
-import { readFileSync, renameSync, appendFileSync, statSync, mkdirSync, openSync, writeSync, fsyncSync, closeSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, appendFileSync, statSync, mkdirSync, openSync, writeSync, fsyncSync, closeSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { makeRedactor } from "./redact.mjs";
 
@@ -41,20 +41,57 @@ export function validateSubmission(body, profiles) {
   return null;
 }
 
+export const SCHEMA_VERSION = 1;
+
+/**
+ * Leva o conteúdo lido do state.json até a versão atual. Pura: não toca em disco.
+ * - v0 (sem `schema_version`, arquivos de antes da T73) -> v1: só marca a versão e garante paused/tasks/agents.
+ * - já na versão atual: devolve igual (idempotente).
+ * - versão desconhecida/futura ou formato impossível: lança erro (o chamador guarda o arquivo e não o reescreve).
+ */
+export function migrateState(parsed) {
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("state.json não é um objeto");
+  const from = parsed.schema_version === undefined ? 0 : parsed.schema_version;
+  if (!Number.isInteger(from) || from < 0) throw new Error(`schema_version inválida (${JSON.stringify(parsed.schema_version)})`);
+  if (from > SCHEMA_VERSION) throw new Error(`state.json é de uma versão mais nova (v${from}; este código entende até v${SCHEMA_VERSION})`);
+  if (parsed.tasks !== undefined && !Array.isArray(parsed.tasks)) throw new Error("state.json: tasks não é uma lista");
+  if (parsed.agents !== undefined && (typeof parsed.agents !== "object" || parsed.agents === null || Array.isArray(parsed.agents))) throw new Error("state.json: agents não é um objeto");
+  const state = { ...parsed, schema_version: SCHEMA_VERSION };
+  if (from === 0) {
+    state.paused = parsed.paused === true;
+    state.tasks = parsed.tasks ?? [];
+    state.agents = parsed.agents ?? {};
+  }
+  return { from, state };
+}
+
 export function createStore(dir, { now = Date.now, maxEventBytes = 1024 * 1024, log = console.error } = {}) {
   mkdirSync(dir, { recursive: true });
   const file = join(dir, "state.json");
   const eventsFile = join(dir, "events.jsonl");
-  let state = { paused: false, tasks: [], agents: {} };
+  let state = { schema_version: SCHEMA_VERSION, paused: false, tasks: [], agents: {} };
   let corrupted = null;
+  let migrated = null;
+  let migrationBackup = null; // cópia do arquivo antigo, gravada antes de qualquer reescrita
   if (existsSync(file)) {
+    let raw = null, loaded = null;
     try {
-      state = { ...state, ...JSON.parse(readFileSync(file, "utf8")) };
+      raw = readFileSync(file, "utf8");
+      loaded = migrateState(JSON.parse(raw));
     } catch (err) {
-      // não sobrescreve em silêncio: guarda o arquivo ruim e avisa
+      // não sobrescreve em silêncio: guarda o arquivo ruim (ou de versão futura) e avisa
       corrupted = `${file}.corrompido-${now()}`;
       renameSync(file, corrupted);
       log(`[agentops] state.json ilegível (${err.message}); guardado em ${corrupted}; fila começa vazia`);
+    }
+    if (loaded) {
+      if (loaded.from !== SCHEMA_VERSION) {
+        // guarda o original ANTES de reescrever; se não der para guardar, a falha sobe e o arquivo fica como está
+        migrationBackup = `${file}.v${loaded.from}-${now()}.bak`;
+        writeFileSync(migrationBackup, raw, { mode: 0o600, flag: "wx" });
+        migrated = { from: loaded.from, to: SCHEMA_VERSION, backup: migrationBackup };
+      }
+      state = { ...state, ...loaded.state };
     }
   }
 
@@ -79,10 +116,15 @@ export function createStore(dir, { now = Date.now, maxEventBytes = 1024 * 1024, 
   };
 
   if (corrupted) appendFileSync(eventsFile, `${JSON.stringify({ at: new Date(now()).toISOString(), type: "state.corrupted", file: corrupted })}\n`, { mode: 0o600 });
+  if (migrated) {
+    save();
+    event("state.migrated", migrated);
+    log(`[agentops] state.json migrado v${migrated.from} -> v${migrated.to}; original guardado em ${migrated.backup}`);
+  }
 
   return {
     get state() { return state; },
-    corrupted,
+    corrupted, migrated,
     save, event,
     add(profileName, profile, prompt, priority = 5) {
       const task = {

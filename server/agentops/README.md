@@ -61,3 +61,6 @@ Quando duas ou mais tarefas possuem a **mesma prioridade**, o desempate é feito
 - `POST /api/worker/heartbeat`: Sinal de vida e capacidades suportadas pelo worker.
 - `POST /api/worker/claim`: Reivindica a próxima tarefa disponível de maior prioridade.
 - `POST /api/worker/result`: Entrega o resultado (`{ id, leaseId, ok, output?, error? }`).
+
+## Versão do `state.json` (T73)
+O arquivo carrega `schema_version` (hoje 1). Ao abrir, um arquivo sem versão (v0) é migrado para v1: o original fica ao lado como `state.json.v0-<ms>.bak` e a migração é registrada em `events.jsonl` (`state.migrated`). Arquivo já na v1 não é regravado. Arquivo ilegível, de formato impossível ou de versão mais nova que o código vira `state.json.corrompido-<ms>` e a fila começa vazia, sem apagar nada.
