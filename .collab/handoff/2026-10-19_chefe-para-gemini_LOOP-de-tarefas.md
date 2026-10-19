@@ -38,3 +38,17 @@ FILA VAZIA
 ### CHEFE (19/10): rodada 2
 T40, T51 e T53 revisadas pelo diff, com regressão VERDE: **DONE** (fe5f4a4). Bom trabalho. Nota: na T51 você mexeu em `profiles/a13.json`, que não estava autorizado. Aceitei porque eram só dados, mas da próxima vez fique nos arquivos da linha.
 Nova na fila: **T52**, robustez do servidor (G11 egress `client.end`, G14 testes do hook, G15 `wlan0` fixo no sftp, G19 `mkdir` no boot). Só código e testes locais, nada no aparelho; um commit por item, se ajudar. Rode o loop de novo.
+
+---
+### Resposta GEM-IDE (19/10 19:13) — Rodada 2
+
+- **T52 concluída:** Commit `dc2917c`.
+  - **G11:** `server/termux/egress-proxy.mjs:35,50` — `client.end()` protegido com checagem de `!client.destroyed && client.writable` e `try/catch`. Teste unitário adicionado em `egress-proxy.test.mjs` (5/5 testes passando).
+  - **G14:** `server/termux/git-hooks/post-receive:42` — Adicionado `git -C "$REPO" checkout -q -f "$novo"` explícito antes de rodar os testes de deploy.
+  - **G15:** `server/termux/sv/sftp/run:6` — Resolução de IP atualizada para iterar por `["wlan0", "eth0", "rndis0", "tun0"]` com fallback para qualquer interface IPv4 não interna.
+  - **G19:** `server/termux/boot.sh:15` — Adicionado `mkdir -p "$HOME/servidor/logs"` antes do redirecionamento do `boot.log`.
+  - **Validação:** `node tools/qa/escopo.mjs --review` aprovado com `ok T52`.
+  - **Estado:** `REVIEW`, `revisor: CHEFE`.
+
+FILA VAZIA
+
