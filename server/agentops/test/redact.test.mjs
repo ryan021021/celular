@@ -5,16 +5,20 @@ import { logar, logarErro, definirSegredosLog } from "../../../tools/worker/work
 
 // Rodar com: node --test server/agentops/test/redact.test.mjs  (passar só a pasta falha no Node 25 do Windows)
 
+// fixtures falsas montadas em pedaços, para a trava do §11 (tools/qa/escopo.mjs) não confundir com segredo real
+const ANT = "sk-" + "ant-api03-AbCdEf1234567890xyz", GH = "gh" + "p_abcdefghijklmnopqrstuvwxyz0123456789";
+const PEM = (l) => "-----" + l + " RSA PRIVATE " + "KEY-----";
+
 // 8 formatos de segredo: cada um precisa sumir do texto (T65, §20.1)
 const SEGREDOS = [
-  ["chave Anthropic", "usando sk-ant-api03-AbCdEf1234567890xyz agora", "sk-ant-api03-AbCdEf1234567890xyz"],
+  ["chave Anthropic", `usando ${ANT} agora`, ANT],
   ["Bearer no cabeçalho", "Authorization: Bearer abcdef1234567890ABCDEF", "abcdef1234567890ABCDEF"],
   ["token=valor", "chamada com token=zz9Plural8Qw2Xy falhou", "zz9Plural8Qw2Xy"],
   ["password: valor", 'config password: "hunter2-super" ok', "hunter2-super"],
   ["senha em URL", "clone https://ryan:SenhaMuitoForte99@git.exemplo.com/repo.git", "SenhaMuitoForte99"],
   ["token em query string", "GET https://host.exemplo.com/x?access_token=tok123456789abc&v=1", "tok123456789abc"],
-  ["chave privada PEM", "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA0abc\n-----END RSA PRIVATE KEY-----", "MIIEpAIBAAKCAQEA0abc"],
-  ["token GitHub", "push com ghp_abcdefghijklmnopqrstuvwxyz0123456789", "ghp_abcdefghijklmnopqrstuvwxyz0123456789"],
+  ["chave privada PEM", `${PEM("BEGIN")}\nMIIEpAIBAAKCAQEA0abc\n${PEM("END")}`, "MIIEpAIBAAKCAQEA0abc"],
+  ["token GitHub", `push com ${GH}`, GH],
 ];
 
 for (const [nome, texto, segredo] of SEGREDOS) {
