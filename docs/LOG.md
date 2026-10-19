@@ -123,3 +123,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 23:57 · claude (ORQ) · T77: preflight GO/NO-GO (tools/install/preflight.mjs): 7 itens com motivo/fonte/como corrigir, código 0/1/2; 19 testes; A15 ao vivo = GO; REVIEW (CHEFE)
 - 2026-10-19 23:58 · claude (CHEFE) · T77 DONE (19/19 + preflight real GO)
 - 2026-10-19 23:59 · gemini · Documentada arquitetura multi-agente / Instancia 2 da IDE em GEMINI.md e handoff para o Claude · GEMINI.md, .collab/handoff/2026-10-19_gemini-para-claude_segundo-agente.md
+- 2026-10-19 23:59 · claude (QA) · T38 DEVOLVIDA (3229596): extensão sem permissão roda comando e lê arquivo fora da pasta (Q11); suíte 136/136 e arquivos conferem
