@@ -66,3 +66,15 @@ test("fitResult: output de 100 KB (com aspas e acentos) cabe no corpo de 32 KB d
   assert.match(r.output, /cortado pelo worker/);
   assert.deepEqual(fitResult({ ok: true, output: "curto" }), { ok: true, output: "curto" });
 });
+
+test("fitResult mede BYTES: acentos e emoji perto do limite não passam de 32 KB nem quebram UTF-8", () => {
+  for (const unidade of ["é", "😀", "日", "\"\\", "a"]) {
+    const res = { ok: false, output: unidade.repeat(40_000), error: unidade.repeat(40_000) };
+    const body = JSON.stringify({ id: "t", leaseId: "l", ...fitResult(res) });
+    assert.ok(Buffer.byteLength(body) <= 32 * 1024, unidade + " " + Buffer.byteLength(body));
+    const r = fitResult(res);
+    assert.ok(r.output.length > 1000, "output não pode ser zerado por causa do error");
+    assert.ok(r.output.isWellFormed() && r.error.isWellFormed(), "não pode sobrar par substituto partido");
+    assert.ok(!body.includes("�"));
+  }
+});

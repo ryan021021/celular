@@ -61,19 +61,24 @@ export function buildRunner(profile, dir) {
 }
 
 /** Workdir dentro de uma pasta bloqueada = agente não lê nem a própria pasta (achado R1 da QA). */
-// O AgentOps recusa corpo > 32 KB (G3): corta output/error até o JSON inteiro caber em ~28 KB
+// O AgentOps recusa corpo > 32 KB, medido em BYTES (server.mjs:26): corta error e output até o JSON caber em 28 KB
 export const MAX_BODY = 28 * 1024;
+const bytes = o => Buffer.byteLength(JSON.stringify(o));
+function cortar(texto, n) { // n caracteres, sem partir um par substituto (emoji)
+  if (n > 0 && n < texto.length) { const c = texto.charCodeAt(n - 1); if (c >= 0xd800 && c <= 0xdbff) n--; }
+  return texto.slice(0, n);
+}
 export function fitResult(res, max = MAX_BODY) {
   const r = { ...res };
-  const note = n => `\n[... cortado pelo worker em ${n} caracteres]`;
-  for (const k of ["output", "error"]) {
-    if (typeof r[k] !== "string") continue;
-    let lim = Math.min(r[k].length, max);
-    while (JSON.stringify({ ...r, [k]: r[k] }).length > max && lim > 0) {
-      lim = Math.floor(lim / 2);
-      r[k] = r[k].slice(0, lim) + note(lim);
-      if (k === "output" && lim <= 0) break;
-    }
+  // error primeiro e pequeno: o output é o que importa
+  for (const k of ["error", "output"]) {
+    if (typeof r[k] !== "string" || bytes(r) <= max) continue;
+    const orig = r[k];
+    const monta = n => cortar(orig, n) + `
+[... cortado pelo worker em ${n} caracteres]`;
+    let lo = 0, hi = orig.length; // maior n em que o corpo ainda cabe
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; bytes({ ...r, [k]: monta(mid) }) <= max ? lo = mid : hi = mid - 1; }
+    r[k] = monta(lo);
   }
   return r;
 }
