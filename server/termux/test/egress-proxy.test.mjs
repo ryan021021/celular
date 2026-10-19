@@ -53,3 +53,19 @@ test("erro DEPOIS do 200: só fecha, sem escrever HTTP dentro do túnel (Q4)", a
   assert.match(data, /200 Connection Established/);
   assert.doesNotMatch(data, /502/);
 });
+
+test("cliente destruído prematuramente antes do erro: não lança exceção (G11)", async t => {
+  const fake = () => {
+    const e = new EventEmitter(); e.setTimeout = () => {}; e.destroy = () => {};
+    setTimeout(() => e.emit("error", Object.assign(new Error("x"), { code: "ECONNREFUSED" })), 50);
+    return e;
+  };
+  const { port } = await startProxy(t, fake);
+  const s = connect(port, "127.0.0.1", () => {
+    s.write("CONNECT api.anthropic.com:443 HTTP/1.1\r\nHost: api.anthropic.com:443\r\n\r\n");
+    s.destroy();
+  });
+  await new Promise(r => setTimeout(r, 100));
+  assert.ok(true);
+});
+

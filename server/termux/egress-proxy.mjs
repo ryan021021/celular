@@ -32,7 +32,9 @@ export function createProxy({ allow = parseAllow(), connectFn = connect, log = c
     const host = m?.[1], port = Number(m?.[2]);
     if (!m || port !== 443 || !allowed(host, allow)) {
       log(`[egress] NEGADO ${req.url}`);
-      client.end("HTTP/1.1 403 Forbidden\r\n\r\n");
+      if (!client.destroyed && client.writable) {
+        try { client.end("HTTP/1.1 403 Forbidden\r\n\r\n"); } catch {}
+      }
       return;
     }
     let established = false;
@@ -47,8 +49,11 @@ export function createProxy({ allow = parseAllow(), connectFn = connect, log = c
     upstream.on("error", e => {
       log(`[egress] erro ${host}: ${e.code || e.message}`);
       // antes do 200 dá para responder 502; depois, o canal já é TLS do cliente: só fecha (achado Q4)
-      if (!established) client.end("HTTP/1.1 502 Bad Gateway\r\n\r\n");
-      else client.destroy();
+      if (!established) {
+        if (!client.destroyed && client.writable) {
+          try { client.end("HTTP/1.1 502 Bad Gateway\r\n\r\n"); } catch {}
+        }
+      } else client.destroy();
     });
     client.on("error", close);
   });

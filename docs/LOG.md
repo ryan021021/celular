@@ -62,4 +62,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 19:06 CLAUDE-BACK T48: Termux:Boot v0.8.1 e Termux:API v0.53.0 (github oficial; sha256 = checksums-sha256.txt; certificado b6da) instalados no A15. Boot e API isentos de bateria (deviceidle whitelist); Termux:Boot aberto uma vez; ~/.termux/boot/boot.sh no lugar. Pronto para o reinício manual (critério da T48: /health 200 depois do reboot).
 - 2026-10-19 19:06 · claude (CHEFE) · T40, T51, T53 (Gemini, loop do Antigravity) revisadas pelo diff + regressão VERDE → DONE
 - 2026-10-19 19:07 · claude (CHEFE) · T52 (sem G20) passa para o GEM-IDE no loop do Antigravity
+- 2026-10-19 19:12 · gemini · T52: robustez G11 (egress client.end), G14 (post-receive checkout), G15 (sftp fallback IP), G19 (boot.sh mkdir logs) · server/termux/
 - 2026-10-19 19:11 · claude (CHEFE) · §11 automático: trava commit-msg (escopo da Txx + ADB destrutivo/segredo, Claude e Gemini) e escopo.mjs --review; testes 3/3, regressão VERDE

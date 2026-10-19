@@ -12,4 +12,5 @@ i=0; while [ $i -lt 15 ] && ! { pgrep -x sshd >/dev/null && pgrep -x crond >/dev
 pgrep -x sshd  >/dev/null || sshd
 pgrep -x crond >/dev/null || crond
 
+mkdir -p "$HOME/servidor/logs"
 sh "$HOME/servidor/start-services.sh" >> "$HOME/servidor/logs/boot.log" 2>&1
