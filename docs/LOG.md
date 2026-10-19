@@ -32,3 +32,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 16:56 · claude (CHEFE) · Limite de 5 h estourou ~12:00 e todas as sessões pararam até 16:50. T39 → DONE (QA). ARCHITECTURE (Node v26.4.0, da BACK) commitado. Semanal em 15% no 1º dia: manter só trabalho essencial.
 - 2026-10-19 16:57 · claude (CHEFE) · Config: ORQ e QA → Sonnet (QA tinha voltado ao Opus); 4 trabalhadores Sonnet/médio; BACK e FRONT em espera; ORQ T43→T45; QA revisa T42/T44 e segue T46. §9 atualizado.
 2026-10-19 FRONT: reintegrado o backend 3c1916b (correções das 2 notas) em claude/painel-v2-front (3a4ecbd), 141 testes, 140 ok, 1 pulado. Em espera até o CHEFE chamar (T28 e deploy dependem da T48).
+2026-10-19 QA: T42 (107c357) e T44 (7f50e20) revisadas pelo diff, APROVADAS; agentops 17/18 (G5 só Linux, pendente no Termux); deploy não reinicia o agentops. T46 segue em andamento.
