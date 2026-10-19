@@ -7,12 +7,22 @@ set -euo pipefail
 
 KEYDIR="$HOME/.servidor-a13"; KEY="$KEYDIR/backup.key"
 DEST="$(cd "$(dirname "$0")/../.." && pwd)/backups"
-SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 -i "$HOME/.ssh/id_ed25519" -p 8022 u0_a271@192.168.1.127)
 CIFRA=(-aes-256-cbc -pbkdf2 -iter 200000 -salt)
 MANTER=7
 
 # OpenSSL do Windows nao entende /c/... depois de "file:": converte para C:/...
 win() { cygpath -m "$1" 2>/dev/null || echo "$1"; }
+# aparelho: SERVER_DEVICE=<id do perfil> (padrao a13); usuario, IP e porta vem de profiles/<id>.json (T50)
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+DEVICE="${SERVER_DEVICE:-a13}"
+PERFIL="$ROOT/profiles/$DEVICE.json"
+perfil() { node -e 'const n=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).network||{};process.stdout.write(String(n[process.argv[2]]??""))' "$(win "$PERFIL")" "$1"; }
+if [ "${1:-}" != "--restaurar" ]; then
+  [ -f "$PERFIL" ] || { echo "sem perfil $PERFIL"; exit 1; }
+  S_IP="$(perfil ip)"; S_USER="$(perfil ssh_user)"; S_PORT="$(perfil ssh_port)"
+  [ -n "$S_IP" ] && [ -n "$S_USER" ] || { echo "perfil $DEVICE sem network.ip/ssh_user"; exit 1; }
+  SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 -i "$HOME/.ssh/id_ed25519" -p "${S_PORT:-8022}" "$S_USER@$S_IP")
+fi
 decifra() { openssl enc -d "${CIFRA[@]}" -pass "file:$(win "$KEY")" -in "$(win "$1")"; }
 
 if [ "${1:-}" = "--restaurar" ]; then
@@ -23,7 +33,7 @@ fi
 mkdir -p "$KEYDIR" "$DEST"; chmod 700 "$KEYDIR"
 [ -f "$KEY" ] || { openssl rand -base64 48 > "$KEY"; chmod 600 "$KEY"; echo "chave nova criada em $KEY (guarde uma copia fora do PC)"; }
 
-NOME="a13-$(date +%Y%m%d-%H%M%S).tar.gz.enc"
+NOME="$DEVICE-$(date +%Y%m%d-%H%M%S).tar.gz.enc"
 # No A13: inventario + arquivos de configuracao e segredos (sem logs, sem caches)
 "${SSH[@]}" 'set -e; cd $HOME
   I=servidor/.inventario; mkdir -p $I
@@ -66,5 +76,5 @@ fi
   && echo "registro do ultimo backup gravado no A13" || echo "AVISO: nao gravei o registro no A13"
 
 # Retencao: mantem os $MANTER mais recentes
-ls -1t "$DEST"/a13-*.tar.gz.enc | tail -n +$((MANTER+1)) | while read -r velho; do rm -f "$velho" "$velho.sha256"; done
-echo "backups guardados: $(ls -1 "$DEST"/a13-*.tar.gz.enc | wc -l) (maximo $MANTER)"
+ls -1t "$DEST"/"$DEVICE"-*.tar.gz.enc | tail -n +$((MANTER+1)) | while read -r velho; do rm -f "$velho" "$velho.sha256"; done
+echo "backups guardados: $(ls -1 "$DEST"/"$DEVICE"-*.tar.gz.enc | wc -l) (maximo $MANTER)"
