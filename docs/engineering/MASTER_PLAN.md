@@ -1,12 +1,13 @@
 # Master Plan — Home Server OS (Galaxy A13)
 
-Orquestrador: sessão Claude "Organizar estrutura com Gemini Antigravity" (ORQ). Atualizado em 2026-10-19 01:45.
+Chefe/orquestrador: sessão Claude "Otimizar consumo de tokens" (CHEFE), desde 19/10 (D14). ORQ = executor de infra. Atualizado em 2026-10-19 01:45.
 Registro de tarefas: `.collab/TASKS.md` · Decisões: `docs/engineering/DECISIONS.md` · Diário: `docs/LOG.md` · Regras de convivência: `docs/COLABORACAO.md`.
 
 ## 1. Equipe real (verificada, não presumida)
 | Sigla | Agente | Como participa | Executa comandos | Edita arquivos | Papel |
 |---|---|---|---|---|---|
-| ORQ | Claude Code (sessão "Organizar…") | esta sessão | sim (PC, SSH, ADB) | sim | Orquestrador, AgentOps, infra/Android, backup, deploy |
+| CHEFE | Claude Code (sessão "Otimizar consumo de tokens") | esta sessão (Opus) | sim (PC, ADB) | sim | Cérebro do projeto: prioridades, distribuição, aprovação final, economia de tokens |
+| ORQ | Claude Code (sessão "Organizar…") | sessão própria | sim (PC, SSH, ADB) | sim | Executor: AgentOps, infra/Android, backup, deploy |
 | BACK | Claude Code (sessão "A13 server OS enterprise reengineering") | mensagens entre sessões | sim | sim | Backend/API do console, alertas |
 | FRONT | Claude Code (sessão "Home VPS control center reengineering") | mensagens entre sessões | sim | sim | Frontend do console |
 | QA | Claude Code (sessão "A13 home server architecture reengineering") | mensagens entre sessões | sim | só `docs/qa/`, `tools/qa/` | QA, release, revisão independente |

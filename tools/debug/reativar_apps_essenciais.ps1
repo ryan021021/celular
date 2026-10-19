@@ -1,8 +1,16 @@
 # Reativador de Apps Essenciais e Modulos de Configuracoes (A13)
 # Mantem a maxima otimizacao desativando apenas lixo real, recuperando Meus Arquivos e Configs.
 param(
-    [string]$Serial = "RQ8TC00EJNB"
+    [string]$Device = "a13",
+    [string]$Serial = ""
 )
+
+# serial vem do perfil (profiles/<Device>.json), nao fica fixo no script (T39)
+if (-not $Serial) {
+    $perfil = Join-Path $PSScriptRoot "..\..\profiles\$Device.json"
+    $Serial = (Get-Content $perfil -Raw | ConvertFrom-Json).serial
+    if (-not $Serial) { Write-Error "perfil $Device sem serial"; exit 1 }
+}
 
 . "$PSScriptRoot\..\common.ps1"
 $adb = Find-Adb

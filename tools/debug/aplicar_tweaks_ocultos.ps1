@@ -1,11 +1,19 @@
 # Script de Ativacao de Recursos e Otimizacoes Ocultas do Android (ADB)
 # Galaxy A13 (SM-A135M) - Executado em modo seguro e reversivel.
 param(
-    [string]$Serial = "RQ8TC00EJNB",
+    [string]$Device = "a13",
+    [string]$Serial = "",
     [switch]$CompilarTudo, # Se passado, compila todos os apps de utilizador
     [switch]$ModoImersivo, # Esconde barras para tela 100% limpa
     [int]$Dpi = 0          # Permite definir densidade personalizada (ex: 280)
 )
+
+# serial vem do perfil (profiles/<Device>.json), nao fica fixo no script (T39)
+if (-not $Serial) {
+    $perfil = Join-Path $PSScriptRoot "..\..\profiles\$Device.json"
+    $Serial = (Get-Content $perfil -Raw | ConvertFrom-Json).serial
+    if (-not $Serial) { Write-Error "perfil $Device sem serial"; exit 1 }
+}
 
 . "$PSScriptRoot\..\common.ps1"
 $adb = Find-Adb

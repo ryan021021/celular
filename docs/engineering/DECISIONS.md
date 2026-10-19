@@ -17,3 +17,4 @@ Formato: data · decisão · por quê · alternativa descartada. Decisão nova =
 | D11 | 19/10 | Hermes desligado no worker do PC | Toolsets padrão incluem terminal e leitura livre; `approvals test` permite ler chaves | Rodar com `--yolo` ou sem prova |
 | D12 | 19/10 | Orquestração: ORQ coordena; BACK, FRONT, QA, GEM-IDE e GEM-CLI com zonas próprias | Evitar dois orquestradores e edição concorrente | Cada sessão seguindo o próprio plano |
 | D13 | 19/10 | Projeto inteiro em git local (sem remoto); repos do painel e binários ficam fora | Histórico e revisão entre 4+ agentes; Ryan autorizou automação ampla | Seguir sem histórico (A2) |
+| D14 | 19/10 | CHEFE = sessão "Otimizar consumo de tokens" (ordem do Ryan); ORQ passa a executor; substitui a coordenação da D12 | Um cérebro só, com visão do projeto inteiro e do consumo de tokens | Manter o ORQ coordenando com contexto em 95% |

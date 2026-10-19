@@ -15,7 +15,7 @@ Funciona com git ou com outra ferramenta de versão (ver "Versionamento").
 Regra: **só edite arquivos da sua zona.** Fora dela, use um handoff.
 
 ## 1b. Regras novas (19/10, orquestrador)
-- **Orquestração:** a sessão Claude "Organizar estrutura com Gemini Antigravity" coordena (ver `docs/engineering/MASTER_PLAN.md`). Tarefas só pelo `.collab/TASKS.md`.
+- **Orquestração (atualizado 19/10, D14):** a sessão Claude "Otimizar consumo de tokens" é o **CHEFE** do projeto: define prioridades, distribui tarefas e dá a aprovação final. A sessão "Organizar…" (ORQ) segue como executora de infra/AgentOps. Dúvida de prioridade ou conflito entre sessões → handoff `*-para-chefe_*` ou mensagem ao CHEFE. Tarefas só pelo `.collab/TASKS.md`.
 - **Worktrees do painel:** cada `server/panel/server-box-*` pertence à sessão que a criou. Ninguém escreve na worktree de outro; para propor mudança, mande diff ou abra tarefa.
 - **Git na raiz:** o projeto tem git local. Depois de mudar arquivos, faça `git add` dos SEUS arquivos e commit com o nome do agente (`git -c user.name="<agente>" commit`). Nunca `git reset --hard`, `git checkout -- .` ou `git stash` sem tag na raiz: você apagaria o trabalho dos outros.
 - **Credenciais novas** (chaves SSH, logins, tokens) só com OK explícito do Ryan, mesmo com a autorização ampla de automação.
@@ -55,3 +55,16 @@ Ao terminar uma tarefa, uma linha em `docs/LOG.md`: data, agente, o que mudou, a
 ## 8. Segurança
 - Nunca rodar comandos destrutivos no celular (`wipe`, `uninstall`, factory reset) sem confirmação do usuário.
 - Nunca colocar senhas, padrões de desbloqueio ou tokens em arquivos do projeto.
+
+## 9. Economia de tokens (19/10, obrigatório)
+O limite do plano é compartilhado por todas as sessões. Contexto grande = custo em toda chamada.
+- **Ler só o necessário.** `TASKS.md` tem só tarefas abertas (feitas: `.collab/TASKS_FEITAS.md`). LOG: só `tail -n 10 docs/LOG.md`; arquivo antigo em `docs/log/`, não ler sem motivo.
+- **Arquivo grande** (> 300 linhas): Grep, `sed -n 'a,bp'` ou Read com offset/limit. Nunca reler arquivo que já está no contexto.
+- **Revisão cruzada:** `git diff -- <arquivos>` ou `git show <commit> --stat` + trechos, não o arquivo inteiro.
+- **Escrever sem ler:** LOG com append (`>>` / `Add-Content`), 1 linha de até ~300 caracteres; detalhes ficam no commit/handoff. Tarefa nova DONE: mover a linha para `TASKS_FEITAS.md`.
+- **Saída curta:** filtrar comandos (`| tail -n 30`, `--quiet`); testes: só resumo e falhas. Nada de despejar log/JSON inteiro.
+- **Sem espera ativa:** proibido `/loop`, ScheduleWakeup, `sleep` ou releitura periódica para esperar outra sessão. Deixe o handoff/TASKS e encerre o turno.
+- **Sem subagentes** (Agent/Explore) e sem pesquisa web, salvo pedido do Ryan.
+- **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
+- **Contexto > 300 mil tokens:** termine a tarefa atual, registre o estado em TASKS/handoff e peça ao Ryan um `/compact` (ou sessão nova).
+- **Modelo/esforço (definido pelo Ryan em 19/10):** ORQ = Opus, esforço médio; BACK, FRONT e QA = Sonnet, esforço médio. Subir só com OK do Ryan.
