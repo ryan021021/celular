@@ -11,7 +11,7 @@ Registro de tarefas: `.collab/TASKS.md` · Decisões: `docs/engineering/DECISION
 | FRONT | Claude Code (sessão "Home VPS control center reengineering") | mensagens entre sessões | sim | sim | Frontend do console |
 | QA | Claude Code (sessão "A13 home server architecture reengineering") | mensagens entre sessões | sim | só `docs/qa/`, `tools/qa/` | QA, release, revisão independente |
 | GEM-IDE | Gemini no Antigravity IDE | **só pela interface**: lê `.collab/` e `GEMINI.md`; o Ryan repassa pedidos | sim (ADB/SSH pelo IDE) | sim (zona dele) | `profiles/`, `README.md`, `tools/connect`, Tailscale (T9) |
-| GEM-CLI | Gemini CLI 0.61.0 no PC (`gemini`, login pessoal) | ORQ aciona por comando | não (usado em modo leitura) | não | Revisor independente de arquitetura e segurança |
+| GEM-CLI | Gemini CLI 0.61.0 no PC (`gemini`, login pessoal) | **indisponível**: `IneligibleTierError` em 19/10 ("This client is no longer supported for Gemini Code Assist for individuals… migrate to Antigravity") | — | — | Revisão independente passou para o GEM-IDE (T19) |
 | A13-CC | Claude Code 2.1.303 no A13 (assinatura Pro) | AgentOps, perfis `leitura`/`edicao` | só ferramentas do perfil | só `~/agentes/<perfil>` | Executor de tarefas leves |
 | PC-CC | Claude Code no PC via `tools/worker` | AgentOps, perfil `pc-claude` | não (só leitura da pasta) | não | Executor remoto (depois do teste da QA) |
 | HERMES | Hermes Agent no PC | — | — | — | **Desligado** no worker até haver toolset só de leitura (Q2) |
@@ -42,10 +42,10 @@ Escolha deliberada: **um** painel/API em Node, **um** AgentOps e serviços peque
 | A2 | Projeto (raiz) sem controle de versão; 4 agentes editando | Alta | `git rev-parse` falha na raiz | T5 |
 | A3 | Hermes sem toolset só de leitura | Alta | `hermes approvals test`: `allow` para ler chaves e `curl` | T22 (desligado) |
 | A4 | Locks ignorados (debloat, Tailscale, checkout do painel) | Alta (processo) | `docs/LOG.md`, handoffs | regra reforçada; T19 audita |
-| A5 | `connect.ps1` modo Status com `StrictHostKeyChecking=no` | Média | linha 110 | T1 |
+| A5 | `connect.ps1` modo Status com `StrictHostKeyChecking=no` | Média | linha 110 | T1 (resolvido) |
 | A6 | Backup só manual | Média | nenhum agendamento | T18 |
 | A7 | Acesso remoto inexistente (sem Tailscale) | Média | T9 parado no login | T9 (Ryan) |
-| A8 | `README.md` com afirmação falsa sobre `max_phantom_processes` | Baixa | README:72 | T17 |
+| A8 | `README.md` com afirmação falsa sobre `max_phantom_processes` | Baixa | README:72 | T17 (resolvido) |
 | A9 | `imsservice` crasha 9× por boot | Baixa | logcat | T21 |
 | A10 | IPv6 público não testado de fora | Baixa | sem teste em 4G | T13 (Ryan) |
 
@@ -55,7 +55,7 @@ A (descoberta) feita · B (fundação) feita · C (dashboard) console v1 em prod
 ## 5. Fila da madrugada (ORQ, autônomo, com autorização do Ryan de 19/10)
 1. T5 — controle de versão do projeto (git local, sem remoto, `.gitignore` sem segredos/binários).
 2. T18 — backup semanal agendado no Windows + verificação.
-3. T19 — revisão independente pelo Gemini CLI (só leitura) → `docs/qa/gemini-review-2026-10-19.md`; achados viram tarefas.
+3. T19 — revisão independente pelo Gemini do Antigravity (handoff `…revisao-independente.md`; o CLI foi descontinuado pelo Google) → `docs/engineering/reviews/gemini-review-2026-10-19.md`; achados viram tarefas. Enquanto isso, a QA cobre a revisão crítica.
 4. Integrar resultados da QA (T15 canário, T20 suíte) e revisões de BACK/FRONT.
 5. Monitorar o A13 a cada ciclo (serviços, alertas, temperatura) e registrar no LOG.
 6. T24/T26 — avaliar atualização segura do Claude Code no A13 e hospedagem de páginas estáticas.

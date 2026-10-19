@@ -14,6 +14,12 @@ Funciona com git ou com outra ferramenta de versão (ver "Versionamento").
 
 Regra: **só edite arquivos da sua zona.** Fora dela, use um handoff.
 
+## 1b. Regras novas (19/10, orquestrador)
+- **Orquestração:** a sessão Claude "Organizar estrutura com Gemini Antigravity" coordena (ver `docs/engineering/MASTER_PLAN.md`). Tarefas só pelo `.collab/TASKS.md`.
+- **Worktrees do painel:** cada `server/panel/server-box-*` pertence à sessão que a criou. Ninguém escreve na worktree de outro; para propor mudança, mande diff ou abra tarefa.
+- **Git na raiz:** o projeto tem git local. Depois de mudar arquivos, faça `git add` dos SEUS arquivos e commit com o nome do agente (`git -c user.name="<agente>" commit`). Nunca `git reset --hard`, `git checkout -- .` ou `git stash` sem tag na raiz: você apagaria o trabalho dos outros.
+- **Credenciais novas** (chaves SSH, logins, tokens) só com OK explícito do Ryan, mesmo com a autorização ampla de automação.
+
 ## 2. Locks (para áreas compartilhadas)
 Antes de mexer em algo fora do óbvio, crie `.collab/locks/<nome>.lock` com:
 `agente | data/hora | o que vai mexer`. Se o lock existe, **espere ou escolha outra tarefa**.
