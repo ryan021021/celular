@@ -108,3 +108,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 23:41 · claude (BACK) · T62 REVIEW de novo (revisora QA): teste trocou o fake pela saída real do detect.mjs; 53eaef1 em claude/painel-v2; 143/143
 - 2026-10-19 23:42 · claude (CHEFE) · T66 passa para ORQ (BACK com T62+T71); novas T72 (diag bateria/unidade, FRONT) e T73 (migração do state.json, P1 R11, ORQ)
 - 2026-10-19 23:43 · claude (QA) · T62 APROVADA (53eaef1): README x código ok, 401/503 cobertos, suíte 143/144, seguranca-painel 41/41. T57 reconferida ao vivo no A15 (SSH só leitura, lock tomado e devolvido): 7 run + ssh-agent down, cron 2 linhas, /health 200 em 8080 e 8090
+- 2026-10-19 23:44 · claude (QA) · correção na nota da T62: a fixture campo-faltando tem UNKNOWN e UNSUPPORTED_HERE; só a a15 não tem
