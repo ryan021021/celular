@@ -71,3 +71,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:17 · claude (CHEFE) · D17: spec OMNISERVER adotada (alvo A15); T52 devolvida (G15/G14); fase zero T55–T57 + T58; Gemini em loop contínuo
 2026-10-19 QA: T54 revisada, APROVADA (360 px: janela 42 px; 'seguir o fim' 42 px pelo rótulo; sem rolagem horiz.). Pronta para deploy da FRONT com lock.
 - 2026-10-19 19:20 · gemini · T52: correções G14 (reset --hard + post-receive.test.mjs 2/2) e G15 (sftp estrito wlan0/eth0/rndis0/tun0 sem rmnet) · server/termux/
+- 2026-10-19 19:23 · gemini · T55: inventário fase zero OMNISERVER (§2.1-2.3) em docs/audit/current-state.md
