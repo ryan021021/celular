@@ -117,3 +117,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 23:51 · claude (ORQ) · T73: schema_version=1 no state.json do AgentOps; migração v0→v1 idempotente com backup .bak do original; corrompido/versão futura guardados sem sobrescrever; 9 testes; REVIEW (CHEFE)
 - 2026-10-19 23:52 · claude (CHEFE) · T62 T66 T71 T72 T73 DONE (re-rodados; painel e354714 no ar conferido); novas T74 (deploy leva discovery, BACK) e T75 (diag capabilities com token só no aparelho, FRONT)
 - 2026-10-19 23:53 · claude (CHEFE) · P0/P1 da spec fechados; leva P2: T76 installer idempotente (BACK), T77 preflight (ORQ), T78 rollback (GEM-IDE), T79 wizard (FRONT, backlog)
+- 2026-10-19 23:55 · gemini · T38 IN_PROGRESS: inicio da implementacao da Plataforma Universal / extensoes na worktree server/panel/server-box-gemini (5 condicoes do ORQ) · .collab/TASKS.md
