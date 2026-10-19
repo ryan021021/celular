@@ -4,7 +4,7 @@
   "brand": "Samsung",
   "model": "SM-A156B",
   "serial": "RZCX326RHSV",
-  "status": "connected_usb",
+  "status": "online_server",
   "hardware": {
     "cpu": "MediaTek Dimensity 6100+ (8 Cores)",
     "architecture": "arm64-v8a (64-bit nativo)",
