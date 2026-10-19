@@ -35,7 +35,7 @@ NOME="a13-$(date +%Y%m%d-%H%M%S).tar.gz.enc"
     servidor .termux/boot .ssh/authorized_keys \
     -C $PREFIX etc/ssh/ssh_host_ed25519_key etc/ssh/ssh_host_ed25519_key.pub etc/ssh/ssh_host_rsa_key etc/ssh/ssh_host_rsa_key.pub \
        etc/ssh/ssh_host_ecdsa_key etc/ssh/ssh_host_ecdsa_key.pub var/service/server-box var/service/alertas \
-       var/service/agentops var/service/sftp
+       var/service/agentops var/service/sftp var/service/egress
   rm -rf $I' | openssl enc "${CIFRA[@]}" -pass "file:$(win "$KEY")" -out "$(win "$DEST/$NOME")"
 
 (cd "$DEST" && sha256sum "$NOME" > "$NOME.sha256")
@@ -50,7 +50,7 @@ for f in servidor/alertas.json servidor/painel.token servidor/start-services.sh 
          servidor/panel/server-box/server.js servidor/.inventario/crontab.txt servidor/.inventario/server-box.bundle \
          .termux/boot/boot.sh .ssh/authorized_keys etc/ssh/ssh_host_ed25519_key var/service/server-box/run var/service/alertas/run \
          servidor/agentops/server.mjs servidor/agentops.token servidor/agentops-workers.json servidor/agentops-data/state.json \
-         servidor/sftp/host_ed25519 servidor/sftp_authorized_keys var/service/agentops/run var/service/sftp/run; do
+         servidor/sftp/host_ed25519 servidor/sftp_authorized_keys var/service/agentops/run var/service/sftp/run var/service/egress/run servidor/termux/egress-proxy.mjs; do
   [ -s "$TMP/$f" ] || { echo "FALTANDO: $f"; faltando=1; }
 done
 if git clone -q -b celular "$TMP/servidor/.inventario/server-box.bundle" "$TMP/clone-teste" 2>/dev/null; then
