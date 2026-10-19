@@ -20,7 +20,7 @@ Onde cada agente consegue rodar, com evidência (18–19/10/2026).
 | Carregador | `~/opt/claude-code/2.1.303/ld-musl-aarch64.so.1` |
 | Comando | `$PREFIX/bin/claude` (wrapper) |
 | ripgrep | o do Termux (`USE_BUILTIN_RIPGREP=0`) |
-| Atualização | manual (`DISABLE_AUTOUPDATER=1`): baixar o pacote `@anthropic-ai/claude-code-linux-arm64-musl` novo para `~/opt/claude-code/<versão>` e trocar o link `current` |
+| Atualização | `sh ~/servidor/termux/claude-update.sh --check` (compara com o npm) · `--apply [versão]` (baixa, confere sha512 com o `dist.integrity` do npm, testa `--version`, troca o link `current` e guarda `previous`) · `--rollback`. O autoupdate do Claude Code fica desligado (`DISABLE_AUTOUPDATER=1`) |
 
 Testado em 19/10 pelo AgentOps: tarefa real no perfil `leitura` respondeu certo; pedido para ler `~/servidor/agentops-workers.json` foi **negado** pelas regras e nenhum token vazou. As tarefas automáticas rodam com `--permission-mode dontAsk` (o padrão novo do Claude Code é `auto`, que aprovaria sozinho). Limitações: se o Claude Code tentar executar a si mesmo pelo caminho do binário (sem o carregador), isso falha; ferramentas que dependem de binários embutidos podem não funcionar.
 

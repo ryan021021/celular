@@ -28,6 +28,6 @@ Regras: um dono por tarefa; só edite os arquivos autorizados; nada no A13 sem `
 | T20 | Suíte de regressão + reconstrução do zero + checagem de afirmações | QA | — | `docs/qa/**`, `tools/qa/**` | READY | rodar no PC e no A13; restaurar backup em diretório temporário | — | — |
 | T21 | `imsservice` crasha no boot | GEM-IDE | — | debloat (ADB) | BACKLOG | logcat após boot | 9 crashes/boot | decidir reativar epdg/sve ou manter |
 | T22 | Hermes seguro como worker | ORQ | ferramenta | `tools/worker/**` | BLOCKED | canário | `hermes approvals test` permite ler chaves | sem toolset só de leitura confinado |
-| T24 | Atualização segura do Claude Code no A13 | ORQ | — | `server/termux/**`, docs | BACKLOG | versão nova roda + rollback | — | hoje manual |
+| T24 | Atualização segura do Claude Code no A13 | ORQ | — | `server/termux/**`, docs | REVIEW | versão nova roda + rollback | `server/termux/claude-update.sh` (`--check`/`--apply`/`--rollback`): `--check` no A13 ok (2.1.303 = npm); conferência sha512 contra `dist.integrity` testada no A13 | `--apply` e `--rollback` só serão exercitados quando sair versão nova; revisor: QA |
 | T25 | SFTP também pelo Tailscale | ORQ | T9 | `server/termux/sv/sftp` | BLOCKED | sftp pelo 100.x | — | depende do T9 |
 | T26 | Hospedagem de páginas estáticas no A13 | ORQ | — | a definir | BACKLOG | página servida só na LAN/Tailscale | — | avaliar antes de criar serviço |
