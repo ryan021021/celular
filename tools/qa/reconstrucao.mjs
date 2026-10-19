@@ -10,7 +10,9 @@
 //      /api/v1/* 401 sem token e 200 com o painel.token restaurado
 //   5. o AgentOps do backup sobe com a fila restaurada (127.0.0.1, sem executar tarefas): /health, /api/state com o
 //      token admin restaurado, mesma contagem de tarefas do state.json, 401 com token errado; o painel restaurado o enxerga
-// A pasta restaurada tem SEGREDOS (tokens, chaves de host do SSH): fica em %TEMP% e é apagada no fim, mesmo com erro.
+// A pasta restaurada tem SEGREDOS (tokens, chaves de host do SSH): fica em %TEMP% e é apagada no fim, mesmo com erro
+// ou Ctrl+C (SIGINT/SIGTERM/SIGHUP). Um encerramento forçado (taskkill /F, kill -9) não deixa limpar: por isso cada
+// execução começa apagando as pastas qa-reconstrucao-* com mais de 10 minutos que tenham sobrado (T35, revisão da FRONT).
 // Nenhum segredo é impresso. Não sobe o vigia de alertas (não manda push).
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -25,12 +27,22 @@ const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? proces
 const WIN = process.platform === "win32";
 const passos = [];
 const passo = (nome, ok, detalhe = "") => { passos.push({ nome, ok, detalhe }); console.log(`${ok ? "ok  " : "FALHA"} ${nome}${detalhe ? ` · ${detalhe}` : ""}`); return ok; };
+/** Não reprova o ensaio, mas aparece separado no resumo. */
+const aviso = (nome, detalhe) => { passos.push({ nome, ok: true, aviso: true, detalhe }); console.log(`AVISO ${nome} · ${detalhe}`); };
+
+// sobras de execuções mortas à força (têm segredos)
+const sobras = readdirSync(tmpdir()).filter(d => d.startsWith("qa-reconstrucao-")).map(d => join(tmpdir(), d))
+  .filter(d => { try { return Date.now() - statSync(d).mtimeMs > 10 * 60_000; } catch { return false; } });
+for (const d of sobras) rmSync(d, { recursive: true, force: true });
+if (sobras.length) console.log(`apagadas ${sobras.length} pasta(s) qa-reconstrucao-* que sobraram de execuções interrompidas`);
 
 const backups = readdirSync(join(ROOT, "backups")).filter(f => /^a13-\d{8}-\d{6}\.tar\.gz\.enc$/.test(f)).sort();
 const arquivo = resolve(arg("--backup", backups.length ? join(ROOT, "backups", backups.at(-1)) : ""));
 const tmp = mkdtempSync(join(tmpdir(), "qa-reconstrucao-"));
 const home = join(tmp, "home");
 const filhos = [];
+const limparTudo = () => { filhos.forEach(c => { try { parar(c); } catch {} }); try { rmSync(tmp, { recursive: true, force: true }); } catch {} };
+for (const sinal of ["SIGINT", "SIGTERM", "SIGHUP"]) process.on(sinal, () => { console.log(`\n${sinal}: encerrando e apagando a pasta restaurada`); limparTudo(); process.exit(130); });
 
 const portaLivre = () => new Promise(ok => { const s = createServer().listen(0, "127.0.0.1", () => { const p = s.address().port; s.close(() => ok(p)); }); });
 const esperar = async (fn, ms = 20_000) => { const fim = Date.now() + ms; while (Date.now() < fim) { try { const r = await fn(); if (r) return r; } catch {} await new Promise(r => setTimeout(r, 300)); } return null; };
@@ -65,7 +77,8 @@ try {
   // Aviso, não falha: o DISASTER_RECOVERY manda rodar o deploy.ps1 depois de restaurar, e ele recria os serviços runit
   // a partir do repositório. Mas a lista do backup.sh deveria acompanhar os serviços (achado Q6).
   const semOpc = ["var/service/egress/run", "servidor/termux/egress-proxy.mjs"].filter(f => !existsSync(join(home, f)));
-  passo("backup acompanha os serviços novos (egress)", true, semOpc.length ? `AVISO: ausentes ${semOpc.join(", ")}; o deploy.ps1 recria` : "presentes");
+  if (semOpc.length) aviso("backup acompanha os serviços novos (egress)", `ausentes ${semOpc.join(", ")}; o deploy.ps1 recria (Q6)`);
+  else passo("backup acompanha os serviços novos (egress)", true, "presentes");
   let estado = null;
   try { estado = JSON.parse(ler("servidor/agentops-data/state.json")); } catch {}
   passo("fila do AgentOps é JSON válido", !!estado && Array.isArray(estado.tasks), estado ? `${estado.tasks.length} tarefa(s), pausado=${!!estado.paused}` : "ilegível");
@@ -132,6 +145,7 @@ try {
 }
 
 const ok = passos.every(p => p.ok);
-console.log(`\n${ok ? "RECONSTRUÇÃO OK" : "RECONSTRUÇÃO COM FALHAS"} · ${passos.filter(p => p.ok).length}/${passos.length} passos`);
+const avisos = passos.filter(p => p.aviso).length;
+console.log(`\n${ok ? "RECONSTRUÇÃO OK" : "RECONSTRUÇÃO COM FALHAS"} · ${passos.filter(p => p.ok && !p.aviso).length}/${passos.length - avisos} passos${avisos ? ` · ${avisos} aviso(s)` : ""}`);
 if (arg("--json", "")) writeFileSync(arg("--json"), JSON.stringify({ quando: new Date().toISOString(), backup: arquivo.replace(ROOT, "."), ok, passos }, null, 2));
 process.exitCode = ok ? 0 : 1;

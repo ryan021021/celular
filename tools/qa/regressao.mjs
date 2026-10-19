@@ -15,6 +15,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync, readdirSy
 import { tmpdir } from "node:os";
 import { join, dirname, resolve, relative, extname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { DESKTOP } from "./regras.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PAINEL = join(ROOT, "server", "panel", "server-box");
@@ -137,7 +138,7 @@ function varrerSegredos(grupo, arquivos, base) {
 }
 varrerSegredos("repositório raiz", rastreados, ROOT);
 
-// 5. regra do CLAUDE.md: scripts sem caminho da Desktop nem serial fixo
+// 5. regra do CLAUDE.md: scripts sem caminho da Desktop nem serial fixo (expressão e casos em tools/qa/regras.mjs)
 {
   // testes ficam de fora: usam caminhos de exemplo de propósito (ex.: C:/Users/x/Desktop para provar o bloqueio)
   const scripts = rastreados.filter(f => [".ps1", ".bat", ".cmd", ".sh", ".mjs", ".js", ".cjs", ".py"].includes(ext(f)) && !f.startsWith("tools/qa/") && !f.endsWith(".test.mjs"));
@@ -149,7 +150,7 @@ varrerSegredos("repositório raiz", rastreados, ROOT);
   for (const f of scripts) {
     const txt = readFileSync(join(ROOT, f), "utf8");
     txt.split("\n").forEach((l, i) => {
-      if (/[A-Za-z]:[\\/]+Users[\\/]+[^\\/]+[\\/]+Desktop|%USERPROFILE%[\\/]+Desktop|~\/Desktop\b(?!\/\*\*)/i.test(l) && !/^\s*(\/\/|#|::|rem )/i.test(l)) achados.push(`${f}:${i + 1} (caminho da Desktop)`);
+      if (DESKTOP.test(l) && !/^\s*(\/\/|#|::|rem )/i.test(l)) achados.push(`${f}:${i + 1} (caminho da Desktop)`);
       for (const s of seriais) if (l.includes(s)) achados.push(`${f}:${i + 1} (serial ${s})`);
     });
   }

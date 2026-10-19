@@ -35,9 +35,10 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | Q5 | MÉDIA | `tools/rescue/desenhar_padrao.bat:15`, `tools/rescue/resgatar_galaxy_a21s.bat:4` | Lançadores de resgate QUEBRADOS: chamam .py/.ps1 em `C:UsersRyanrDesktop`, que foram movidos para `tools/rescue/` (não existem mais na Desktop). Mais caminho da Desktop e serial fixo em `tools/debug/*.cjs` e `tools/connect/legacy` | GEM-IDE | ABERTO (handoff `2026-10-19_qa-para-gemini_caminhos-desktop.md`) |
 | R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | VERIFICADO (15/15 no PC, 19/10 06:5x) |
 . Depois de cada atualização, repetir o teste de isolamento (as ferramentas mudam entre versões) | ORQ | ABERTO |
-| R7 | BAIXA | `tools/server/reaplicar-ajustes.ps1:2` | Serial fixo `RQ8TC00EJNB` no `param` (regra do CLAUDE.md); ler do perfil com `Get-ProfileBySerial`/`profiles/a13.json` | ORQ | CORRIGIDO pela ORQ (2a14bb8), lido pela QA |
+| R7 | BAIXA | `tools/server/reaplicar-ajustes.ps1:2` | Serial fixo `RQ8TC00EJNB` no `param` (regra do CLAUDE.md); ler do perfil com `Get-ProfileBySerial`/`profiles/a13.json` | ORQ | VERIFICADO (regressão não acusa mais o reaplicar-ajustes.ps1) |
 | Q8 | MÉDIA | `server/termux/setup.sh:7` | Instala `nodejs-lts`, mas a produção roda `nodejs` 26.4.0 (dpkg e `/proc/<pid>/exe` de todos os serviços). No Termux os dois conflitam: `deploy.ps1 -Step Install` ou a reconstrução do DISASTER_RECOVERY trocariam a versão principal do Node, diferente da testada. O `docs/ARCHITECTURE.md:16` e o `profiles/a13.json:29` dizem v24.18.0 (falso; ver `docs/qa/AFIRMACOES.md`) | ORQ (+ GEM-IDE no perfil) | VERIFICADO no setup (T33: `nodejs`); textos do ARCHITECTURE/perfil pendentes |
-| R8 | BAIXA | `server/agentops/adapters.mjs` (`claudeArgs`) | Texto da tarefa vai como argumento posicional depois de `-p` (booleano): texto que começa com "-" vira opção do CLI (`claude -p "--version"` imprime a versão). Com os argumentos da T32 e stdin vazio: `--dangerously-skip-permissions` → recusado pelo `--restricted`; `-c` → erro. Sem escalada hoje, mas tarefa legítima com "-" no início quebra. Sugerido: texto pelo stdin | ORQ | ABERTO |
+| R8 | BAIXA | `server/agentops/adapters.mjs` (`claudeArgs`) | Texto da tarefa vai como argumento posicional depois de `-p` (booleano): texto que começa com "-" vira opção do CLI (`claude -p "--version"` imprime a versão). Com os argumentos da T32 e stdin vazio: `--dangerously-skip-permissions` → recusado pelo `--restricted`; `-c` → erro. Sem escalada hoje, mas tarefa legítima com "-" no início quebra. Sugerido: texto pelo stdin | ORQ | VERIFICADO (T34, 73d3a2d: texto pelo stdin; teste garante que depois de `-p` vem opção nossa; 16/16) |
+| Q9 | BAIXA | `server/panel/server-box/console-api.mjs:21,84` | Respostas da `/api/v1/*` saem sem `X-Content-Type-Options: nosniff` (e sem `X-Frame-Options`); os outros JSON do `server.js` têm (`SEC_HEADERS`). Risco prático pequeno (exige login, tipo `application/json` explícito), mas é inconsistente | BACK | ABERTO |
 
 ## Q1: worker do PC executava Bash e lia fora da pasta
 
@@ -106,3 +107,32 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | T24 atualizador do Claude Code | aprovado com R6 (e Q7 relacionado) | leitura do código: sha512 contra `dist.integrity`, `--version` antes da troca, troca atômica do link (`mv -fT`), anterior guardada, rollback. `--apply`/`--rollback` não foram exercitados (não há versão nova) |
 | T29 permissões do Termux | aprovado | conferido por mim pelo ADB (lock 06:48, só leitura): em `dumpsys package com.termux`, só `android.permission.DUMP: granted=true` |
 | T30 reaplicar ajustes | aprovado com R7 | `reaplicar-ajustes.ps1 -SoConferir` rodado por mim (mesmo lock): 5/5 ok, "tudo certo: nada a corrigir" |
+
+## Segurança do painel, caixa-preta (19/10 ~06:56)
+
+`node tools/qa/seguranca-painel.mjs`: `server.js` REAL de um clone limpo do branch `celular` (`f9ad723`, o que está no A13), em 127.0.0.1, com home falsa (token de TESTE gerado na hora) e AgentOps simulado que registra cada chamada. "Recusada" = código HTTP certo **e** nenhuma chamada no AgentOps. **40/41 provas**; a falha é o Q9.
+
+| Grupo | O que passou |
+|---|---|
+| público | `/health` só `{ok, service}`; `/ready` só `{ok}` |
+| sem login | 18 rotas de API dão 401; `/`, `/console`, `/status.html` e os scripts redirecionam para `/login` |
+| credencial | Bearer errado, token na query string e token cru no cookie não autenticam |
+| login | erro = 401 sem cookie; acerto = 303 + cookie `HttpOnly; SameSite=Strict; Path=/`, que não contém o token; corpo de 5 KB cortado |
+| ações | sem `X-Painel-Acao`, com Origin de outro site, Origin `null`, cookie sem cabeçalho, sem login e GET na rota de ação: nada chega ao AgentOps; mesma origem + cabeçalho = exatamente 1 chamada |
+| entrada | id de tarefa com `../` codificado recusado (400) sem alcançar outra rota do AgentOps; corpo de 20 KB cortado; JSON inválido = 400 |
+| logs | 8 fontes forjadas recusadas (`file:../..`, `__proto__`, `constructor`, `sv:../`, caminhos absolutos); token do painel, Bearer e sk-ant mascarados no log |
+| estáticos | 7 tentativas de sair de `public/` (`%2e%2e`, `%5c`, `//`…) não devolvem código-fonte |
+| cabeçalhos | CSP do console com `script-src 'self'` (sem inline), `X-Frame-Options: DENY`, nosniff no HTML; `X-Request-Id` malicioso trocado por UUID |
+| ao vivo | `/api/v1/live` 401 sem login; com login abre `text/event-stream` |
+| sessão | "sair de todos" troca o salt; cookie antigo vira 401; Bearer continua |
+| limite | mais de 30 ações por minuto dão 429 (25 passaram, 7 barradas, contando as anteriores) |
+| força bruta | depois de 10 erros, até o token certo dá 429 |
+| segredos | token ausente de 110 respostas |
+
+**Não coberto:** XSS no navegador (o front usa `textContent`; os testes de DOM da FRONT cobrem); DNS rebinding (sem cookie nem token, o atacante cai no 401, pela leitura do código); DoS por conexões lentas; TLS (o painel é HTTP na LAN/Tailscale). Observação da leitura: o Bearer errado nas rotas de API não conta para o bloqueio de força bruta (só o `/login` conta). Com o token de 48+ caracteres aleatórios, isso não é atacável na prática.
+
+## T35: notas da FRONT sobre as ferramentas da QA (19/10 ~07:00)
+1. Regra da Desktop em `tools/qa/regras.mjs` (com teste `tools/qa/test/regras.test.mjs`, 2/2): agora pega também `$env:USERPROFILE\Desktop`, `$HOME/Desktop`, `${HOME}/Desktop`, `[Environment]::GetFolderPath('Desktop')` e `homedir()`/`expanduser`/`Path.home()` + "Desktop".
+2. `reconstrucao.mjs`: apaga a pasta restaurada em SIGINT/SIGTERM/SIGHUP e, no início, apaga as `qa-reconstrucao-*` com mais de 10 min (taskkill /F e kill -9 não deixam limpar). Testado: uma sobra com data de 20 min foi apagada.
+3. Avisos contados à parte: "18/18 passos · 1 aviso(s)" (o Q6 do egress).
+Rodado de novo com o backup das 06:55: 18/18, painel restaurado = produção `f9ad723`, 6 tarefas na fila.
