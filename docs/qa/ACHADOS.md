@@ -11,7 +11,9 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | Q3 | ALTA | `tools/worker/worker.mjs` (1.1) | Mesmo em `dontAsk`, o agente tinha SendMessage, ListAgents, RemoteTrigger, PushNotification e Cron*: mandou mensagem para outra sessão do Claude | ORQ | VERIFICADO (1.2) |
 | R1 | BAIXA | `tools/worker/worker.mjs` (1.1) | workdir dentro de pasta bloqueada (~/AppData etc.): o agente não lia nem a própria pasta e devolvia ok:true | ORQ | VERIFICADO (1.2: exit 2) |
 | R2 | BAIXA | `tools/worker/test/` | `node --test <pasta>` falha no Node 25 do Windows; por glob passa | ORQ | VERIFICADO (comando documentado) |
-| Q4 | BAIXA | `server/termux/egress-proxy.mjs:38` | Erro do destino depois do túnel aberto escreve `HTTP/1.1 502` dentro do fluxo TLS; e importar o módulo já abre a porta, o que impede teste de `allowed()` | ORQ | ABERTO |
+| Q4 | BAIXA | `server/termux/egress-proxy.mjs:38` | Erro do destino depois do túnel aberto escreve `HTTP/1.1 502` dentro do fluxo TLS; e importar o módulo já abre a porta, o que impede teste de `allowed()` | ORQ | VERIFICADO no PC (`b8d64a6`, 4/4); falta conferir no A13 depois do deploy |
+| Q5 | MÉDIA | `tools/rescue/desenhar_padrao.bat:15`, `tools/rescue/resgatar_galaxy_a21s.bat:4` | Lançadores de resgate QUEBRADOS: chamam .py/.ps1 em `C:UsersRyanrDesktop`, que foram movidos para `tools/rescue/` (não existem mais na Desktop). Mais caminho da Desktop e serial fixo em `tools/debug/*.cjs` e `tools/connect/legacy` | GEM-IDE | ABERTO (handoff `2026-10-19_qa-para-gemini_caminhos-desktop.md`) |
+| R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | ABERTO |
 
 ## Q1: worker do PC executava Bash e lia fora da pasta
 
@@ -53,3 +55,9 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 ## Q4: egress-proxy (baixa)
 
 `server/termux/egress-proxy.mjs`: o `upstream.on("error")` chama `client.end("HTTP/1.1 502 …")` mesmo depois do `200 Connection Established`. O cliente recebe texto no meio do TLS (falha de qualquer jeito, mas com erro confuso). Corrigir: escrever o 502 só antes do 200; depois dele, `client.destroy()`. Além disso, o `server.listen` roda no import, então não dá para testar `allowed()` (por exemplo, `evilanthropic.com` tem que dar falso) sem abrir a porta. Sugestão: proteger o `listen` como o worker 1.1 faz, e escrever um teste.
+
+**Q4, revisão da correção (`b8d64a6`, 19/10 06:37):** o 502 só sai antes do `200` e, depois dele, `client.destroy()`; `allowed()` recusa `/` e `@`; `listen` atrás do mesmo guard de módulo principal que o `server/agentops/server.mjs:139` já usa em produção no runit. `node --test server/termux/test/*.test.mjs`: 4/4. **Conferir no A13 depois do deploy:** `sv status egress` com mais de 10 s de uptime (sem laço de reinício) e uma requisição pelo proxy para `api.anthropic.com` responde (se o guard falhasse, o node sairia na hora e o Claude Code do A13 ficaria sem rede).
+
+## Regressão (T20)
+
+`node tools/qa/regressao.mjs` (relatórios em `docs/qa/regressao-*.md`). 1ª rodada completa em 19/10 06:41: sintaxe 100% (15 JS, 18 shell, 9 PowerShell); suítes da raiz ok, exceto R3; painel `celular@e127952` 128/129 com 1 pulado em 6,5 s; nenhuma suíte travou (limite de 180 s); segredos: 0 na raiz (107 arquivos) e 0 no painel (49); regra de caminhos: 14 ocorrências (Q5).
