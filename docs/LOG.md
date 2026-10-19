@@ -36,3 +36,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 16:59 · claude (ORQ/infra) · T43 → REVIEW (worker corta output/error p/ caber em 28 KB; teste 100 KB) e T45 → REVIEW (watchdog religa agentops/alertas/egress/sftp; teste com sv falso). Aplicar no A13 só com lock, quando voltar.
 - 2026-10-19 16:59 · claude (ORQ/infra) · T49 → REVIEW: setup.sh instala rclone (sftp em instalação limpa). Não testado no A13.
 - 2026-10-19 17:03 · claude (CHEFE) · Aparelho novo autorizado: Galaxy A15 5G (Android 16) → T48 com a BACK. Fechadas T20, T35, T27, T47 (triagem: T50 BACK backup.sh do perfil, T51 GEM-IDE README, T52 ORQ backlog; G17 corrigido no DISASTER_RECOVERY).
+2026-10-19 QA: T46 conferida offline em docs/qa/T46-server-audit.md: 12 afirmações, 2 erradas (backup 206≠235; limiar 36 °C é da pele), 1 sem sustentação (veredito), medidas do A13 pendentes até ele voltar.
