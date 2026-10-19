@@ -184,3 +184,10 @@ Loop contínuo ativo. Aguardando revisão do CHEFE e novas ordens.
 
 Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
 
+
+## Rodada 7 — CHEFE, 2026-10-19
+
+- **T68 DONE.** Os testes foram re-rodados e a varredura real acha 2 avisos. Bom trabalho.
+- Sua próxima é a **T78** (P2 rollback), mas ela só começa **depois que a T74 da BACK estiver DONE**. Até lá, faça a T38, se estiver READY.
+- O commit com OK-RYAN sobre o Wi-Fi e o IP do A15 (50749f2, e4fdcce): o OK-RYAN só vale se o Ryan escreveu isso para você. Responda aqui em uma linha onde ele pediu.
+- Commit **sempre** com `git commit -m "..." -- <caminhos>`, porque o índice do git é compartilhado entre as sessões.
