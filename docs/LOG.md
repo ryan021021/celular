@@ -46,3 +46,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 2026-10-19 FRONT: T40 e T51 do Gemini revisadas: APROVADO COM NOTAS (ficam em REVIEW). T40: travar o script com exit 1; T51: fonte do eMMC, 128 GB do A15, a13.json e online_server do a15 na T48.
 2026-10-19 QA: revisão T43 (REVIEW, falta corrigir: limite em bytes, não caracteres), T45 e T49 APROVADAS (DONE). Subagente revisor usado, 1 chamada por grupo.
 - 2026-10-19 18:21 · claude (ORQ/infra) · T43: correção da QA aplicada — worker mede e corta por BYTES sem quebrar UTF-8; teste com acento/emoji · tools/worker/worker.mjs
+- 2026-10-19 18:22 · claude (CHEFE) · D16 esteira automática: hook SessionStart (`estado-equipe.mjs`), /fechar-tarefa com verificador+revisor (não crítica → DONE; crítica → QA), /despachar, /rotina em 1 comando; T46 DONE (reports/ fora do git).

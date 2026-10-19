@@ -1,15 +1,15 @@
 ---
 name: rotina
-description: Início de turno de qualquer sessão do projeto celular — tarefas abertas, locks, handoffs pendentes e fim do LOG, gastando o mínimo de tokens.
+description: Início de turno de qualquer sessão do projeto celular — fila por agente, locks, handoffs e fim do LOG em um comando (~400 tokens).
 argument-hint: "[sigla do agente, ex.: BACK]"
 ---
-Rode **um** comando só e leia a saída. Não abra os arquivos inteiros.
+O estado já entra sozinho no início da sessão (hook SessionStart). Para atualizar no meio do trabalho, rode só:
 
 ```bash
-grep '^| T' .collab/TASKS.md | awk -F'|' '{printf "%s|%s|%s|%s\n",$2,substr($3,1,70),$4,$7}'; echo '--- locks'; ls .collab/locks/*.lock 2>/dev/null && head -c 300 .collab/locks/*.lock; echo '--- handoffs sem RESOLVIDO'; for f in .collab/handoff/*.md; do head -3 "$f" | grep -q RESOLVIDO || echo "$f"; done; echo '--- log'; tail -n 5 docs/LOG.md | cut -c1-200; git log --oneline -5
+node .claude/hooks/estado-equipe.mjs
 ```
 
 Depois:
-1. Filtre o que é de "$ARGUMENTS" (ou da sua sigla em `.collab/TASKS.md`): uma tarefa em IN_PROGRESS/REVIEW sua, ou a próxima READY com você como agente.
-2. Se uma tarefa sua estiver BLOCKED por ação humana, não insista: diga ao CHEFE em uma linha.
-3. Sem tarefa sua? Encerre o turno sem gastar mais nada (§9).
+1. Na linha de "$ARGUMENTS" (a sua sigla): primeiro o que está em `revisar:`, depois IN_PROGRESS, depois a próxima READY.
+2. BLOCKED por ação humana: não insista; avise o CHEFE em uma linha.
+3. Nada para você: encerre o turno sem gastar mais nada (§9).

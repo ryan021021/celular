@@ -42,7 +42,7 @@ Quem recebe responde no mesmo arquivo e marca `RESOLVIDO` no topo.
 
 ## 5. Revisão cruzada
 Todo trabalho vai para `review`. O **outro** agente revisa antes de `done`.
-Nada de revisar o próprio código.
+Nada de revisar o próprio código. (19/10, D16: em tarefa não crítica o subagente `revisor`, com contexto isolado, conta como o outro agente; tarefa crítica segue com a QA. Ver §10.)
 
 ## 6. Log
 Ao terminar uma tarefa, uma linha em `docs/LOG.md`: data, agente, o que mudou, arquivos.
@@ -87,3 +87,9 @@ Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx
 Trava (`adb-guard`): bloqueia comando ADB destrutivo (uninstall, clear, disable, reboot, compile, wm density, policy_control, rm -rf, fastboot). Só passa com o OK do Ryan e o marcador `# OK-RYAN: <motivo>` no comando. Teste: `node --test .claude/hooks/adb-guard.test.mjs`.
 
 Não usamos o "Agent Teams" experimental: custa mais e a coordenação já é feita pelo CHEFE com as sessões.
+
+### Esteira automática (19/10, D16)
+- **Início de sessão:** o hook `SessionStart` injeta sozinho a fila por agente, os locks, os handoffs e o fim do LOG (`.claude/hooks/estado-equipe.mjs`, ~400 tokens). Para atualizar: `node .claude/hooks/estado-equipe.mjs`.
+- **Entrega:** `/fechar-tarefa <Txx> <evidência>` roda `verificador` e `revisor` em paralelo. Tarefa não crítica aprovada vai direto para DONE. Tarefa crítica (aparelho, `profiles/`, `server/termux`, `tools/server`, deploy, auth, rede, segredos) vai para REVIEW com a QA.
+- **Distribuição:** o CHEFE usa `/despachar`, que só acorda sessão parada que tem trabalho.
+- **Gemini:** pedidos no fim do handoff aberto dele; o Ryan cola uma linha no Antigravity.

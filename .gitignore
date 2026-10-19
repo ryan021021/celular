@@ -28,3 +28,6 @@ tools/debug/snapshots_a13/
 *.log
 node_modules/
 desktop.ini
+
+# Relatórios gerados sem dono/revisão (T46: afirmações erradas; correções em docs/qa/)
+reports/

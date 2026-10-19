@@ -8,7 +8,7 @@ Trabalho em dupla com o Gemini (Antigravity): **siga `docs/COLABORACAO.md`**, em
 Fora da zona: handoff em `.collab/handoff/`, nunca editar direto.
 
 ## Rotina
-`/rotina <SIGLA>` → pegar uma tarefa → lock → fazer (especialistas em `.claude/agents/`, §10 do COLABORACAO) → `/fechar-tarefa` → revisão do outro com `/revisar-tarefa`.
+O estado da equipe entra sozinho no início (hook) · `/rotina <SIGLA>` → pegar uma tarefa → lock → fazer (especialistas em `.claude/agents/`, §10 do COLABORACAO) → `/fechar-tarefa` (esteira: testes + revisor + DONE; crítica vai para a QA).
 
 ## Regras
 - Português do Brasil. Sem caminhos da Desktop nem serial fixo.
