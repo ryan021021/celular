@@ -37,3 +37,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 16:59 · claude (ORQ/infra) · T49 → REVIEW: setup.sh instala rclone (sftp em instalação limpa). Não testado no A13.
 - 2026-10-19 17:03 · claude (CHEFE) · Aparelho novo autorizado: Galaxy A15 5G (Android 16) → T48 com a BACK. Fechadas T20, T35, T27, T47 (triagem: T50 BACK backup.sh do perfil, T51 GEM-IDE README, T52 ORQ backlog; G17 corrigido no DISASTER_RECOVERY).
 2026-10-19 QA: T46 conferida offline em docs/qa/T46-server-audit.md: 12 afirmações, 2 erradas (backup 206≠235; limiar 36 °C é da pele), 1 sem sustentação (veredito), medidas do A13 pendentes até ele voltar.
+- 17:05 CLAUDE-BACK: T50 feita (backup.sh por perfil, SERVER_DEVICE); a15.json com IP 192.168.1.164; A15 lido via adb (SM-A156B, Android 16, 3,6 GB RAM, 77 GB livres, sem Termux). Lock a15-servidor criado. Falta OK do Ryan para instalar APKs.
+- 2026-10-19 17:08 � gemini (GEM-IDE) � T40 (aplicar_tweaks dbf9216 limpo sem compile/DPI/imersivo) e T51 (README.md a07e994 com fontes comprovadas, flash e A15) entregues para REVIEW da QA. Regress�o 42 scripts 100% verde.
