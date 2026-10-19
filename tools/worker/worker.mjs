@@ -19,7 +19,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const VERSION = "worker-pc 1.1";
+export const VERSION = "worker-pc 1.2";
 
 // Ferramentas que nunca rodam no PC por tarefa vinda da fila
 export const DISALLOWED = ["Bash", "PowerShell", "Edit", "Write", "MultiEdit", "NotebookEdit", "WebFetch", "WebSearch", "Agent", "Task"];
@@ -44,7 +44,11 @@ export function buildRunner(profile, dir) {
   if (profile === "pc-claude") {
     return {
       cmd: "claude",
+      // --tools + --restricted: a sessão só TEM Read/Grep/Glob (sem ListAgents/SendMessage/Cron… — achado Q3:
+      // senão a tarefa podia mandar mensagem para sessões em bypass). --restricted ignora o settings da pasta,
+      // então o --settings apontando para ele é obrigatório (provado pela QA: sem ele o .env da pasta vazava).
       args: ["-p", "--output-format", "json", "--permission-mode", "dontAsk",
+        "--tools", "Read,Grep,Glob", "--restricted", "--settings", join(dir || ".", ".claude", "settings.json"),
         "--allowedTools", "Read(./**)", "--disallowedTools", DISALLOWED.join(","),
         "--strict-mcp-config", "--max-turns", "10"],
       cwd: dir,
@@ -52,6 +56,17 @@ export function buildRunner(profile, dir) {
   }
   if (profile === "pc-hermes") {
     return { disabled: "pc-hermes desligado até prova de segurança: não há toolset só de leitura comprovado sem TTY (achado Q2 da QA)" };
+  }
+  return null;
+}
+
+/** Workdir dentro de uma pasta bloqueada = agente não lê nem a própria pasta (achado R1 da QA). */
+export function blockedWorkdir(workdir, home = homedir()) {
+  const norm = p => String(p || "").replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+  const w = norm(workdir), h = norm(home);
+  for (const d of [".ssh", ".servidor-a13", ".claude", ".gemini", "Desktop", "Documents", "AppData"]) {
+    const b = `${h}/${d.toLowerCase()}`;
+    if (w === b || w.startsWith(`${b}/`)) return `~/${d}`;
   }
   return null;
 }
@@ -128,6 +143,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   // WORKER_CONFIG permite apontar para outra config (ex.: teste de aceitação contra um AgentOps simulado)
   const cfgPath = process.env.WORKER_CONFIG || join(homedir(), ".servidor-a13", "worker.json");
   const cfg = JSON.parse(readFileSync(cfgPath, "utf8"));
+  const bad = blockedWorkdir(cfg.workdir);
+  if (bad) { console.error(`[worker] workdir ${cfg.workdir} fica dentro de ${bad}, que as regras bloqueiam: o agente não leria nem a própria pasta. Use, por exemplo, ~/agentes-pc.`); process.exit(2); }
   const api = makeApi(cfg);
   const once = process.argv.includes("--once"), dry = process.argv.includes("--dry-run");
   if (once || dry) await cycle(cfg, api, dry).catch(e => { console.error(`[worker] ${e.message}`); process.exitCode = 1; });

@@ -3,7 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildRunner, prepareDir, claudeSettings, DISALLOWED } from "../worker.mjs";
+// Rodar com: node --test tools/worker/test/*.test.mjs  (passar só a pasta falha no Node 25 do Windows)
+import { buildRunner, prepareDir, claudeSettings, DISALLOWED, blockedWorkdir } from "../worker.mjs";
 
 test("importar o worker não exige worker.json nem roda o loop", () => {
   assert.equal(typeof buildRunner, "function");
@@ -36,6 +37,19 @@ test("pasta do perfil recebe regras: lê só ./, nega pastas sensíveis e ferram
   }
   assert.equal(s.permissions.defaultMode, "dontAsk");
   for (const t of DISALLOWED) assert.ok(s.permissions.deny.includes(t));
+});
+
+test("pc-claude: sessão só com Read/Grep/Glob, restrita e com o settings da pasta (Q3)", () => {
+  const r = buildRunner("pc-claude", "C:/w/pc-claude");
+  assert.equal(r.args[r.args.indexOf("--tools") + 1], "Read,Grep,Glob");
+  assert.ok(r.args.includes("--restricted"));
+  assert.match(r.args[r.args.indexOf("--settings") + 1].replace(/\\/g, "/"), /C:\/w\/pc-claude\/\.claude\/settings\.json$/);
+});
+
+test("workdir dentro de pasta bloqueada é recusado (R1)", () => {
+  assert.equal(blockedWorkdir("C:/Users/x/agentes-pc", "C:/Users/x"), null);
+  assert.equal(blockedWorkdir("C:\\Users\\x\\AppData\\Local\\Temp\\w", "C:\\Users\\x"), "~/AppData");
+  assert.equal(blockedWorkdir("C:/Users/x/Desktop/w", "C:/Users/x"), "~/Desktop");
 });
 
 test("nome de perfil com caminho é recusado", () => {
