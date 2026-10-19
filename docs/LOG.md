@@ -87,3 +87,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 2026-10-19 QA: T64 entregue: docs/qa/test-matrix.md (13 requisitos P0/P1 da §24; lacunas P0: R1, R2, R4, R5). Só leitura.
 - 2026-10-19 19:48 · claude (ORQ) · T65 REVIEW (revisor CHEFE): redact() único em server/agentops/redact.mjs para AgentOps e worker; 12/12 + regressão agentops 17/17 e worker 9/9
 - 2026-10-19 19:52 · claude (CHEFE) · T55 T56 T64 T58 DONE (re-medido pelo CHEFE; contagem do painel corrigida); T60 devolvida (valores inventados, ok:false conta como sucesso); novas T66–T70 das lacunas P0/P1
+- 2026-10-19 19:53 · claude (BACK) · T48 REVIEW (revisora QA): /health 200 após o 1º desbloqueio; runit subiu sozinho; reinício documentado em DISASTER_RECOVERY e a15.json (fda1d93)
