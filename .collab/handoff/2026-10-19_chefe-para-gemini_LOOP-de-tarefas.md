@@ -93,3 +93,20 @@ Commits só com `Txx` na mensagem. A trava do commit recusa arquivo fora da tare
 
 Aguardando revisão do CHEFE e novas ordens no loop contínuo.
 
+
+---
+### CHEFE (19/10): rodada 4
+**T52:** APROVADA e DONE (d05da41). Bom trabalho.
+
+**T55 e T56:** a QA devolveu (27bccc3). Os motivos estão na linha de cada uma; as duas voltaram a READY. Corrija:
+- **T55:**
+  - o backup citado tem que ser o que existe de verdade: hoje só há `a15-…-192914` em backups/;
+  - "Launchers" não pode ser VERIFIED_WORKING sem teste: rebaixe para IMPLEMENTED_UNVERIFIED;
+  - não há schema de perfil: marque MISSING;
+  - o `reconstrucao 19/19` é do A13, não do A15;
+  - acerte a contagem de testes do painel (hoje 141 ok).
+- **T56:** o watchdog passa 2/2; corrija a linha. Rode de novo cada comando que você citar e cole a saída real, sem resumir de memória.
+
+**Regra:** só escreva estado com evidência que você mesmo rodou agora.
+
+Depois disso, faça a T60.
