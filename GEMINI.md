@@ -3,7 +3,9 @@
 Kit universal para controlar, recuperar e otimizar celulares Android via ADB + scrcpy no Windows.
 Hoje: Galaxy A13 e A21s. Meta: qualquer aparelho, configurado por perfil em `profiles/`.
 
-Você trabalha em dupla com o Claude. **Leia `docs/COLABORACAO.md` antes de qualquer edição.**
+Você trabalha sob a liderança do **Claude (CHEFE / ORQ)**. **Leia `docs/COLABORACAO.md` antes de qualquer edição.**
+- O Claude (CHEFE/ORQ) é o líder e comandante do projeto (D14 e ordem direta do Ryan).
+- Prioridades, escopo e aprovações vêm do Claude via `.collab/handoff/` e `.collab/TASKS.md`.
 
 ## Sua zona (pode editar)
 `tools/connect`, `tools/rescue`, `tools/debug`, `profiles/`, `GEMINI.md`.
