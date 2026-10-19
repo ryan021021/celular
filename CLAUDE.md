@@ -15,3 +15,6 @@ O estado da equipe entra sozinho no início (hook) · `/rotina <SIGLA>` → pega
 - Comandos ADB destrutivos só com confirmação do usuário.
 - Não apagar arquivos.
 - Economia: ler por trecho, saída filtrada, sem polling/`/loop`, sem subagentes sem pedido, respostas curtas.
+
+## Ao compactar (/compact ou automático)
+Guardar só: tarefa atual e estado (Txx), arquivos mexidos, commits, testes que falharam e por quê, decisões do Ryan e pendências. Descartar: saídas de comandos, conteúdo de arquivos já lidos, tentativas que não deram certo.

@@ -67,6 +67,9 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Subagentes:** só os do projeto (§10), que são baratos e devolvem resumo. Agent genérico, Explore e pesquisa web só com pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
 - **Contexto:** o projeto compacta sozinho aos 25% da janela (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=25` em `.claude/settings.json`, ~250 mil). Antes disso, registre o estado em TASKS/handoff; sessão com muito histórico inútil: `/compact` ou sessão nova.
+- **Cache:** não trocar de modelo nem de esforço no meio da sessão (perde o cache e reprocessa tudo). Troque só depois de `/clear` ou em sessão nova.
+- **Uma tarefa por contexto:** terminou e fechou a tarefa (`/fechar-tarefa`)? Rode `/clear` antes da próxima, a menos que ela dependa do que acabou de ser feito. O estado fica em TASKS/LOG/commit, não no histórico.
+- **Plugins e conectores fora do projeto:** os plugins de Shopify/Trackbee ficam desligados neste projeto (`.claude/settings.json`). Conectores da conta (meta-ads, Hostinger, Gmail…) só o Ryan desliga.
 - **Modelo/esforço (19/10, CHEFE):** CHEFE = Opus; ORQ, BACK, FRONT e QA = Sonnet, esforço médio. Ninguém troca de modelo sozinho; subir só com OK do Ryan ou do CHEFE. Sessão sem tarefa fica parada (sem polling) até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)

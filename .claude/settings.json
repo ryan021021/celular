@@ -26,5 +26,9 @@
   },
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25"
+  },
+  "enabledPlugins": {
+    "shopify-ai-toolkit@claude-plugins-official": false,
+    "trackbee-claude-plugin@trackbee-claude-plugin": false
   }
 }
