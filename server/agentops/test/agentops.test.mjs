@@ -195,3 +195,16 @@ test("pastas de perfil ficam confinadas em ~/agentes; backoff cresce e tem teto"
   assert.ok(backoffMs(1, 1000, 60000, () => 0) < backoffMs(4, 1000, 60000, () => 0));
   assert.ok(backoffMs(50, 1000, 60000, () => 0) <= 60000);
 });
+
+test("claude-local: sessão só com as ferramentas do perfil, sem MCP e com o settings da pasta (Q7)", async () => {
+  const { claudeArgs, BASE_TOOLS } = await import("../adapters.mjs");
+  const a = claudeArgs("tarefa", { tools: ["Read", "Grep", "Glob", "Edit", "Write"], allowedTools: ["Read(./**)"] }, "/w/edicao");
+  assert.equal(a[a.indexOf("--tools") + 1], "Read,Grep,Glob,Edit,Write");
+  assert.ok(a.includes("--strict-mcp-config") && a.includes("--restricted"));
+  assert.equal(a[a.indexOf("--permission-mode") + 1], "dontAsk");
+  assert.match(a[a.indexOf("--settings") + 1].split(String.fromCharCode(92)).join("/"), /\/w\/edicao\/\.claude\/settings\.json$/);
+  assert.equal(a[a.indexOf("-p") + 1], "tarefa");
+  const padrao = claudeArgs("x", {}, "/w/l");
+  assert.equal(padrao[padrao.indexOf("--tools") + 1], BASE_TOOLS.join(","));
+  assert.doesNotMatch(a.join(" "), /dangerously|bypassPermissions|acceptEdits/);
+});

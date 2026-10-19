@@ -4,7 +4,8 @@
 set -e
 
 pkg update -y && pkg upgrade -y
-pkg install -y openssh termux-services termux-api cronie nodejs-lts nano curl git
+# Node: o pacote "nodejs" (26.x) é o que roda e foi testado em produção; "nodejs-lts" conflita com ele (achado Q8 da QA)
+pkg install -y openssh termux-services termux-api cronie nodejs nano curl git
 
 # Servicos via runit (termux-services). SVDIR nao vem definido em SSH sem terminal.
 export SVDIR="$PREFIX/var/service"

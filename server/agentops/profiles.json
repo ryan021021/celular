@@ -2,21 +2,43 @@
   "leitura": {
     "description": "Claude Code no A13, só leitura dentro de ~/agentes/leitura",
     "adapter": "claude-local",
-    "allowedTools": ["Read(./**)", "Grep", "Glob", "LS"],
+    "allowedTools": [
+      "Read(./**)",
+      "Grep",
+      "Glob"
+    ],
     "maxTurns": 8,
     "timeoutMs": 600000,
     "maxAttempts": 2,
-    "backoffMs": 30000
+    "backoffMs": 30000,
+    "tools": [
+      "Read",
+      "Grep",
+      "Glob"
+    ]
   },
   "edicao": {
     "description": "Claude Code no A13, lê e edita arquivos só dentro de ~/agentes/edicao (sem Bash, sem rede)",
     "adapter": "claude-local",
-    "allowedTools": ["Read(./**)", "Grep", "Glob", "LS", "Edit(./**)", "Write(./**)"],
+    "allowedTools": [
+      "Read(./**)",
+      "Grep",
+      "Glob",
+      "Edit(./**)",
+      "Write(./**)"
+    ],
     "maxTurns": 15,
     "timeoutMs": 900000,
     "maxAttempts": 2,
     "backoffMs": 60000,
-    "idempotent": false
+    "idempotent": false,
+    "tools": [
+      "Read",
+      "Grep",
+      "Glob",
+      "Edit",
+      "Write"
+    ]
   },
   "pc-claude": {
     "description": "Claude Code no PC (worker remoto)",

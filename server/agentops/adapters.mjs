@@ -54,6 +54,23 @@ function runProcess(cmd, args, { cwd, env, signal, maxBytes = 256 * 1024 }) {
   });
 }
 
+// Ferramentas que a sessão TEM (lista fechada). Sem isso ela carrega SendMessage, RemoteTrigger, Cron*,
+// PushNotification e os conectores da conta (Gmail, Agenda…): o dontAsk só nega o que pede permissão (achado Q7).
+export const BASE_TOOLS = ["Read", "Grep", "Glob"];
+
+/** Argumentos do Claude Code para uma tarefa (sem o binário). Texto da tarefa entra como argumento único, nunca por shell. */
+export function claudeArgs(prompt, profile, cwd) {
+  const tools = profile.tools?.length ? profile.tools : BASE_TOOLS;
+  const args = ["-p", prompt, "--output-format", "json",
+    // dontAsk: nega tudo que não está em allowedTools (o padrão novo do Claude Code é "auto", que aprova sozinho)
+    "--permission-mode", "dontAsk",
+    // --restricted ignora o settings da pasta: por isso o --settings explícito (provado pela QA no worker)
+    "--tools", tools.join(","), "--restricted", "--settings", join(cwd, ".claude", "settings.json"),
+    "--strict-mcp-config", "--max-turns", String(profile.maxTurns ?? 10)];
+  if (profile.allowedTools?.length) args.push("--allowedTools", profile.allowedTools.join(","));
+  return args;
+}
+
 /** Claude Code oficial no próprio A13 (via carregador musl; ver docs/AGENT_RUNTIME_MATRIX.md). */
 export function claudeLocal({ ccDir = join(HOME, "opt", "claude-code", "current") } = {}) {
   const loader = join(ccDir, "ld-musl-aarch64.so.1");
@@ -66,9 +83,7 @@ export function claudeLocal({ ccDir = join(HOME, "opt", "claude-code", "current"
     async run({ task, profile, signal }) {
       if (!existsSync(bin)) return { ok: false, retryable: false, error: "Claude Code não instalado" };
       const cwd = prepareWorkdir(task.profile, profile);
-      // dontAsk: nega tudo que não está em allowedTools (o padrão novo do Claude Code é "auto", que aprova sozinho)
-      const args = [bin, "-p", task.prompt, "--output-format", "json", "--permission-mode", "dontAsk", "--max-turns", String(profile.maxTurns ?? 10)];
-      if (profile.allowedTools?.length) args.push("--allowedTools", profile.allowedTools.join(","));
+      const args = [bin, ...claudeArgs(task.prompt, profile, cwd)];
       const env = {
         HOME, PATH: process.env.PATH, LANG: "C.UTF-8", TMPDIR: process.env.TMPDIR || join(HOME, "..", "usr", "tmp"),
         USE_BUILTIN_RIPGREP: "0", DISABLE_AUTOUPDATER: "1", SHELL: process.env.SHELL || "/data/data/com.termux/files/usr/bin/bash",

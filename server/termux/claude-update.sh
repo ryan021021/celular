@@ -17,6 +17,8 @@ case "${1:---check}" in
     ;;
   --apply)
     v="${2:-$(npm view "$PKG" version)}"
+    # a versão vira nome de pasta e entra em rm -rf: só X.Y.Z (R6 da QA)
+    echo "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "ERRO: versão inválida: '$v'"; exit 2; }
     [ "$v" = "$(cur)" ] && { echo "já está em $v"; exit 0; }
     tmp="$BASE/.baixando-$v"; rm -rf "$tmp"; mkdir -p "$tmp"; cd "$tmp"
     want=$(npm view "$PKG@$v" dist.integrity)

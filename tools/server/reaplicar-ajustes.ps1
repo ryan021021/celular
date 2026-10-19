@@ -1,5 +1,11 @@
 [CmdletBinding()]
-param([string]$Serial = "RQ8TC00EJNB", [switch]$SoConferir)
+param([string]$Device = "a13", [string]$Serial = "", [switch]$SoConferir)
+# serial vem do perfil (profiles/<Device>.json), não fica fixo no script (R7 da QA)
+if (-not $Serial) {
+  $perfil = Join-Path $PSScriptRoot "..\..\profiles\$Device.json"
+  $Serial = (Get-Content $perfil -Raw | ConvertFrom-Json).serial
+  if (-not $Serial) { Write-Host "[ERRO] perfil $Device sem serial" -ForegroundColor Red; exit 1 }
+}
 # Reaplica pelo ADB (cabo) os ajustes do servidor que já voltaram ao padrão sozinhos (T30).
 # O Termux não consegue: o comando settings exige o shell do ADB (INTERACT_ACROSS_USERS / app_process bloqueados).
 #   .\reaplicar-ajustes.ps1 -SoConferir   -> só mostra o que está diferente
