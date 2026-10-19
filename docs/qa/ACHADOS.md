@@ -13,7 +13,8 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 | R2 | BAIXA | `tools/worker/test/` | `node --test <pasta>` falha no Node 25 do Windows; por glob passa | ORQ | VERIFICADO (comando documentado) |
 | Q4 | BAIXA | `server/termux/egress-proxy.mjs:38` | Erro do destino depois do túnel aberto escreve `HTTP/1.1 502` dentro do fluxo TLS; e importar o módulo já abre a porta, o que impede teste de `allowed()` | ORQ | VERIFICADO no PC (`b8d64a6`, 4/4); falta conferir no A13 depois do deploy |
 | Q5 | MÉDIA | `tools/rescue/desenhar_padrao.bat:15`, `tools/rescue/resgatar_galaxy_a21s.bat:4` | Lançadores de resgate QUEBRADOS: chamam .py/.ps1 em `C:UsersRyanrDesktop`, que foram movidos para `tools/rescue/` (não existem mais na Desktop). Mais caminho da Desktop e serial fixo em `tools/debug/*.cjs` e `tools/connect/legacy` | GEM-IDE | ABERTO (handoff `2026-10-19_qa-para-gemini_caminhos-desktop.md`) |
-| R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | ABERTO |
+| R3 | BAIXA | `server/agentops/adapters.mjs:26` | `startsWith(AGENTS_ROOT + "/")` não é portátil: no Windows o teste de confinamento (`agentops.test.mjs:191`) falha, 14/15; no A13 passa. Sugerido `relative()` + `isAbsolute()` | ORQ | VERIFICADO (15/15 no PC, 19/10 06:5x) |
+| Q6 | BAIXA | `tools/server/backup.sh:37-38,51-53` | O backup não leva `var/service/egress` (lista parou em server-box, alertas, agentops e sftp). A recuperação não quebra: o DISASTER_RECOVERY manda rodar o `deploy.ps1` depois, e ele recria o egress pelo `setup.sh:20`. Mas a lista e a conferência do backup estão desatualizadas | ORQ | ABERTO |
 
 ## Q1: worker do PC executava Bash e lia fora da pasta
 
@@ -61,3 +62,13 @@ Estado: ABERTO · CORRIGIDO (o dono aplicou a correção) · VERIFICADO (a QA te
 ## Regressão (T20)
 
 `node tools/qa/regressao.mjs` (relatórios em `docs/qa/regressao-*.md`). 1ª rodada completa em 19/10 06:41: sintaxe 100% (15 JS, 18 shell, 9 PowerShell); suítes da raiz ok, exceto R3; painel `celular@e127952` 128/129 com 1 pulado em 6,5 s; nenhuma suíte travou (limite de 180 s); segredos: 0 na raiz (107 arquivos) e 0 no painel (49); regra de caminhos: 14 ocorrências (Q5).
+
+## Reconstrução do zero (T20)
+
+`node tools/qa/reconstrucao.mjs` (só no PC, nunca no A13). Rodado em 19/10 ~06:55 com `backups/a13-20261019-014310.tar.gz.enc` (5 h de idade): **19/19 passos**.
+- sha256 confere; `backup.sh --restaurar` funciona; 20/20 arquivos essenciais; a fila `state.json` é JSON válido (5 tarefas).
+- O painel renasce do bundle git do backup no commit de produção registrado (`c64a7f4` = `commit.txt`).
+- O painel do bundle sobe no PC com HOME = pasta restaurada (só 127.0.0.1): `/health` 200; `/ready` 503 (esperado fora do A13, sem runit); `/api/v1/overview` 401 sem token e 200 com o `painel.token` restaurado; a resposta não contém nenhum dos tokens.
+- O AgentOps do backup sobe com a fila restaurada (sem executar tarefas): `/health` 200; o token admin restaurado abre `/api/state` com 5 tarefas, igual ao arquivo; token errado dá 401; o painel restaurado lista os perfis do AgentOps restaurado.
+- A pasta restaurada, com segredos, é apagada no fim (conferido).
+- **Não coberto:** o passo 4 do DISASTER_RECOVERY (`deploy.ps1` num aparelho novo), porque exige um celular limpo; o `sshd` com as host keys restauradas; o vigia de alertas (de propósito: mandaria push).
