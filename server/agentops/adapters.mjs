@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { join, resolve, relative, isAbsolute } from "node:path";
 
 /**
  * Adaptadores do AgentOps. Cada um declara o que sabe fazer e onde roda.
@@ -23,7 +23,9 @@ export const DENY_RULES = [
 export function profileDir(name) {
   if (!/^[a-z0-9-]{1,32}$/.test(name)) throw new Error("nome de perfil inválido");
   const dir = resolve(AGENTS_ROOT, name);
-  if (!dir.startsWith(AGENTS_ROOT + "/")) throw new Error("perfil fora de ~/agentes");
+  // portátil (Windows usa "\"): o caminho relativo não pode subir nem ser absoluto (achado R3 da QA)
+  const rel = relative(AGENTS_ROOT, dir);
+  if (!rel || rel.startsWith("..") || isAbsolute(rel)) throw new Error("perfil fora de ~/agentes");
   return dir;
 }
 

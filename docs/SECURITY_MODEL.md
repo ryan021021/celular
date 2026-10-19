@@ -32,3 +32,8 @@ Nenhum segredo está no git; logs e saídas de tarefas passam por mascaramento (
 - Regras de negação do Claude Code em cada pasta de perfil: `.env`, `~/.ssh`, credenciais, tokens do servidor, `*.pem`, `*.key`, `curl`, `wget`, `ssh`, `scp`, `rm -rf`, `git push`.
 - **Limite honesto:** isso é isolamento lógico (regras do Claude Code), não sandbox de kernel. Sem root não há namespaces/chroot no A13: um agente com Bash liberado teria acesso a tudo do usuário do Termux. Por isso nenhum perfil local libera Bash.
 - Kill switch: `POST /api/pause` impede novas execuções (persistido em disco).
+
+## Permissões do Termux (19/10)
+- O Termux tinha DUMP, READ_LOGS, WRITE_SECURE_SETTINGS e PACKAGE_USAGE_STATS concedidas por alguém, sem registro (provavelmente no setup inicial pelo ADB).
+- Como os agentes locais rodam no mesmo usuário do Termux, ficou **só a DUMP** (usada pelo painel para `dumpsys thermalservice/deviceidle/power/wifi`). As outras três foram revogadas em 19/10 06:50 (`pm revoke`); serviços e painel conferidos depois.
+- Ajustes do Android que voltam ao padrão são reaplicados pelo PC (`tools/server/reaplicar-ajustes.ps1`, ADB), porque o Termux não consegue usar o comando `settings`.
