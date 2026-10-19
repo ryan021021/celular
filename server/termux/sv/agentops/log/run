@@ -1,0 +1,3 @@
+#!/data/data/com.termux/files/usr/bin/sh
+mkdir -p "$HOME/servidor/logs/agentops"
+exec svlogd -tt "$HOME/servidor/logs/agentops"

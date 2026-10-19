@@ -1,0 +1,26 @@
+# Projeto celular — git local (D13). Segredos NUNCA ficam no projeto: tokens e chaves vivem no A13 (~/servidor) e no PC (~/.servidor-a13, ~/.ssh).
+
+# Binários e capturas grandes
+assets/apk/
+assets/screenshots/
+assets/server-box.copia-antiga-sem-git/
+
+# Backups cifrados (já têm SHA-256 e retenção próprios)
+backups/
+
+# O painel tem repositório git próprio (e worktrees das sessões)
+server/panel/server-box/
+server/panel/server-box-*/
+
+# Dumps do aparelho (listas de pacotes, settings, identificadores)
+tools/debug/snapshots_a13/
+
+# Estado de sessões e locks (efêmeros)
+.claude/
+.collab/locks/*.lock
+
+# Temporários
+*.tmp
+*.log
+node_modules/
+desktop.ini

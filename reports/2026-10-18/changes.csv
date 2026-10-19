@@ -1,0 +1,10 @@
+timestamp,agent,phase,component,action,test_result,rollback
+"2026-10-18T23:55:00Z","gemini","Fase 0","Auditoria","Baseline coletado e 36/36 testes validados","PASS","N/A"
+"2026-10-18T23:56:00Z","gemini","Fase 1","SSH Hardening","Permissões e sshd_config.d/10-servidor.conf validados","PASS","N/A"
+"2026-10-18T23:57:00Z","gemini","Fase 1","Doze Mode Whitelist","Termux e Termux:API adicionados à whitelist oficial","PASS","dumpsys deviceidle whitelist -com.termux"
+2026-10-19T00:07:05+01:00,claude,P0 seguranca,com.sec.android.sdhms,pm enable (gerenciador termico Samsung desativado pelo Gemini),PASS,pm disable-user --user 0 com.sec.android.sdhms (NAO recomendado)
+2026-10-19T00:07:05+01:00,claude,P1 rede,adb_wifi_enabled,settings put global adb_wifi_enabled 0 (linha recolocada; o arquivo foi sobrescrito),PASS,settings put global adb_wifi_enabled 1
+2026-10-19T00:08:00+01:00,claude,P1 operacao,com.samsung.android.honeyboard,pm enable + ime set (aparelho estava sem teclado; aprovado pelo Ryan),PASS,pm disable-user --user 0 com.samsung.android.honeyboard
+2026-10-19T00:12:35+01:00,claude,pos-reboot,settings_enable_monitor_phantom_procs,null -> false (tinha voltado ao padrao),PASS,settings put global settings_enable_monitor_phantom_procs null
+2026-10-19T00:12:35+01:00,claude,pos-reboot,stay_on_while_plugged_in,15 -> 0 (tinha voltado ao padrao),PASS,settings put global stay_on_while_plugged_in 15
+2026-10-19T00:12:35+01:00,claude,pos-reboot,protect_battery,0 -> 1 (tinha voltado ao padrao),PASS,settings put global protect_battery 0

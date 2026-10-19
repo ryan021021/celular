@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Log rotativo do painel em ~/servidor/logs/server-box/current (svlogd corta sozinho)
+mkdir -p "$HOME/servidor/logs/server-box"
+exec svlogd -tt "$HOME/servidor/logs/server-box"

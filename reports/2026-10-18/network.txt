@@ -1,0 +1,6 @@
+--- ROUTES ---
+--- LISTENING SOCKETS ---
+/data/data/com.termux/files/usr/bin/bash: line 1: ss: command not found
+netstat: no support for `AF INET (tcp)' on this system.
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    

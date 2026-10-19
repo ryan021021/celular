@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Vigia de alertas (ntfy). Separado do painel para avisar quando o painel cai.
+exec 2>&1
+exec node "$HOME/servidor/panel/server-box/alerts.mjs"

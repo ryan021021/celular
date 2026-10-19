@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Proxy de saida do Claude Code (127.0.0.1:8091, so dominios da Anthropic)
+exec 2>&1
+exec node "$HOME/servidor/termux/egress-proxy.mjs"

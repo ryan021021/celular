@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# AgentOps: fila de tarefas dos agentes (porta 8090, token obrigatorio)
+exec 2>&1
+exec node "$HOME/servidor/agentops/server.mjs"

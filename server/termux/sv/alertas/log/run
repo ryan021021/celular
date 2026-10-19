@@ -1,0 +1,3 @@
+#!/data/data/com.termux/files/usr/bin/sh
+mkdir -p "$HOME/servidor/logs/alertas"
+exec svlogd -tt "$HOME/servidor/logs/alertas"

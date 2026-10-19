@@ -1,0 +1,8 @@
+{
+  "id": "a21s",
+  "name": "Galaxy A21s",
+  "brand": "Samsung",
+  "serial": null,
+  "notes": "Fluxo de resgate sem tela (ver tools/rescue).",
+  "scrcpy_args": ["--no-audio", "--stay-awake"]
+}

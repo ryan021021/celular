@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Servidor de arquivos: SFTP confinado em ~/shared (porta 8023, so chave de ~/servidor/sftp_authorized_keys).
+# rclone nao segue atalhos: nada fora de ~/shared fica acessivel.
+# Preso ao IPv4 do Wi-Fi: em Go, "0.0.0.0" tambem abre o IPv6 publico do aparelho.
+exec 2>&1
+IP=$(node -e 'const n=require("os").networkInterfaces().wlan0||[];const a=n.find(x=>x.family==="IPv4");if(a)console.log(a.address)')
+if [ -z "$IP" ]; then echo "sem IPv4 no wlan0; tentando de novo em 15 s"; sleep 15; exit 1; fi
+echo "sftp em $IP:8023"
+exec rclone serve sftp "$HOME/shared" --addr "$IP:8023" --authorized-keys "$HOME/servidor/sftp_authorized_keys" --key "$HOME/servidor/sftp/host_ed25519" --log-level NOTICE

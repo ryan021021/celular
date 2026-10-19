@@ -1,0 +1,53 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Deploy por git push (projeto celular): testes -> restart -> /health -> aceita ou volta sozinho.
+# So age quando o branch que roda (celular) muda; push de outros branches nao mexe em nada.
+# Instalar em ~/servidor/panel/server-box/.git/hooks/post-receive
+unset GIT_DIR
+export SVDIR="$PREFIX/var/service"
+REPO="$HOME/servidor/panel/server-box"
+LOG="$HOME/servidor/logs/deploy.log"
+mkdir -p "$(dirname "$LOG")"
+
+velho=""; novo=""
+while read -r old new ref; do
+  [ "$ref" = "refs/heads/celular" ] && { velho=$old; novo=$new; }
+done
+[ -n "$novo" ] || { echo "[a13] branch recebido (nao e o celular): nada reiniciado"; exit 0; }
+
+curto() { git -C "$REPO" rev-parse --short "$1" 2>/dev/null || echo "$1"; }
+registra() { echo "$(date '+%F %T') $(curto "$velho") -> $(curto "$novo") $1" >> "$LOG"; }
+
+reinicia() {
+  sv restart server-box >/dev/null 2>&1
+  [ -d "$SVDIR/alertas" ] && sv restart alertas >/dev/null 2>&1
+  i=0; until curl -sf -m 2 http://127.0.0.1:8080/health >/dev/null 2>&1 || [ $i -ge 15 ]; do sleep 1; i=$((i+1)); done
+  [ $i -lt 15 ]
+}
+
+volta() { # $1 = motivo
+  echo "[a13] FALHOU ($1). Voltando para $(curto "$velho")..."
+  git -C "$REPO" reset -q --hard "$velho"
+  if reinicia; then
+    echo "[a13] ROLLBACK ok: painel de volta em $(curto "$velho"). O push NAO entrou em producao."
+    registra "ROLLBACK ($1)"
+  else
+    echo "[a13] ERRO GRAVE: rollback tambem nao subiu. Veja ~/servidor/logs/server-box/current"
+    registra "ROLLBACK FALHOU ($1)"
+  fi
+  exit 1
+}
+
+# 1) testes no codigo novo, antes de mexer no que esta rodando
+cd "$REPO" || exit 1
+if ! timeout 120 node --test test/*.test.mjs > "$HOME/servidor/logs/deploy-tests.log" 2>&1; then
+  [ "$velho" = "0000000000000000000000000000000000000000" ] && { echo "[a13] testes falharam no primeiro deploy"; exit 1; }
+  volta "testes falharam: veja ~/servidor/logs/deploy-tests.log"
+fi
+
+# 2) reinicia e confere o /health
+if reinicia; then
+  echo "[a13] painel reiniciado com $(git -C "$REPO" log -1 --format='%h %s') (testes ok)"
+  registra "ok"
+else
+  volta "painel nao respondeu /health em 15 s"
+fi

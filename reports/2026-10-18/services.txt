@@ -1,0 +1,30 @@
+run: /data/data/com.termux/files/usr/var/service/alertas: (pid 15959) 2221s; run: log: (pid 15958) 2221s
+run: /data/data/com.termux/files/usr/var/service/crond: (pid 16232) 1969s; run: log: (pid 11750) 3445s
+run: /data/data/com.termux/files/usr/var/service/server-box: (pid 16231) 1969s; run: log: (pid 15411) 2665s
+down: /data/data/com.termux/files/usr/var/service/ssh-agent: 3445s; run: log: (pid 11754) 3445s
+run: /data/data/com.termux/files/usr/var/service/sshd: (pid 11753) 3445s; run: log: (pid 11751) 3445s
+--- CRONTAB ---
+*/5 * * * * sh $HOME/servidor/watchdog.sh
+0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1
+--- PROCESSOS ---
+UID        PID  PPID  C STIME TTY          TIME CMD
+u0_a271   3575   654  0  2022 ?        00:00:03 com.termux.api
+u0_a271  10665   654  0  2022 ?        00:00:01 com.termux
+u0_a271  11723     1  0  2022 ?        00:00:00 /data/data/com.termux/files/usr/bin/runsvdir /data/data/com.termux/files/usr/var/service
+u0_a271  11743 11723  0  2022 ?        00:00:00 runsv sshd
+u0_a271  11744 11723  0  2022 ?        00:00:00 runsv ssh-agent
+u0_a271  11746 11723  0  2022 ?        00:00:00 runsv crond
+u0_a271  11750 11746  0  2022 ?        00:00:00 svlogd -tt /data/data/com.termux/files/usr/var/log/sv/crond
+u0_a271  11751 11743  0  2022 ?        00:00:00 svlogd -tt /data/data/com.termux/files/usr/var/log/sv/sshd
+u0_a271  11753 11743  0  2022 ?        00:00:00 sshd -D -e
+u0_a271  11754 11744  0  2022 ?        00:00:00 svlogd -tt /data/data/com.termux/files/usr/var/log/sv/ssh-agent
+u0_a271  15410 11723  0  2022 ?        00:00:00 runsv server-box
+u0_a271  15411 15410  0  2022 ?        00:00:00 svlogd -tt /data/data/com.termux/files/home/servidor/logs/server-box
+u0_a271  15957 11723  0  2022 ?        00:00:00 runsv alertas
+u0_a271  15958 15957  0  2022 ?        00:00:00 svlogd -tt /data/data/com.termux/files/home/servidor/logs/alertas
+u0_a271  15959 15957  0  2022 ?        00:00:03 node /data/data/com.termux/files/home/servidor/panel/server-box/alerts.mjs
+u0_a271  16231 15410  0  2022 ?        00:00:05 node /data/data/com.termux/files/home/servidor/panel/server-box/server.js
+u0_a271  16232 11746  0  2022 ?        00:00:00 crond -n -s
+u0_a271  19663 11753 12  2022 ?        00:00:00 /data/data/com.termux/files/usr/libexec/sshd-session -D -e -R
+u0_a271  19665 19663  3  2022 ?        00:00:00 /data/data/com.termux/files/usr/libexec/sshd-session -D -e -R
+u0_a271  19666 19665 32  2022 ?        00:00:00 ps -ef

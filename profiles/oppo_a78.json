@@ -1,0 +1,15 @@
+{
+  "id": "oppo_a78",
+  "name": "Oppo A78",
+  "brand": "Oppo",
+  "model": "CPH2565",
+  "status": "reserve_hardware",
+  "hardware": {
+    "cpu": "Qualcomm Snapdragon 680 (6nm, 8 Cores)",
+    "architecture": "aarch64 (64-bit)",
+    "ram_total": "8 GB LPDDR4X",
+    "storage": "128 GB UFS 2.2"
+  },
+  "notes": "Aparelho desmontado sem conjunto de display físico. Interface USB 2.0 sem suporte a DisplayPort Alt Mode (video out passivo indisponivel). Requer tela física temporária para ativar depuração USB.",
+  "investigation_artifact": "file:///C:/Users/Ryanr/.gemini/antigravity-ide/brain/55c9b7e9-2e41-4c92-969f-87079e1c2ccb/oppo_a78_deep_search_investigation.md"
+}

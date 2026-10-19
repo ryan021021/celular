@@ -1,0 +1,4 @@
+#!/data/data/com.termux/files/usr/bin/sh
+# Servico runit do painel: o runit religa na hora se cair.
+exec 2>&1
+exec node "$HOME/servidor/panel/server-box/server.js"

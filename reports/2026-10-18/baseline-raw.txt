@@ -1,0 +1,50 @@
+## identidade
+data=2026-10-18 23:59:51 WEST uptime=s kernel=4.19.198-28701120-abA135MUBSDDZB3 arch=armv8l
+## memoria
+MemTotal:        3795712 kB
+MemAvailable:    2025312 kB
+SwapTotal:       4194300 kB
+SwapFree:        3670268 kB
+## disco
+/dev/block/dm-51 109G 5.6G  103G   6% /storage/emulated/0/Android/obb
+## servicos
+run: sshd: (pid 11753) 3417s; run: log: (pid 11751) 3417s
+run: crond: (pid 16232) 1941s; run: log: (pid 11750) 3417s
+run: server-box: (pid 16231) 1941s; run: log: (pid 15411) 2637s
+run: alertas: (pid 15959) 2193s; run: log: (pid 15958) 2193s
+## portas em escuta (proc/net)
+## health
+health http=200 tempo=0.004894s
+monitor http=200 tempo=1.578725s bytes=1598
+## chaves do /api/monitor
+ok,at,j5,j5via,cron,services,status,history,history_stats
+j5: device,mem,load,uptime,disk,bat,digest,cores,cpuTemp
+device: {"manufacturer":"samsung","brand":"samsung","model":"SM-A135M","market_name":null,"product":"a13ub","name":"Samsung SM-A135M","source":"getprop"}
+## sshd efetivo
+## permissoes
+700 /data/data/com.termux/files/home/.ssh
+600 /data/data/com.termux/files/home/.ssh/authorized_keys
+600 /data/data/com.termux/files/home/servidor/alertas.json
+600 /data/data/com.termux/files/usr/etc/ssh/sshd_config.d/10-servidor.conf
+chaves autorizadas: 1
+## host keys (fingerprint)
+256 SHA256:1Q+OSavCrMLy5JUr9kCp870lxXxi/E+9ydkmKpTFX0M u0_a271@localhost (ECDSA)
+256 SHA256:ranEFFyVNRoFfQ0g9D/0lqgr5VX7xw6+vswr+9ua0Fw u0_a271@localhost (ED25519)
+3072 SHA256:DHW5I3xaX2HpWl8HX+cOIWz5WqshEiKNa07r4NkU6aQ u0_a271@localhost (RSA)
+## versoes
+node v24.18.0 npm 11.21.1 python Python 3.14.6 git git version 2.56.0 OpenSSH_10.6p1, OpenSSL 3.6.5 29 Sep 2026
+pacotes desatualizados: 0
+## cron
+*/5 * * * * sh $HOME/servidor/watchdog.sh
+0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1
+## boot
+total 4
+-rwx------. 1 u0_a271 u0_a271 728 Oct 18 22:49 boot.sh
+## producao vs repo
+prod=9c70fa3 Merge claude/alertas: alertas via ntfy
+## logs (tamanho)
+7.5K	/data/data/com.termux/files/home/servidor/logs/alertas
+4.0K	/data/data/com.termux/files/home/servidor/logs/boot.log
+4.0K	/data/data/com.termux/files/home/servidor/logs/panel.log
+7.5K	/data/data/com.termux/files/home/servidor/logs/server-box
+4.0K	/data/data/com.termux/files/home/servidor/logs/watchdog.log

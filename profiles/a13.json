@@ -1,0 +1,36 @@
+{
+  "id": "a13",
+  "name": "Samsung Galaxy A13",
+  "brand": "Samsung",
+  "model": "SM-A135M",
+  "serial": "RQ8TC00EJNB",
+  "status": "online_server",
+  "hardware": {
+    "cpu": "Samsung Exynos 850 (8 Cores)",
+    "architecture": "armv8l (32-bit userspace / 64-bit kernel 4.19)",
+    "ram_total": "7.6 GB (3.6 GB RAM + 4.0 GB Swap / RAM Plus)",
+    "storage_free": "100 GB"
+  },
+  "network": {
+    "ip": "192.168.1.127",
+    "wifi_adb_port": 5555,
+    "ssh_port": 8022,
+    "ssh_user": "u0_a271",
+    "ssh_key": "~/.ssh/id_ed25519"
+  },
+  "scrcpy_args": [
+    "--no-audio",
+    "--stay-awake",
+    "--turn-screen-off",
+    "--max-size=1024",
+    "--video-bit-rate=4M"
+  ],
+  "runtimes": {
+    "node": "v24.18.0",
+    "npm": "11.21.1",
+    "python": "3.14.6",
+    "git": "2.56.0",
+    "openssh": "10.6p1"
+  },
+  "notes": "Servidor bare-metal 24/7 em producao. Termux whitelisted de economia de bateria. Conexao SSH via Wi-Fi direta ou USB port-forward."
+}

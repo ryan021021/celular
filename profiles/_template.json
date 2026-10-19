@@ -1,0 +1,8 @@
+{
+  "id": "",
+  "name": "",
+  "brand": "",
+  "serial": null,
+  "notes": "",
+  "scrcpy_args": ["--no-audio"]
+}

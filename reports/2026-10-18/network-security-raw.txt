@@ -1,0 +1,35 @@
+## host key pelo cabo USB (adb forward) vs known_hosts
+ed25519: IGUAL (SHA256:ranEFFyVNRoFfQ0g9D/0lqgr5VX7xw6+vswr+9ua0Fw)
+rsa: IGUAL (SHA256:DHW5I3xaX2HpWl8HX+cOIWz5WqshEiKNa07r4NkU6aQ)
+ecdsa: IGUAL (SHA256:1Q+OSavCrMLy5JUr9kCp870lxXxi/E+9ydkmKpTFX0M)
+## portas abertas vistas do PC (192.168.1.127)
+22 fechada
+5555 fechada
+8022 ABERTA
+8080 ABERTA
+8081 fechada
+8443 fechada
+3000 fechada
+5037 fechada
+## ADB por Wi-Fi
+nenhum dispositivo ADB por Wi-Fi conectado
+service.adb.tcp.port= persist.adb.tcp.port= adb_wifi_enabled=1
+## sshd efetivo
+Port 8022
+AddressFamily any
+ListenAddress 0.0.0.0:8022
+## sshd efetivo (sshd -T)
+LoginGraceTime 30
+MaxAuthTries 3
+ClientAliveInterval 60
+ClientAliveCountMax 3
+PermitRootLogin prohibit-password
+PubkeyAuthentication yes
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+X11Forwarding no
+PermitEmptyPasswords no
+AllowTcpForwarding yes
+## desligando depuracao sem fio (USB continua)
+adb_wifi_enabled=0
+device
