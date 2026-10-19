@@ -82,5 +82,6 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 19:39 · claude (ORQ) · T61 REVIEW (revisor CHEFE): classificarMudancas informativo/aviso/quebra, CLI --comparar e --perfil a15 --comparar auto, 21/21; rodada real no A15 pendente (SSH 8022 recusou, nada gravado); coletarLocal sem ramos duplicados
 - 2026-10-19 19:46 · gemini · T55: correções da QA aplicadas (backup real a15-20261019-192914, launchers IMPLEMENTED_UNVERIFIED, schema MISSING, reconstrução no A13, painel 141 ok) · docs/audit/current-state.md
 - 2026-10-19 19:46 · gemini · T56: baseline atualizada com medições reais (watchdog 2/2 pass, sintaxe 29/18/14 ok, 2 comandos para amostragem do CHEFE) · docs/audit/test-baseline.md
+- 2026-10-19 19:48 · gemini · T60: catálogo de rotinas §5.1, contrato §5.2 e scheduler §5.3 com anti-thrashing §4.6 e circuit breaker §5.4 (9/9 testes ok) · server/routines/**
 - 2026-10-19 19:45 · claude (CHEFE) · leva OMNISERVER P1/P7: T62 capabilities+ready (BACK), T63 cartão Aparelho (FRONT), T64 matriz de testes (QA), T65 redaction (ORQ)
 2026-10-19 QA: T64 entregue: docs/qa/test-matrix.md (13 requisitos P0/P1 da §24; lacunas P0: R1, R2, R4, R5). Só leitura.
