@@ -69,4 +69,4 @@ celular/
 - **Git**: `2.56.0`
 - **cURL**: `8.23.0`
 - **OpenSSH**: `10.6p1` na porta `8022`
-- **Background Persistence**: Processos fantasma liberados (`max_phantom_processes=2147483647`), isenção de economia de bateria (`dumpsys deviceidle whitelist +com.termux`) e `termux-wake-lock` permanente.
+- **Background Persistence**: Monitor de processos fantasma desativado (`settings_enable_monitor_phantom_procs=false`), isenção de economia de bateria (`dumpsys deviceidle whitelist +com.termux`) e `termux-wake-lock` permanente.

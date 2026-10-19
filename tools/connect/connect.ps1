@@ -107,7 +107,7 @@ function Show-Status {
     $user = $profile.network.ssh_user
     $key = [System.Environment]::ExpandEnvironmentVariables($profile.network.ssh_key.Replace("~", "%USERPROFILE%"))
     
-    ssh -o ConnectTimeout=3 -o StrictHostKeyChecking=no -i "$key" -p $port "$user@$ip" "echo '[Uptime]'; uptime; echo ''; echo '[Memoria RAM]'; free -h; echo ''; echo '[Disco Flash]'; df -h /data | tail -n 1; echo ''; echo '[Carga CPU]'; top -b -n 1 | head -n 5" 2>$null
+    ssh -o ConnectTimeout=3 -i "$key" -p $port "$user@$ip" "echo '[Uptime]'; uptime; echo ''; echo '[Memoria RAM]'; free -h; echo ''; echo '[Disco Flash]'; df -h /data | tail -n 1; echo ''; echo '[Carga CPU]'; top -b -n 1 | head -n 5" 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[!] Nao foi possivel consultar metricas via SSH direto." -ForegroundColor DarkGray
     }
