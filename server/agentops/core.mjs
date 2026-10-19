@@ -1,6 +1,9 @@
 import { randomUUID, randomInt } from "node:crypto";
 import { readFileSync, renameSync, appendFileSync, statSync, mkdirSync, openSync, writeSync, fsyncSync, closeSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { makeRedactor } from "./redact.mjs";
+
+export { makeRedactor }; // compatibilidade: server.mjs e os testes importam daqui
 
 /**
  * AgentOps (projeto celular): fila persistente de tarefas para agentes.
@@ -20,22 +23,6 @@ const MAX_HISTORY = 200; // cada save regrava o JSON inteiro: histórico e saíd
 export function backoffMs(attempt, baseMs = 30_000, maxMs = 30 * 60_000, rand = randomInt) {
   const exp = Math.min(maxMs, baseMs * 2 ** Math.max(0, attempt - 1));
   return Math.round(exp / 2 + rand(0, Math.max(1, Math.round(exp / 2))));
-}
-
-export function makeRedactor(secrets = []) {
-  const literal = secrets.filter(s => typeof s === "string" && s.length >= 8);
-  const patterns = [
-    /sk-ant-[A-Za-z0-9_\-]{10,}/g,
-    /(?:api[_-]?key|token|secret|password|authorization)\s*[:=]\s*["']?[^\s"']{8,}/gi,
-    /Bearer\s+[A-Za-z0-9._\-]{16,}/g,
-    /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
-  ];
-  return text => {
-    let out = String(text ?? "");
-    for (const s of literal) out = out.split(s).join("[segredo]");
-    for (const p of patterns) out = out.replace(p, "[segredo]");
-    return out;
-  };
 }
 
 export function truncate(text, max = MAX_OUTPUT) {

@@ -18,6 +18,13 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { makeRedactor } from "../../server/agentops/redact.mjs";
+
+// Log do worker sempre mascarado (T65): o token do A13 e qualquer segredo que a saída trouxer não aparecem.
+export let segredosLog = [];
+export function definirSegredosLog(lista) { segredosLog = lista.filter(Boolean); }
+export const logar = msg => console.log(makeRedactor(segredosLog)(msg));
+export const logarErro = msg => console.error(makeRedactor(segredosLog)(msg));
 
 export const VERSION = "worker-pc 1.2";
 
@@ -120,7 +127,7 @@ function run(api, { cmd, args, cwd }, prompt, timeoutMs, leaseId) {
     const beat = setInterval(async () => {
       try {
         const hb = await api("/api/worker/heartbeat", { adapters: ["worker-pc"], version: VERSION });
-        if ((hb.body.cancel || []).includes(leaseId)) { cancelled = true; child.kill(); console.log("[worker] cancelada no A13: processo encerrado"); }
+        if ((hb.body.cancel || []).includes(leaseId)) { cancelled = true; child.kill(); logar("[worker] cancelada no A13: processo encerrado"); }
       } catch {}
     }, 30_000);
     let out = "", err = "";
@@ -143,11 +150,11 @@ function run(api, { cmd, args, cwd }, prompt, timeoutMs, leaseId) {
 async function cycle(cfg, api, dry) {
   const hb = await api("/api/worker/heartbeat", { adapters: ["worker-pc"], version: VERSION });
   if (hb.status !== 200) throw new Error(`heartbeat recusado (${hb.status})`);
-  if (hb.body.paused) return console.log("[worker] kill switch ligado no A13: nada a fazer");
+  if (hb.body.paused) return logar("[worker] kill switch ligado no A13: nada a fazer");
   const c = await api("/api/worker/claim");
   const task = c.body.task;
   if (!task) return;
-  console.log(`[worker] tarefa ${task.id} (${task.profile})`);
+  logar(`[worker] tarefa ${task.id} (${task.profile})`);
   let res;
   const runner = buildRunner(task.profile, null);
   if (!runner) res = { ok: false, error: `perfil ${task.profile} não suportado neste worker` };
@@ -158,20 +165,21 @@ async function cycle(cfg, api, dry) {
     res = await run(api, buildRunner(task.profile, dir), task.prompt, Math.max(60_000, task.timeoutMs - 30_000), task.leaseId);
   }
   const r = await api("/api/worker/result", { id: task.id, leaseId: task.leaseId, ...fitResult(res) });
-  console.log(`[worker] resultado ${res.ok ? "ok" : "falha"} entregue (${r.status})`);
+  logar(`[worker] resultado ${res.ok ? "ok" : "falha"} entregue (${r.status})`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   // WORKER_CONFIG permite apontar para outra config (ex.: teste de aceitação contra um AgentOps simulado)
   const cfgPath = process.env.WORKER_CONFIG || join(homedir(), ".servidor-a13", "worker.json");
   const cfg = JSON.parse(readFileSync(cfgPath, "utf8"));
+  definirSegredosLog([cfg.token]);
   const bad = blockedWorkdir(cfg.workdir);
-  if (bad) { console.error(`[worker] workdir ${cfg.workdir} fica dentro de ${bad}, que as regras bloqueiam: o agente não leria nem a própria pasta. Use, por exemplo, ~/agentes-pc.`); process.exit(2); }
+  if (bad) { logarErro(`[worker] workdir ${cfg.workdir} fica dentro de ${bad}, que as regras bloqueiam: o agente não leria nem a própria pasta. Use, por exemplo, ~/agentes-pc.`); process.exit(2); }
   const api = makeApi(cfg);
   const once = process.argv.includes("--once"), dry = process.argv.includes("--dry-run");
-  if (once || dry) await cycle(cfg, api, dry).catch(e => { console.error(`[worker] ${e.message}`); process.exitCode = 1; });
+  if (once || dry) await cycle(cfg, api, dry).catch(e => { logarErro(`[worker] ${e.message}`); process.exitCode = 1; });
   else {
-    console.log(`[worker] ${VERSION} ligado em ${cfg.url}`);
-    for (;;) { await cycle(cfg, api, false).catch(e => console.error(`[worker] ${e.message}`)); await new Promise(r => setTimeout(r, 10_000)); }
+    logar(`[worker] ${VERSION} ligado em ${cfg.url}`);
+    for (;;) { await cycle(cfg, api, false).catch(e => logarErro(`[worker] ${e.message}`)); await new Promise(r => setTimeout(r, 10_000)); }
   }
 }

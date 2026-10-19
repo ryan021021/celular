@@ -40,8 +40,10 @@ export function publicTask(t, { full = false } = {}) {
 
 export function createApp({ dir, profiles, adapters, adminToken, workers = {}, now = Date.now, rand, secrets = [] }) {
   const redact = makeRedactor([adminToken, ...Object.values(workers).map(w => w.token), ...secrets]);
-  const store = createStore(dir, { now });
-  const runner = createRunner({ store, profiles, adapters, redact, now, rand });
+  // todo log do AgentOps passa pela máscara (T65): a fila e o runner também escrevem erros
+  const log = m => console.error(redact(m));
+  const store = createStore(dir, { now, log });
+  const runner = createRunner({ store, profiles, adapters, redact, now, rand, log });
   const heartbeats = {};
   store.recoverInterrupted();
 
