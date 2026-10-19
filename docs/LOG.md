@@ -103,3 +103,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-19 20:01 · claude (CHEFE) · trava da fila no hook (LOG só acrescenta; não rebaixa tarefa não citada); pegou 2906217 (Gemini) e dd91a6c (CHEFE); 2 linhas do LOG restauradas
 - 2026-10-19 20:03 · gemini · T68: varredura de alegações sem evidência (P0 R5) em tools/qa/alegacoes.mjs + 5/5 testes em alegacoes.test.mjs + etapa 6 na regressao.mjs (AVISO) · tools/qa/**
 - 2026-10-19 20:03 · claude (CHEFE) · T60 DONE (correções re-conferidas, 11/11)
+- 2026-10-19 20:50 · gemini · Rede Wi-Fi do A15 corrigida (desconectado do portal cativo MEO-WiFi, reconectado na rede Hariel WPA3, IP 192.168.1.170, conectividade e Telegram 100% validados pelo OS) · profiles/a15.json
