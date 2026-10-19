@@ -37,10 +37,11 @@ function Step-Check {
     Remote "echo conectado: `$(whoami) em `$(uname -m); node --version"
 }
 function Step-Push {
-    Write-Host "[2/5] Enviando server/termux e o painel (git) ..." -ForegroundColor Cyan
+    Write-Host "[2/5] Enviando server/termux, server/agentops e o painel (git) ..." -ForegroundColor Cyan
     Remote "mkdir -p ~/servidor/logs ~/servidor/panel"
     $scpOpts = @("-o", "StrictHostKeyChecking=accept-new", "-i", $key, "-P", $port, "-r")
-    Run "scp" ($scpOpts + @((Join-Path $root "server\termux"), "${target}:servidor/"))
+    # agentops: so o codigo; a fila (agentops-data) e o token ficam fora da pasta e nao sao tocados (achado G1)
+    Run "scp" ($scpOpts + @((Join-Path $root "server\termux"), (Join-Path $root "server\agentops"), "${target}:servidor/"))
     # Painel vai por git, nunca por scp (scp por cima estragaria o .git do celular)
     $repo = Join-Path $root "server\panel\server-box"
     Remote "cd ~/servidor/panel && { [ -d server-box/.git ] || git clone -q https://github.com/felipenalves/server-box.git server-box; } && cd server-box && git config receive.denyCurrentBranch updateInstead && { git switch -q celular 2>/dev/null || git switch -q -c celular; }"
