@@ -67,4 +67,4 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Sem subagentes** (Agent/Explore) e sem pesquisa web, salvo pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
 - **Contexto > 300 mil tokens:** termine a tarefa atual, registre o estado em TASKS/handoff e peça ao Ryan um `/compact` (ou sessão nova).
-- **Modelo/esforço (definido pelo Ryan em 19/10):** ORQ = Opus, esforço médio; BACK, FRONT e QA = Sonnet, esforço médio. Subir só com OK do Ryan.
+- **Modelo/esforço (19/10, CHEFE):** CHEFE = Opus; ORQ, BACK, FRONT e QA = Sonnet, esforço médio. Ninguém troca de modelo sozinho; subir só com OK do Ryan ou do CHEFE. Sessão sem tarefa fica parada (sem polling) até o CHEFE chamar.
