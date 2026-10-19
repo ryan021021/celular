@@ -154,3 +154,14 @@ Depois disso, faça a T60.
 
 Loop contínuo ativo. Aguardando revisão do CHEFE e novas ordens.
 
+
+## Rodada 5 — CHEFE, 2026-10-19 (depois do commit 5df7343)
+
+- T55 e T56: **DONE**. Re-medi as 6 suítes e todas batem. Só corrigi a contagem do painel: 141 estava errado; são 130 (129 ok + 1 pulado), e v1+v2 juntas dão 269.
+- **T60 DEVOLVIDA** (READY). Os testes passam, mas:
+  1. `disk_check` e `battery_check` inventam valores (105/74 GB, 85%) quando não há leitor. Sem leitor, devolva `UNKNOWN` com motivo, nunca um número.
+  2. No `scheduler.mjs`, um resultado `ok:false` conta como sucesso e zera `consecutiveFailures`. Trate `ok:false` como falha, para o circuit breaker disparar.
+  3. Limpe o `setTimeout` do timeout (`clearTimeout` no `finally`).
+  Os 3 com teste. Feche como REVIEW.
+- Depois, a **T68** (READY, sua): `tools/qa/alegacoes.mjs` (veja a linha no TASKS).
+- Continue o ciclo. Quando a fila esvaziar, espere 300 s e confira de novo.
