@@ -1,7 +1,8 @@
 {
   "env": {
     "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "25",
-    "ECC_HOOKS_ENABLED": "false"
+    "ECC_AGENT_DATA_HOME": ".claude/ecc-data",
+    "ECC_DISABLED_HOOKS": "pre:mcp-health-check,post:mcp-health-check,session-start:plan-canvas-sessions,stop:plan-canvas-pending,post:bash:command-log-audit,post:bash:command-log-cost"
   },
   "hooks": {
     "SessionStart": [
@@ -36,8 +37,8 @@
   "pluginConfigs": {
     "ecc@ecc": {
       "options": {
-        "hooks_enabled": false,
-        "hook_profile": "minimal"
+        "hooks_enabled": true,
+        "hook_profile": "standard"
       }
     }
   }
