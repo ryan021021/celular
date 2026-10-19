@@ -28,5 +28,6 @@
     "branch": "celular",
     "hook": "post-receive roda node --test e reinicia server-box e alertas; rollback se falhar",
     "nota": "chave ~/.ssh/id_ed25519; push: git push <remote> <commit>:celular"
-  }
+  },
+  "reinicio": "Após reiniciar, o servidor só volta depois do 1º desbloqueio com PIN (armazenamento criptografado: RUNNING_LOCKED). Ver docs/DISASTER_RECOVERY.md, seção 'Reinício do A15'."
 }

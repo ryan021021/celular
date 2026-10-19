@@ -30,3 +30,8 @@ Comando no PC (Git Bash, raiz do projeto): `bash tools/server/backup.sh`. Destin
 5. **Claude Code:** `npm pack @anthropic-ai/claude-code-linux-arm64-musl@<versão>`, carregador `ld-musl-aarch64.so.1` do pacote `musl` do Alpine (aarch64), wrapper `$PREFIX/bin/claude` — passo a passo em `docs/AGENT_RUNTIME_MATRIX.md`. Depois `claude` → `/login`.
 6. **Android (ADB):** reaplicar `settings_enable_monitor_phantom_procs=false`, `protect_battery=1`, `stay_on_while_plugged_in=0`, `screen_off_timeout=30000`, `adb_wifi_enabled=0`; manter `double_tap_to_wake`/`lift_to_wake` ligados (o aparelho não tem botão para a tela).
 7. **Conferir:** painel 401 sem token, `/health` 200, AgentOps 401 sem token, SFTP só com a chave de arquivos, IPv6 público fechado.
+
+## Reinício do A15 (criptografia do Android)
+- Depois de reiniciar, o celular fica em `RUNNING_LOCKED` (`ro.crypto.state` = `encrypted`): o Termux:Boot, o sshd e o painel **só sobem depois do 1º desbloqueio** com o PIN. Não é falha do servidor, é o armazenamento criptografado do Android.
+- Depois do desbloqueio, confira: `/health` 200 e uptime do runit menor que o do celular (o serviço subiu sozinho pelo `boot.sh`).
+- Sem desbloqueio, nada responde em 8022 nem 8080: o acesso remoto só volta quando alguém digita o PIN no aparelho.
