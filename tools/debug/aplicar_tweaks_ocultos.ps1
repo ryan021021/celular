@@ -3,8 +3,15 @@
 # NOTA (T40): PROIBIDO EXECUTAR EM QUALQUER APARELHO ATE REVISAO DO ORQ/CHEFE.
 param(
     [string]$Device = "a13",
-    [string]$Serial = ""
+    [string]$Serial = "",
+    [switch]$Confirmo
 )
+
+if (-not $Confirmo) {
+    Write-Host "[BLOQUEADO] O script aplicar_tweaks_ocultos.ps1 esta proibido de rodar sem confirmacao explicita (T40)." -ForegroundColor Red
+    Write-Host "            Para executar deliberadamente, use o parametro -Confirmo." -ForegroundColor Yellow
+    exit 1
+}
 
 # serial vem do perfil (profiles/<Device>.json), nao fica fixo no script (T39)
 if (-not $Serial) {

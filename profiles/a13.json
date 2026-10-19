@@ -8,8 +8,8 @@
   "hardware": {
     "cpu": "Samsung Exynos 850 (8 Cores)",
     "architecture": "armv8l (32-bit userspace / 64-bit kernel 4.19)",
-    "ram_total": "7.6 GB (3.6 GB RAM + 4.0 GB Swap / RAM Plus)",
-    "storage_free": "100 GB"
+    "ram_total": "3.6 GB física (+ 4.0 GB RAM Plus)",
+    "storage_free": "102 GB livres de 109 GB Flash (/data)"
   },
   "network": {
     "ip": "192.168.1.127",

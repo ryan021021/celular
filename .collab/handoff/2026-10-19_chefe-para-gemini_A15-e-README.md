@@ -25,3 +25,10 @@ T40 e T51 foram APROVADAS COM NOTAS e continuam em REVIEW até você fazer isto:
 1. **T40:** `aplicar_tweaks_ocultos.ps1` precisa parar sozinho. Sem o parâmetro `-Confirmo`, ele imprime o aviso e sai com `exit 1` antes de qualquer comando adb. Hoje o aviso é só comentário.
 2. **T51:** coloque uma fonte versionada (arquivo do projeto ou saída de comando registrada) para "eMMC 5.1" e para os "128 GB" do A15, ou tire essas afirmações do README.
 Commit com o seu nome e 1 linha no LOG. A FRONT confere e eu fecho.
+
+---
+### Resposta GEM-IDE (19/10 18:35)
+
+1. **T40:** Trava com `[switch]$Confirmo` adicionada a `tools/debug/aplicar_tweaks_ocultos.ps1`. Sem a flag, o script imprime aviso e encerra imediatamente com `exit 1` antes de qualquer comando adb. Testado (`ExitCode: 1`).
+2. **T51:** Removidas menções sem fonte versionada ("eMMC 5.1" e "128 GB") do `README.md`; mantidas apenas capacidades medidas em bloco (`105 GB Flash / 74 GB livres` no A15; `109 GB Flash / 102 GB livres` no A13). `profiles/a13.json` ajustado para `3.6 GB física` e `102 GB livres de 109 GB Flash (/data)`.
+3. Pronto para conferência da FRONT e fechamento pelo CHEFE.

@@ -17,10 +17,10 @@ Para interagir com o servidor sem complicações, use os lançadores diretos:
 
 | Aparelho | Modelo | Processador | RAM / Armazenamento | Status | Conexão |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Galaxy A15 5G** | `SM-A156B` | Dimensity 6100+ (8 Cores) | 4.0 GB RAM (3.63 GB física) / 128 GB Flash (105 GB /data) | **Em Migração (T48)** | USB / ADB autorizada |
-| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 3,6 GB RAM (+4 GB RAM Plus) / 109 GB Flash (eMMC 5.1) | **Offline** | `192.168.1.127:8022` |
-| **Galaxy A21s** | `SM-A217M` | Exynos 850 (8 Cores) | 3.0 GB RAM / 32 GB | **Resgate Pendente** | Requer ativação ADB |
-| **Oppo A78** | `CPH2565` | Snapdragon 680 (8 Cores) | 8.0 GB RAM / 128 GB Flash (UFS 2.2) | **Reserva de Hardware** | USB 2.0 (sem Alt Mode) |
+| **Galaxy A15 5G** | `SM-A156B` | Dimensity 6100+ (8 Cores) | 4.0 GB RAM (3,62 GiB física) / 105 GB Flash (/data, 74 GB livres) | **Em Migração (T48)** | USB / ADB autorizada |
+| **Galaxy A13** | `SM-A135M` | Exynos 850 (8 Cores) | 3,6 GB RAM (+4 GB RAM Plus) / 109 GB Flash (/data, 102 GB livres) | **Offline** | `192.168.1.127:8022` |
+| **Galaxy A21s** | `SM-A217M` | Exynos 850 (8 Cores) | 3.0 GB RAM / 32 GB Flash | **Resgate Pendente** | Requer ativação ADB |
+| **Oppo A78** | `CPH2565` | Snapdragon 680 (8 Cores) | 8.0 GB RAM / 128 GB Flash | **Reserva de Hardware** | USB 2.0 (sem Alt Mode) |
 
 ---
 
