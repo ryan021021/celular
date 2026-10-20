@@ -2,7 +2,7 @@
 name: simplificador
 description: Limpa e simplifica código recém-alterado sem mudar o comportamento (nomes, duplicação, ramos mortos, complexidade). Use depois que a tarefa já funciona e antes da revisão.
 tools: Read, Edit, Grep, Glob, Bash
-model: sonnet
+model: haiku
 effort: medium
 maxTurns: 30
 color: blue

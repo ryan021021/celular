@@ -67,10 +67,11 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Subagentes:** só os do projeto (§10), que são baratos e devolvem resumo. Agent genérico, Explore e pesquisa web só com pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
 - **Contexto:** o projeto compacta sozinho aos 25% da janela (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=25` em `.claude/settings.json`, ~250 mil). Antes disso, registre o estado em TASKS/handoff; sessão com muito histórico inútil: `/compact` ou sessão nova.
-- **Cache:** não trocar de modelo nem de esforço no meio da sessão (perde o cache e reprocessa tudo). Troque só depois de `/clear` ou em sessão nova.
+- **Cache:** não trocar de modelo nem de esforço no meio da sessão (perde o cache e reprocessa tudo), nem com `/model` ou `/effort` digitado à mão. Troque só depois de `/clear` ou em sessão nova.
+- **Opus com contexto curto (20/10, D19):** CHEFE e QA abrem sessão nova a cada onda (despacho, revisões, decisão) ou quando o contexto passa de ~100 mil, com o estado já em TASKS/handoff; o hook `SessionStart` repõe a fila. Cada turno do Opus reprocessa o contexto inteiro, então é a maior economia isolada.
 - **Uma tarefa por contexto:** terminou e fechou a tarefa (`/fechar-tarefa`)? Rode `/clear` antes da próxima, a menos que ela dependa do que acabou de ser feito. O estado fica em TASKS/LOG/commit, não no histórico.
 - **Plugins e conectores fora do projeto:** os plugins de Shopify/Trackbee ficam desligados neste projeto (`.claude/settings.json`). Conectores da conta (meta-ads, Hostinger, Gmail…) só o Ryan desliga.
-- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes = Haiku. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
+- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes (D19): **Haiku** para busca, testes e limpeza (`explorador`, `verificador`, `simplificador`); **Sonnet** para julgamento e risco (`revisor`, `seguranca`, `cacador-falhas`, `android-adb`, `termux-infra`), como no §10. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
 Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto isolado, ferramentas mínimas, modelo barato onde dá), skills em `.claude/skills/` e uma trava em `.claude/hooks/`. Fica no git e vale para toda sessão Claude aberta na raiz do projeto.
@@ -80,13 +81,13 @@ Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto
 | `explorador` | haiku | só leitura | "onde está X?" sem encher o contexto |
 | `verificador` | haiku | Bash sem editar | regressão e testes: devolve só o resumo e as falhas |
 | `revisor` | sonnet | Bash/leitura, sem editar | revisão cruzada pelo diff |
-| `simplificador` | sonnet | edita | limpar o código da tarefa sem mudar o comportamento |
+| `simplificador` | haiku | edita | limpar o código da tarefa sem mudar o comportamento |
 | `android-adb` | sonnet | ADB | diagnóstico, cadastro de aparelho, ajustes (tem memória do projeto) |
 | `termux-infra` | sonnet | Bash/edita | runit, sshd, deploy, backup, egress (tem memória do projeto) |
 | `seguranca` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
 | `cacador-falhas` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
 
-Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks dele desligados. A config global do Claude fica no padrão de fábrica. Os agentes do ECC (`ecc:code-reviewer`, `ecc:network-troubleshooter`, `ecc:planner` e outros) seguem a regra do §9: só com pedido do Ryan.
+Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC (`ecc:code-reviewer`, `ecc:network-troubleshooter`, `ecc:planner` e outros) seguem a regra do §9: só com pedido do Ryan.
 
 Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
 
@@ -117,7 +118,7 @@ Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esfor�
 
 ## 12. ECC neste projeto (20/10, pedido do Ryan, D18)
 **Onde mora:** plugin `ecc@ecc` 2.2.3 só em `.claude/settings.json` (plugin, marketplace, hooks no perfil `standard`, estado em `.claude/ecc-data`, fora do git). O global do Claude é `{}` e continua assim. O `spy` tem a própria cópia, por isso o `/ecc:configure-ecc` trava (dois escopos). **Não usar** `ecc install --target claude`/`antigravity`/`gemini` nem o `/ecc:configure-ecc`: gravam centenas de arquivos no global ou no `.agents/`. Mudar o perfil de hooks = editar `pluginConfigs` no `.claude/settings.json`.
-**Regras (rules) do ECC:** o plugin não distribui; não instalamos (viram contexto fixo em toda sessão e as nossas estão no `CLAUDE.md` e no §9). Se precisar de uma, copiar só o arquivo para `.claude/rules/` do projeto.
+**Regras (rules) do ECC:** o plugin não distribui; copiamos `common` + `typescript` para `.claude/rules/ecc/` (commit 24da32f). Sem filtro `paths:`, entram em toda sessão (~19 KB). Onde conflitam com o projeto vale `.claude/rules/projeto.md` (commit `SIGLA: Txx`, testes por arquivo, subagentes `ecc:*` só com pedido).
 **Quem usar em cada passo** (os nossos primeiro: baratos, em português e presos ao protocolo; o ECC entra onde o nosso não cobre):
 | Passo | Nosso | ECC |
 |---|---|---|
