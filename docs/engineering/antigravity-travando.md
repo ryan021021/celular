@@ -49,3 +49,24 @@ Se o agente ficar "working" por mais de 5 minutos sem saída nova: clique **Stop
 **Segunda rodada (20/10, ainda em "working"):** o log da sessão nova mostrou `failed to get checkpoint config: unknown model key MODEL_PLACEHOLDER_M36` em todo pedido (o modelo escolhido no painel do agente não é reconhecido por esta versão; o checkpoint/resumo da conversa falha) e o plugin `superpowers` com hook de início **síncrono** via `bash` rodando a cada abertura e compactação, além de leitura de caminho inventado (`superpowers/references/...`). Em `~/.gemini/config/config.json` (cópia `.bak-20261020`): `superpowers` e `chrome-devtools-plugin` com `"enabled": false`. **Ryan:** no painel do agente, trocar o modelo por outro da lista (ou atualizar o Antigravity) e abrir conversa nova. As 8 regras globais em `~/.gemini/config/rules` não abrem (frontmatter YAML inválido, ex.: `line 5: found character that cannot start any token`) e são ignoradas pela IDE; são de outros projetos e não foram tocadas.
 
 **Terceira rodada (20/10, sessão `20261020T131927`):** sumiram do log `superpowers`, `chrome-devtools`, `hermes` e as leituras inválidas; `MODEL_PLACEHOLDER_M36` só aparece na abertura, antes da troca de modelo. Restava o `context7` morrendo ao subir (`failed to stop mcp instance: context7: exit status 1`), o que quebra o recarregamento dos MCPs; foi desligado também em `~/.gemini/config/mcp_config.json` (cópia `.bak-20261020b`). Fica ativo só o `sequential-thinking`.
+
+## Quarta rodada (20/10, ainda lento): a causa raiz
+**Medido nos `transcript_full.jsonl` (`brain/<id>/.system_generated/logs/`), tempo entre o pedido ao modelo e o passo seguinte:**
+
+| Conversa | Quando | Chamadas | Média por resposta |
+|---|---|---|---|
+| `30643f42` | 19/10 noite | 85 | 15 s |
+| `a3ecfb0a` (o ciclo) | 19/10 11h–20h UTC | ~750 | 8–28 s |
+| `a3ecfb0a` | 19/10 21h → 20/10 04h UTC | ~580 | 40–106 s |
+| `a3ecfb0a` | 20/10 12h–13h UTC | 11 | 167–324 s |
+| `8bd11420` ("opa" + uma busca) | 20/10 13h | 6 | 183 s |
+
+**Causa:** a ordem do CHEFE na rodada 3 do handoff `2026-10-19_chefe-para-gemini_LOOP-de-tarefas.md` ("não pare, `Start-Sleep 300` e confira de novo") deixou **uma conversa só** rodando sem parar: 2.818 passos, 1.345 chamadas ao modelo, 6 compactações, 33,7 MB, até 274 chamadas numa hora. Ela ainda rodava hoje em paralelo com as conversas novas. A resposta do modelo foi de ~15 s para ~3 min **também na conversa nova e minúscula**, então o gargalo não é o tamanho da conversa: é a conta/servidor (limite de uso) somado a dois agentes chamando ao mesmo tempo. CPU e RAM do PC não explicam (CPU média baixa; o pico era o Defender).
+
+**Agravantes achados:** execução automática em modo turbo (`autoExecutionPolicy` ON, JS do navegador TURBO, acesso a arquivo fora do workspace ALLOW): o agente rodou sozinho `Stop-Process` (python, 20/10) e `schtasks /DISABLE` (Hermes, 19/10). A skill global `/enterprise-deep-search` (13 KB, "24 fases") multiplica as chamadas. O navegador do agente (porta 9222, ~1,2 GB) sobe com a IDE.
+
+**Feito:** ciclo cancelado (`.collab/gemini-loop.stop` + seção CANCELADO no handoff); `/despachar` não manda mais ciclo; `.agents/rules/02-anti-travamento.md` proíbe loop, polling e deep search pesado; `antigravity-arquivar.ps1 -Zerar` move **todo** o histórico (com a IDE fechada, nunca apaga).
+
+**Ryan, para zerar:** feche a IDE → `powershell -File tools\optimize\antigravity-arquivar.ps1 -Zerar` (confere) → `... -Zerar -Aplicar` → abra só a pasta `celular`. No painel do agente: Terminal em "pedir revisão" (não turbo) e acesso fora do workspace desligado. Se continuar ~3 min por resposta numa conversa nova, é o limite da conta: troque de modelo ou espere renovar.
+
+**Regra para nunca repetir:** nenhum agente recebe ordem de ciclo, `sleep` ou "não pare". Uma tarefa por conversa e parar.

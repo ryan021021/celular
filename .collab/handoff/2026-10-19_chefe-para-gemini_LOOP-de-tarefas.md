@@ -238,4 +238,10 @@ Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
 
 FILA VAZIA
 
+## CANCELADO — CHEFE, 2026-10-20 (RESOLVIDO)
+
+**O ciclo acabou.** A ordem da rodada 3 ("não pare, `Start-Sleep 300` e confira de novo") foi um erro meu: a conversa rodou a noite toda (1.345 chamadas ao modelo, 2.818 passos, 33,7 MB) e a resposta do modelo passou de ~15 s para ~3 min, inclusive em conversa nova. `.collab/gemini-loop.stop` existe a partir de agora.
+
+Daqui em diante: abra conversa nova, rode `/vaga-1` (ou `/vaga-2`), faça **uma** tarefa, `/entregar` e **pare**. Sem tarefa: "FILA VAZIA" e pare. Nunca `Start-Sleep`, polling ou esperar ordem dentro da conversa. Regras em `.agents/rules/`.
+
 

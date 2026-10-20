@@ -12,12 +12,14 @@
 .EXAMPLE
   .\antigravity-arquivar.ps1                 # simulacao
   .\antigravity-arquivar.ps1 -Aplicar        # move o antigo (feche a IDE antes)
+  .\antigravity-arquivar.ps1 -Zerar -Aplicar # zera o agente: move TODO o historico (feche a IDE antes)
 #>
 [CmdletBinding()]
 param(
   [string]$Raiz = (Join-Path $env:USERPROFILE '.gemini\antigravity-ide'),
   [string]$Destino = (Join-Path $env:USERPROFILE '.gemini\antigravity-ide-arquivo'),
   [ValidateRange(1, 365)][int]$Dias = 7,
+  [switch]$Zerar,
   [switch]$Aplicar
 )
 
@@ -39,6 +41,8 @@ if ($Aplicar -and ($Raiz -eq $RAIZ_PADRAO)) {
 }
 
 $limite = (Get-Date).AddDays(-$Dias)
+# -Zerar: limite no futuro, entao todo o historico (inclusive o de hoje) vai para o arquivo
+if ($Zerar) { $limite = (Get-Date).AddDays(1) }
 
 function Get-IdDoArquivo([string]$nome) {
   if ($nome -match $PADRAO_ID) { return $Matches[0].ToLower() }
@@ -96,7 +100,8 @@ foreach ($sub in 'brain', 'browser_recordings') {
 $bytes = 0
 foreach ($par in $lista) { $bytes += Get-Tamanho $par[1] }
 $mb = [math]::Round($bytes / 1MB)
-Write-Output ("Parado ha mais de {0} dias: {1} itens, {2} MB (conversas {3}, mantidas {4})." -f $Dias, $lista.Count, $mb, $idsMovidos.Count, $idsMantidos.Count)
+$criterio = if ($Zerar) { 'ZERAR (historico inteiro)' } else { "Parado ha mais de $Dias dias" }
+Write-Output ("{0}: {1} itens, {2} MB (conversas {3}, mantidas {4})." -f $criterio, $lista.Count, $mb, $idsMovidos.Count, $idsMantidos.Count)
 
 if (-not $Aplicar) {
   Write-Output "SIMULA: nada foi movido. Destino seria: $Destino"

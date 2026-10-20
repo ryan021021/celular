@@ -126,6 +126,37 @@ test('conversa com .db antigo mas .wal recente (em uso) fica inteira no lugar', 
   }
 });
 
+test('-Zerar -Aplicar move tudo, inclusive o recente, sem apagar nada', () => {
+  const { pasta, raiz, destino } = montaRaiz();
+  try {
+    const r = roda(['-Raiz', raiz, '-Destino', destino, '-Zerar', '-Aplicar']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal(existsSync(join(raiz, 'conversations', `${ID_NOVO}.db`)), false, 'recente tambem sai');
+    assert.equal(existsSync(join(raiz, 'brain', ID_NOVO)), false);
+    assert.equal(existsSync(join(raiz, 'browser_recordings', 'nova.webp')), false);
+    for (const rel of [
+      ['conversations', `${ID_NOVO}.db`], ['conversations', `${ID_VELHO}.db`], ['conversations', `${ID_VELHO}.db-wal`],
+      ['brain', ID_NOVO, 'plano.md'], ['brain', ID_VELHO, 'plano.md'],
+      ['browser_recordings', 'nova.webp'], ['browser_recordings', 'velha.webp'],
+    ]) assert.ok(existsSync(join(destino, ...rel)), `tem de estar no arquivo: ${rel.join('/')}`);
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
+  }
+});
+
+test('-Zerar sem -Aplicar so simula', () => {
+  const { pasta, raiz, destino } = montaRaiz();
+  try {
+    const r = roda(['-Raiz', raiz, '-Destino', destino, '-Zerar']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /SIMULA/i);
+    assert.ok(existsSync(join(raiz, 'conversations', `${ID_NOVO}.db`)));
+    assert.equal(existsSync(destino), false);
+  } finally {
+    rmSync(pasta, { recursive: true, force: true });
+  }
+});
+
 test('-Dias fora da faixa e recusado', () => {
   const { pasta, raiz, destino } = montaRaiz();
   try {
