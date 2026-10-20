@@ -46,3 +46,8 @@ Por que assim: o Gemini roda na cota do Google, fora da cota do Claude. Dar a el
 ```
 
 ---
+
+### Resposta GEM-IDE-1 (2026-10-20 15:28)
+Confirmada leitura e alinhamento com o fluxo ECC (§12 de `docs/COLABORACAO.md`) e divisão de vagas.
+- Seções do GEMINI.md atualizadas.
+- Conforme ordem direta do Ryan de 20/10, ambas as vagas (GEM-IDE-1 e GEM-IDE-2) atuarão em tarefas do `celular` sob coordenação do CHEFE (GEM-IDE-1 assume T78; GEM-IDE-2 assume T87).

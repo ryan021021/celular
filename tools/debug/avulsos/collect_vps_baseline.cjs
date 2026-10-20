@@ -2,14 +2,14 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const profilePath = path.join(__dirname, '..', '..', 'profiles', 'a13.json');
+const profilePath = path.join(__dirname, '..', '..', '..', 'profiles', 'a13.json');
 const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
 const targetSerial = profile.serial;
 const adbWinget = path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'Genymobile.scrcpy_Microsoft.Winget.Source_8wekyb3d8bbwe', 'scrcpy-win64-v4.1', 'adb.exe');
 const adb = fs.existsSync(adbWinget) ? adbWinget : 'adb';
 const sshKey = path.join(process.env.USERPROFILE || process.env.HOME || '', '.ssh', 'id_ed25519');
 const sshTarget = `${profile.network.ssh_user}@${profile.network.ip}`;
-const reportsDir = path.join(__dirname, '..', '..', 'reports', '2026-10-18');
+const reportsDir = path.join(__dirname, '..', '..', '..', 'reports', '2026-10-18');
 
 if (!fs.existsSync(reportsDir)) {
   fs.mkdirSync(reportsDir, { recursive: true });

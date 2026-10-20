@@ -51,7 +51,7 @@ celular/
 │   ├── optimize/                # 90 Hz/jogo e manutenção do Antigravity (arquivar, diagnóstico)
 │   ├── rescue/                  # resgate de aparelho sem tela (padrão, A21s)
 │   ├── worker/                  # worker.mjs (T22, bloqueado)
-│   ├── debug/                   # scripts avulsos de inspeção (MTP, COM, Tailscale)
+│   ├── debug/                   # aplicar_tweaks_ocultos, reativar_apps_essenciais; avulsos/ (MTP, COM, Tailscale, relatórios de 18/10)
 │   └── collab/aposentado/       # gemini-loop.ps1 (GEM-CLI, D18): só histórico, recusa rodar
 │
 ├── docs/                        # COLABORACAO.md (protocolo), ARCHITECTURE, OPERATIONS, SECURITY_MODEL, LOG.md
@@ -62,7 +62,7 @@ celular/
 │
 ├── .collab/                     # coordenação entre agentes
 │   ├── TASKS.md · TASKS_FEITAS.md   # quadro ativo e concluídas
-│   ├── handoff/ · fichas/ · locks/  # recados, fichas de tarefa, travas por sigla
+│   ├── handoff/ · fichas/ · locks/  # recados (resolvidos em handoff/arquivo/), fichas, travas por sigla
 │   └── gemini-loop.stop         # mantém qualquer ciclo antigo desligado
 │
 ├── .claude/                     # agents/, skills/ (/rotina, /fechar-tarefa…), hooks/, rules/, settings.json
@@ -71,8 +71,8 @@ celular/
 ├── .vscode/                     # a IDE não vigia assets/, backups/, node_modules
 │
 ├── reports/                     # relatórios por data (os novos ficam fora do git, T46)
-├── assets/                      # fora do git: apk/, screenshots/ (sessao-a13, sessao-a21s), cópia antiga do painel
-└── backups/                     # fora do git: backups cifrados (.enc + .sha256) e backup-agendado.log
+├── assets/                      # fora do git: apk/, screenshots/ (sessao-a13, sessao-a21s)
+└── backups/                     # fora do git: backups cifrados (.enc + .sha256), backup-agendado.log, antigos/
 ```
 
 ---

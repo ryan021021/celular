@@ -3,9 +3,8 @@
 # Binários e capturas grandes
 assets/apk/
 assets/screenshots/
-assets/server-box.copia-antiga-sem-git/
 
-# Backups cifrados (já têm SHA-256 e retenção próprios)
+# Backups cifrados (já têm SHA-256 e retenção próprios) e antigos/ (cópia antiga do painel, sem git)
 backups/
 
 # O painel tem repositório git próprio (e worktrees das sessões)

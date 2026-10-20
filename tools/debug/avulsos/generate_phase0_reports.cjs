@@ -2,10 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const profilePath = path.join(__dirname, '..', '..', 'profiles', 'a13.json');
+const profilePath = path.join(__dirname, '..', '..', '..', 'profiles', 'a13.json');
 const profile = JSON.parse(fs.readFileSync(profilePath, 'utf8'));
 const targetSerial = profile.serial;
-const reportsDir = path.join(__dirname, '..', '..', 'reports', '2026-10-18');
+const reportsDir = path.join(__dirname, '..', '..', '..', 'reports', '2026-10-18');
 if (!fs.existsSync(reportsDir)) {
   fs.mkdirSync(reportsDir, { recursive: true });
 }

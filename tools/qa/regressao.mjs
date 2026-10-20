@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { DESKTOP } from "./regras.mjs";
 import { varrerArquivos } from "./alegacoes.mjs";
 import { validarPerfis } from "./perfis.mjs";
+import { comShDoGit } from "./sh-do-git.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PAINEL = join(ROOT, "server", "panel", "server-box");
@@ -25,6 +26,8 @@ const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? proces
 const LIMITE = Number(arg("--limite", "180")) * 1000;
 const PAINEIS = arg("--paineis", "celular").split(",").map(s => s.trim()).filter(Boolean);
 const WIN = process.platform === "win32";
+// rodando do PowerShell não há `sh` no PATH: as suítes de shell recebem o sh do Git
+const ENV = comShDoGit(process.env);
 
 const etapas = [];
 const registrar = (grupo, nome, ok, detalhe = {}) => { etapas.push({ grupo, nome, ok, ...detalhe }); console.log(`${ok ? "ok  " : "FALHA"} ${grupo} · ${nome}${detalhe.resumo ? ` · ${detalhe.resumo}` : ""}`); };
@@ -39,7 +42,7 @@ function git(args, cwd = ROOT) {
 function rodar(cmd, args, { cwd, limite = LIMITE, env } = {}) {
   return new Promise(ok => {
     const t0 = Date.now();
-    const child = spawn(cmd, args, { cwd, env: env || process.env, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(cmd, args, { cwd, env: env || ENV, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
     let out = "";
     child.stdout.on("data", c => { out += c; });
     child.stderr.on("data", c => { out += c; });
@@ -79,7 +82,7 @@ const ext = f => extname(f).toLowerCase();
   registrar("sintaxe", "node --check", ruins.length === 0, { resumo: `${js.length - ruins.length}/${js.length} arquivos`, ruins });
 
   const sh = rastreados.filter(f => ext(f) === ".sh" || /git-hooks\/[^.]+$|\/sv\/[^/]+\/(run|log\/run)$/.test(f));
-  const shRuins = sh.filter(f => spawnSync("bash", ["-n", f], { cwd: ROOT, windowsHide: true }).status !== 0);
+  const shRuins = sh.filter(f => spawnSync("bash", ["-n", f], { cwd: ROOT, env: ENV, windowsHide: true }).status !== 0);
   registrar("sintaxe", "bash -n", shRuins.length === 0, { resumo: `${sh.length - shRuins.length}/${sh.length} arquivos`, ruins: shRuins });
 
   const ps = rastreados.filter(f => ext(f) === ".ps1");
