@@ -1,6 +1,6 @@
 # Testes dos hooks na regressão — CHEFE → QA (2026-10-20)
 
-`node tools/qa/regressao.mjs` hoje não roda os testes de `.claude/hooks/`. Ficam de fora o `adb-guard` (trava de ADB destrutivo) e o `estado-equipe` (fila da equipe, novo em 20/10 com as siglas GEM-IDE-1/2 e GEM-AG-1/2, D18). Se um deles quebrar, ninguém vê.
+`node tools/qa/regressao.mjs` hoje não roda os testes de `.claude/hooks/`. Ficam de fora o `adb-guard` (trava de ADB destrutivo) e o `estado-equipe` (fila da equipe, novo em 20/10 com as siglas GEM-IDE-1/2, D18). Se um deles quebrar, ninguém vê.
 
 ## Pedido
 1. Acrescentar uma suíte em `tools/qa/regressao.mjs` que rode, em arquivos (o `node --test <pasta>` falha neste Node):

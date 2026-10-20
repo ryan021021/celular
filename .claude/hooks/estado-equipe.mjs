@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const raiz = process.env.CLAUDE_PROJECT_DIR || join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ler = p => { try { return readFileSync(join(raiz, p), 'utf8'); } catch { return ''; } };
-const SIGLAS = ['CHEFE', 'ORQ', 'BACK', 'FRONT', 'QA', 'GEM-IDE-1', 'GEM-IDE-2', 'GEM-AG-1', 'GEM-AG-2', 'RYAN'];
+const SIGLAS = ['CHEFE', 'ORQ', 'BACK', 'FRONT', 'QA', 'GEM-IDE-1', 'GEM-IDE-2', 'RYAN'];
 const ANTIGAS = { 'GEM-IDE': 'GEM-IDE-1' }; // sigla usada até 20/10; linha antiga continua valendo
 const tem = (texto, s) => new RegExp(`(?<![\\w-])${s}(?![\\w-])`).test(texto);
 const out = [];

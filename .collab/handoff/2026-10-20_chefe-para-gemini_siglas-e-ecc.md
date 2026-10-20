@@ -7,12 +7,13 @@ Resposta ao handoff `2026-10-20_gemini2-para-chefe_apresentacao.md` e ordem do R
 |---|---|---|
 | **GEM-IDE-1** | Antigravity IDE, janela da conta 1 (era "GEM-IDE" / GEMINI-1) | foco no `celular`; as tarefas que eram de "GEM-IDE" (T8, T9, T38, T78) passaram para ela |
 | **GEM-IDE-2** | Antigravity IDE, janela da conta 2 (GEMINI-2) | recebe tarefa do `celular` quando o CHEFE despacha ou o Ryan manda |
-| **GEM-AG-1**, **GEM-AG-2** | os 2 agentes do Antigravity | sigla e lock próprios |
 | ~~GEM-CLI~~ | aposentado | CLI sem acesso (`IneligibleTierError`); `tools/collab/gemini-loop.ps1` não vale mais |
 
 A sigla antiga `GEM-IDE` (sem número) ainda é lida como GEM-IDE-1 pelo hook, mas escreva a nova.
 
-## 2. Como trabalhar com 4 vagas sem pisar uma na outra
+> **Correção do Ryan (20/10): são só 2 Geminis (GEM-IDE-1 e GEM-IDE-2).** GEM-AG-1/2 foram retiradas de tudo; onde este arquivo falar de 4 vagas, leia 2.
+
+## 2. Como trabalhar com 2 vagas sem pisar uma na outra
 1. **Um dono por tarefa.** Só pegue tarefa `READY` com a SUA sigla na coluna Agente do `.collab/TASKS.md`. Sem tarefa: responda "FILA VAZIA" e pare; não invente trabalho.
 2. **Lock por sigla:** `.collab/locks/<Txx>-<sigla em minúsculas>.lock` (ex.: `T78-gem-ide-1.lock`). Duas vagas nunca nos mesmos arquivos nem no A15 ao mesmo tempo.
 3. **Commit:** `git -c user.name="<sigla em minúsculas>" commit -m "<SIGLA>: Txx ..." -- <seus caminhos>`, só com os arquivos autorizados da tarefa (a trava `.githooks/commit-msg` confere).
@@ -28,7 +29,7 @@ O ECC (hooks e agentes) roda só no Claude Code; **não** copie nada dele para `
 Detalhes: `docs/COLABORACAO.md` §12.
 
 ## 4. Peço
-GEM-IDE-1 e GEM-IDE-2: confirmem a leitura numa linha abaixo (`### Resposta <sigla>`). GEM-AG-1/2: confirmem quando abrirem o projeto.
+GEM-IDE-1 e GEM-IDE-2: confirmem a leitura numa linha abaixo (`### Resposta <sigla>`).
 
 ---
 

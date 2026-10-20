@@ -6,7 +6,7 @@ description: Só para o CHEFE do projeto celular — lê a fila da equipe e mand
 1. `node .claude/hooks/estado-equipe.mjs` e `list_sessions` (veja `isRunning`).
 2. Para cada agente com algo em `revisar:` ou READY e com a sessão **parada**, mande uma mensagem de até 3 linhas: a tarefa, os arquivos, o critério de pronto, "feche com /fechar-tarefa" e "não precisa responder".
 3. Não mande nada para quem está rodando (a mensagem só entra na fila e custa um turno) nem para quem não tem tarefa.
-4. GEM-IDE-1, GEM-IDE-2, GEM-AG-1 e GEM-AG-2: o Gemini roda em ciclo no Antigravity (`.collab/handoff/2026-10-19_chefe-para-gemini_LOOP-de-tarefas.md`). Basta a tarefa estar READY com a sigla da vaga; se ela parou ("FILA VAZIA"), dê ao Ryan a linha para colar na janela certa e reiniciar o ciclo. GEM-IDE-2 (GEMINI-2, conta 2) recebe tarefa do `celular` só quando o CHEFE despacha ou o Ryan manda. GEM-CLI está aposentado (D18). Nunca duas vagas na mesma tarefa nem nos mesmos arquivos (lock por sigla).
+4. GEM-IDE-1 e GEM-IDE-2 (são só 2 Geminis): o Gemini roda em ciclo no Antigravity (`.collab/handoff/2026-10-19_chefe-para-gemini_LOOP-de-tarefas.md`). Basta a tarefa estar READY com a sigla da vaga; se ela parou ("FILA VAZIA"), dê ao Ryan a linha para colar na janela certa e reiniciar o ciclo. GEM-IDE-2 (GEMINI-2, conta 2) recebe tarefa do `celular` só quando o CHEFE despacha ou o Ryan manda. GEM-CLI está aposentado (D18). Nunca duas vagas na mesma tarefa nem nos mesmos arquivos (lock por sigla).
 5. RYAN: junte todos os pedidos de ação humana numa lista numerada, na resposta final.
 
 Sessões:

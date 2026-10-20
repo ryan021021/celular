@@ -25,16 +25,17 @@ function roda(linhas, { prep, semTasks } = {}) {
 
 const linha = (id, agente, estado, pend = '—') => `| ${id} | x | ${agente} | — | \`a\` | ${estado} | t | — | ${pend} |`;
 
-test('cada vaga do Gemini tem a própria fila', () => {
-  const s = roda([
-    linha('T1', 'GEM-IDE-1', 'READY'), linha('T2', 'GEM-IDE-2', 'IN_PROGRESS'),
-    linha('T3', 'GEM-AG-1', 'READY'), linha('T4', 'GEM-AG-2', 'REVIEW'),
-  ]);
+test('cada vaga do Gemini (2: GEM-IDE-1 e GEM-IDE-2) tem a própria fila', () => {
+  const s = roda([linha('T1', 'GEM-IDE-1', 'READY'), linha('T2', 'GEM-IDE-2', 'IN_PROGRESS')]);
   assert.match(s, /- GEM-IDE-1: T1:READY/);
   assert.match(s, /- GEM-IDE-2: T2:IN_PROGRESS/);
-  assert.match(s, /- GEM-AG-1: T3:READY/);
-  assert.match(s, /- GEM-AG-2: T4:REVIEW/);
   assert.doesNotMatch(s, /GEM-IDE-1: .*T2/);
+});
+
+test('GEM-AG-1/2 foram retiradas (20/10): não viram fila nem dono', () => {
+  const s = roda([linha('T3', 'GEM-AG-1', 'READY'), linha('T4', 'GEM-AG-2', 'REVIEW'), linha('T5', 'GEM-IDE-1', 'READY')]);
+  assert.doesNotMatch(s, /GEM-AG/);
+  assert.match(s, /- GEM-IDE-1: T5:READY/);
 });
 
 test('sigla antiga GEM-IDE vale como GEM-IDE-1, sem duplicar na GEM-IDE-2', () => {
@@ -110,8 +111,8 @@ test('erro inesperado vira aviso "indisponível" e o hook ainda sai 0 (nunca tra
 });
 
 test('nome entre parênteses não vira dono e GEM-CLI aposentado não aparece', () => {
-  const s = roda([linha('T20', 'BACK (pede ao GEM-AG-1)', 'READY'), linha('T21', 'GEM-CLI', 'READY')]);
+  const s = roda([linha('T20', 'BACK (pede ao GEM-IDE-2)', 'READY'), linha('T21', 'GEM-CLI', 'READY')]);
   assert.match(s, /- BACK: T20:READY/);
-  assert.doesNotMatch(s, /GEM-AG-1: T20/);
+  assert.doesNotMatch(s, /GEM-IDE-2: T20/);
   assert.doesNotMatch(s, /GEM-CLI/);
 });
