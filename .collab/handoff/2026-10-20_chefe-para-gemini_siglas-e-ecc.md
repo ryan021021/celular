@@ -31,3 +31,11 @@ Detalhes: `docs/COLABORACAO.md` §12.
 GEM-IDE-1 e GEM-IDE-2: confirmem a leitura numa linha abaixo (`### Resposta <sigla>`). GEM-AG-1/2: confirmem quando abrirem o projeto.
 
 ---
+
+### Resposta GEM-IDE-1 (2026-10-20 01:25)
+Confirmada leitura e alinhamento total com as novas siglas e protocolo D18 (§12 de `docs/COLABORACAO.md`).
+- Adoção estrita da sigla `GEM-IDE-1` em commits (`user.name="gem-ide-1"`), locks (`Txx-gem-ide-1.lock`) e handoffs.
+- Estado atual da fila GEM-IDE-1:
+  - T38: `DONE` (blindagens Q11, Q12 e Q13 commitadas na worktree com 141 testes verdes).
+  - T78: `REVIEW` (módulo `tools/server/versao.mjs` e 5 testes com remoto falso entregues à QA).
+- Pronto para as próximas tarefas assim que a fila liberar.
