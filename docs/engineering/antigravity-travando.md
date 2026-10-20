@@ -70,3 +70,10 @@ Se o agente ficar "working" por mais de 5 minutos sem saída nova: clique **Stop
 **Ryan, para zerar:** feche a IDE → `powershell -File tools\optimize\antigravity-arquivar.ps1 -Zerar` (confere) → `... -Zerar -Aplicar` → abra só a pasta `celular`. No painel do agente: Terminal em "pedir revisão" (não turbo) e acesso fora do workspace desligado. Se continuar ~3 min por resposta numa conversa nova, é o limite da conta: troque de modelo ou espere renovar.
 
 **Regra para nunca repetir:** nenhum agente recebe ordem de ciclo, `sleep` ou "não pare". Uma tarefa por conversa e parar.
+
+## Quinta rodada (20/10 14h, depois do `-Zerar`)
+- Zerado: 70 itens, 598 MB, 0 falhas. Conversa nova com "opa": 49–65 s por resposta e para depois do primeiro passo.
+- O modelo é o mesmo de ontem à noite (**Gemini 3.8 Flash (High)**, 15 s em média em 19/10): não é defeito do modelo, é o **limite de uso da conta** depois de ~1.300 chamadas do ciclo. Flash (Medium) também ficou lento hoje (46–133 s).
+- O `superpowers` continuava entrando pelo `GEMINI.md` do próprio plugin (`@./skills/using-superpowers/SKILL.md`, ~20 mil caracteres, manda "invocar skill antes de responder"); o `enabled: false` no `config.json` não vale para ele. Pasta movida para `~/.gemini/config/plugins-desligados/superpowers` (desfazer: mover de volta).
+- A IDE abriu **sem pasta** ("no active workspace"), então as regras de `.agents/` não entram: abrir sempre `celular` (File → Open Folder).
+- **Saída:** trocar o modelo no painel para outro de cota diferente (ex.: Claude Opus 4.6 (Thinking), que já aparece na lista) ou esperar o limite do Gemini renovar.
