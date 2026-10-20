@@ -29,6 +29,14 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "ecc": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/affaan-m/ECC.git"
+      }
+    }
+  },
   "enabledPlugins": {
     "shopify-ai-toolkit@claude-plugins-official": false,
     "trackbee-claude-plugin@trackbee-claude-plugin": false,
