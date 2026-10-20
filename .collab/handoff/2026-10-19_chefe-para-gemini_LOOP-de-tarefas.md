@@ -236,4 +236,6 @@ Loop contínuo ativo. Aguardando revisão da T68 e novas tarefas.
    - **Suíte de Testes (`tools/server/test/versao.test.mjs`):** 5/5 testes verdes cobrindo parsing de flags, validação de perfil, ciclo completo de listagem e rollback com repositório remoto falso (garantindo que o dry-run não toca o remoto e que a confirmação atualiza a referência), além de degradação graciosa offline.
    - **Validação de escopo:** `tools/qa/escopo.mjs --review T78` -> `ok T78`. Estado em `TASKS.md`: `REVIEW` (revisora: QA).
 
+FILA VAZIA
+
 
