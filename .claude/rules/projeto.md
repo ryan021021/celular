@@ -12,5 +12,6 @@ Quando uma regra do ECC conflitar com esta, vale esta.
 - A meta de 80% do ECC não se aplica como número: vale "o teste falha quando o código quebra" (mutação), conforme a auditoria de 20/10.
 
 ## Agentes e economia
-- Subagentes do ECC (`ecc:*`) só com pedido do Ryan; use os do projeto (`.claude/agents/`). Modelos e custos: `docs/COLABORACAO.md` §9 e §10.
+- Use primeiro os subagentes do projeto (`.claude/agents/`). Os do ECC (`ecc:*`) só nos passos e nas condições da tabela do `docs/COLABORACAO.md` §12; fora dela, só com pedido do Ryan. Modelos e custos: §9 e §10.
+- Código novo ou bug: teste que falha primeiro, depois a correção (`tdd-workflow`). Em tarefa com 3+ arquivos, o CHEFE planeja antes (`/ecc:plan`).
 - Não troque de modelo nem de esforço no meio da sessão.

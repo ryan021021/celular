@@ -64,7 +64,7 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Escrever sem ler:** LOG com append (`>>` / `Add-Content`), 1 linha de até ~300 caracteres; detalhes ficam no commit/handoff. Tarefa nova DONE: mover a linha para `TASKS_FEITAS.md`.
 - **Saída curta:** filtrar comandos (`| tail -n 30`, `--quiet`); testes: só resumo e falhas. Nada de despejar log/JSON inteiro.
 - **Sem espera ativa:** proibido `/loop`, ScheduleWakeup, `sleep` ou releitura periódica para esperar outra sessão. Deixe o handoff/TASKS e encerre o turno.
-- **Subagentes:** só os do projeto (§10), que são baratos e devolvem resumo. Agent genérico, Explore e pesquisa web só com pedido do Ryan.
+- **Subagentes:** os do projeto (§10) primeiro, que são baratos e devolvem resumo. Os do ECC só nos passos e nas condições da tabela do §12 (D20). Agent genérico, Explore e pesquisa web só com pedido do Ryan.
 - **Respostas curtas** ao Ryan e entre sessões: o que mudou, o que falta. Sem repetir o que já está nos arquivos.
 - **Contexto:** o projeto compacta sozinho aos 25% da janela (`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=25` em `.claude/settings.json`, ~250 mil). Antes disso, registre o estado em TASKS/handoff; sessão com muito histórico inútil: `/compact` ou sessão nova.
 - **Cache:** não trocar de modelo nem de esforço no meio da sessão (perde o cache e reprocessa tudo), nem com `/model` ou `/effort` digitado à mão. Troque só depois de `/clear` ou em sessão nova.
@@ -87,7 +87,7 @@ Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto
 | `seguranca` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
 | `cacador-falhas` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
 
-Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC (`ecc:code-reviewer`, `ecc:network-troubleshooter`, `ecc:planner` e outros) seguem a regra do §9: só com pedido do Ryan.
+Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC entram só nos passos e nas condições da tabela do §12 (D20); fora dela, só com pedido do Ryan.
 
 Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
 
@@ -119,19 +119,23 @@ Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esfor�
 ## 12. ECC neste projeto (20/10, pedido do Ryan, D18)
 **Onde mora:** plugin `ecc@ecc` 2.2.3 só em `.claude/settings.json` (plugin, marketplace, hooks no perfil `standard`, estado em `.claude/ecc-data`, fora do git). O global do Claude é `{}` e continua assim. O `spy` tem a própria cópia, por isso o `/ecc:configure-ecc` trava (dois escopos). **Não usar** `ecc install --target claude`/`antigravity`/`gemini` nem o `/ecc:configure-ecc`: gravam centenas de arquivos no global ou no `.agents/`. Mudar o perfil de hooks = editar `pluginConfigs` no `.claude/settings.json`.
 **Regras (rules) do ECC:** o plugin não distribui; copiamos `common` + `typescript` para `.claude/rules/ecc/` (commit 24da32f). Sem filtro `paths:`, entram em toda sessão (~19 KB). Onde conflitam com o projeto vale `.claude/rules/projeto.md` (commit `SIGLA: Txx`, testes por arquivo, subagentes `ecc:*` só com pedido).
-**Quem usar em cada passo** (os nossos primeiro: baratos, em português e presos ao protocolo; o ECC entra onde o nosso não cobre):
-| Passo | Nosso | ECC |
-|---|---|---|
-| Planejar tarefa grande (3+ arquivos) | ficha em `.collab/fichas/` | `/ecc:plan` |
-| Código novo ou bug | — | skill `tdd-workflow`: teste que falha primeiro |
-| Rodar testes | `verificador` | skill `verification-loop` |
-| Revisar pelo diff | `revisor` | `ecc:code-reviewer` ou `/ecc:code-review` |
-| Auth, rede, segredos | `seguranca` | `ecc:security-reviewer` · `/ecc:security-scan` |
-| Falha silenciosa, teste fraco | `cacador-falhas` | `ecc:silent-failure-hunter` |
-| Limpar o código | `simplificador` | `ecc:code-simplifier` · `/ecc:refactor-clean` |
-| Build ou erro de compilação | — | `/ecc:build-fix` |
-| Contexto pesado | `/compact` (CLAUDE.md) | skill `context-budget` |
-| Fim de sessão longa | — | `/ecc:save-session` · `/ecc:resume-session` |
+**Quem usar em cada passo** (20/10, D20; o Ryan autorizou o ECC nestes passos, fora deles continua "só com pedido"). Regra de custo: o nosso primeiro (barato, em português, preso ao protocolo); o especialista do ECC entra só na coluna "Escala quando". Todos rodam na mesma cota do Claude.
+| Passo | Nosso (padrão) | ECC | Escala quando |
+|---|---|---|---|
+| Planejar | ficha em `.collab/fichas/` | `/ecc:plan` · `ecc:architect` | 3+ arquivos, decisão de arquitetura ou mexe em mais de uma zona; quem planeja é o CHEFE (Opus) |
+| Código novo ou bug | — | skill `tdd-workflow` · `ecc:tdd-guide` | sempre: teste que falha primeiro, depois a correção; vale para todos os executores e vagas do Gemini |
+| Rodar testes | `verificador` (Haiku) | skill `verification-loop` | nunca: o `verificador` basta |
+| Revisar pelo diff | `revisor` (Sonnet) | `ecc:typescript-reviewer` (nosso código é `.mjs`) · `/ecc:code-review` | diff com mais de ~300 linhas de JS, ou o `revisor` reprovou 2 vezes |
+| Auth, rede, segredos | `seguranca` (Sonnet) | `ecc:security-reviewer` · `/ecc:security-scan` | token, sshd, egress, painel exposto, antes de deploy; o scan roda 1 vez por semana ou antes de release |
+| Falha silenciosa, teste fraco | `cacador-falhas` (Sonnet) | `ecc:silent-failure-hunter` · `ecc:pr-test-analyzer` | script de serviço, deploy, backup, rede; ou o teste novo não tem prova por mutação |
+| Limpar o código | `simplificador` (Haiku) | `ecc:code-simplifier` · `/ecc:refactor-clean` | depois da tarefa verde; `/ecc:refactor-clean` só com pedido do CHEFE |
+| Build ou erro de compilação | — | `/ecc:build-fix` · `ecc:build-error-resolver` | o painel (`server-box`) ou o `claude` no Termux não compila |
+| Teste de ponta a ponta do painel | — | `ecc:e2e-runner` | FRONT, tela nova do painel; roda no PC contra o A15, sem mexer no aparelho |
+| Documentação | CHEFE na própria tarefa | `/ecc:update-docs` · `ecc:doc-updater` | mudou comportamento e `docs/` ficou para trás |
+| Contexto pesado | `/compact` (CLAUDE.md) | skill `context-budget` | sessão passou de ~100 mil (§9) |
+| Fim de sessão longa | handoff + TASKS + LOG | `/ecc:save-session` · `/ecc:resume-session` | CHEFE e QA ao trocar de sessão (§9, D19) |
+
+**Não se aplica a este projeto** (não gaste turno): revisores de Go, Python, F#, C++, C#, Java, Kotlin, Rust, Swift, PHP, Ruby, Vue, React, Flutter, Django e FastAPI; `database-reviewer` (sem Postgres), `mle-reviewer` (sem ML), `harmonyos-app-resolver`, SEO e marketing. O `/code-review` do ECC vale para o JS do projeto; os revisores de linguagem só entram se a linguagem aparecer.
 **Hooks do ECC ligados:** GateGuard (pede fatos antes da 1ª edição/Bash), context-monitor, quality-gate e afins no `standard`. Desligados por `ECC_DISABLED_HOOKS`: mcp-health-check, plan-canvas e command-log (ruído e tokens). Para o ECC pesar menos: `ECC_GATEGUARD=off` no `env` do projeto.
-**Gemini:** os hooks e os agentes do ECC são do Claude Code; no Antigravity valem só as regras escritas em `GEMINI.md` e nos handoffs. Não copiar o ECC para `.agents/` nem `.gemini/`.
-**Conferir:** `node --test .claude/hooks/adb-guard.test.mjs .claude/hooks/estado-equipe.test.mjs` (o `node --test <pasta>` falha neste Node; passe os arquivos) · `node tools/qa/regressao.mjs` (ainda não roda os testes dos hooks: pedido à QA em `.collab/handoff/2026-10-20_chefe-para-qa_hooks-na-regressao.md`). O `ecc doctor` avisa "No ECC install-state files": normal, só existe em instalação manual.
+**Gemini (4 vagas, D20):** os hooks e os agentes do ECC são do Claude Code; no Antigravity valem só as regras escritas em `GEMINI.md`/`GEMINI-2.md` e nos handoffs. Não copiar o ECC para `.agents/` nem `.gemini/`. Papéis padrão (o Ryan pode trocar): **GEM-IDE-1** = código e tooling do `celular` (`tools/connect`, `rescue`, `debug`, `profiles/`) e as tarefas de teste com especificação fechada (ex.: T87); **GEM-IDE-2** = outras frentes do Ryan, no `celular` só com ordem; **GEM-AG-1** = volume com receita pronta (testes novos, documentação, fixtures); **GEM-AG-2** = auditoria só de leitura (mutação, varredura de segredos, relatório em `docs/engineering/reviews/`). Todas seguem o mesmo método do ECC: teste que falha primeiro, achado com `arquivo:linha`, parar no primeiro erro. Quem confere o que o Gemini entrega é a trava + o `/fechar-tarefa` do CHEFE ou a QA; vaga não revisa vaga. Pacote de instruções: `.collab/handoff/2026-10-20_chefe-para-gemini_equipe-e-fluxo.md`.
+**Conferir:** `node --test .claude/hooks/adb-guard.test.mjs .claude/hooks/estado-equipe.test.mjs` (o `node --test <pasta>` falha neste Node; passe os arquivos) · `node tools/qa/regressao.mjs` (já roda os testes dos hooks: pega todo `*.test.mjs` rastreado, por pasta; o pedido à QA em `2026-10-20_chefe-para-qa_hooks-na-regressao.md` partiu de uma premissa falsa). O `ecc doctor` avisa "No ECC install-state files": normal, só existe em instalação manual.

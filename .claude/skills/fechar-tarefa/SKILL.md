@@ -9,6 +9,11 @@ Argumentos: $ARGUMENTS
 2. **Em paralelo, numa mensagem só**, chame dois subagentes:
    - `verificador`: os testes ligados a esses arquivos mais a regressão.
    - `revisor`: a tarefa, o diff desses arquivos e os "Arquivos autorizados" da linha.
+2b. **Reforço só quando o diff pede** (na mesma mensagem do passo 2; tabela do §12):
+   - mexe em auth, token, sshd, rede, egress ou painel exposto → também `seguranca`;
+   - script de serviço, deploy, backup, rede, ou teste novo sem prova por mutação → também `cacador-falhas`;
+   - código novo ou bug sem teste que falhava antes → devolva ao autor (tdd-workflow), sem gastar revisor.
+   Tarefa comum não chama nenhum dos dois: o custo fica no `verificador` e no `revisor`.
 3. **Decida:**
    - VERMELHO ou REPROVADO: corrija e volte ao passo 2. No máximo 2 voltas; depois disso, avise o CHEFE.
    - VERDE e APROVADO (ou com notas só cosméticas), numa tarefa **não crítica**: vira **DONE**. Mova a linha para o fim de `.collab/TASKS_FEITAS.md` com a evidência e `revisor (subagente): APROVADO`.
