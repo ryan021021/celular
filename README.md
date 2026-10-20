@@ -28,37 +28,51 @@ Para interagir com o servidor sem complicações, use os lançadores diretos:
 
 ```text
 celular/
-├── CONECTAR_SSH.bat             # Atalho mestre: Terminal SSH
-├── ESPELHAR_TELA.bat            # Atalho mestre: Espelho Scrcpy
-├── PAINEL_CENTRAL.bat           # Atalho mestre: Painel interativo
-├── README.md                    # Esta documentação
+├── CONECTAR_SSH.bat · ESPELHAR_TELA.bat · PAINEL_CENTRAL.bat · INSTALAR_SERVIDOR.bat   # atalhos de duplo clique
+├── README.md                    # esta página
+├── AGENTS.md                    # porta de entrada dos agentes → COLABORACAO, CLAUDE.md, GEMINI.md, GEMINI-2.md
 │
-├── profiles/                    # Configurações declarativas por hardware
-│   ├── a13.json                 # Specs, rede e flags do Galaxy A13 (servidor ativo)
-│   ├── a21s.json                # Specs e notas de resgate do Galaxy A21s
-│   ├── oppo_a78.json            # Specs e análise técnica do Oppo A78
-│   └── _template.json           # Modelo para novos aparelhos
+├── profiles/                    # um JSON por aparelho (a13, a15, a21s, oppo_a78), schema.json e _template.json
 │
-├── tools/                       # Ferramentas operacionais modulares
-│   ├── connect/                 # Conexão unificada (connect.ps1) e arquivos legados
-│   ├── debug/                   # Scripts de inspeção de hardware e portas seriais/MTP
-│   ├── optimize/                # Otimizadores de taxa de atualização (90Hz) e processos
-│   └── rescue/                  # Ferramentas de injeção de padrões e resgate sem tela
+├── server/                      # o que roda dentro do celular-servidor (Termux)
+│   ├── termux/                  # setup, boot, sshd, watchdog, serviços runit (sv/), hook de deploy
+│   ├── agentops/                # API do AgentOps (server.mjs, adapters, redact)
+│   ├── discovery/               # detecção do aparelho (detect.mjs + fixtures)
+│   ├── routines/                # catálogo e agendador de rotinas
+│   └── panel/                   # painel web: server-box/ tem git próprio (fora deste repo); UPSTREAM.md
 │
-├── assets/                      # Binários e capturas de tela organizadas
-│   ├── apk/                     # APKs de instalação (Termux Universal, etc.)
-│   └── screenshots/             # Histórico visual organizado por sessão
-│       ├── sessao-a13/          # Logs visuais de configuração do A13
-│       └── sessao-a21s/         # Mapas táteis e diagramas do A21s
+├── tools/                       # ferramentas do PC (Windows)
+│   ├── connect/                 # connect.ps1, detectar_aparelho.ps1; legacy/ guarda os .bat antigos
+│   ├── server/                  # deploy.ps1, backup.sh, reaplicar-ajustes.ps1, versao.mjs
+│   ├── install/                 # preflight.mjs (aparelho novo)
+│   ├── diag/                    # diag.mjs e capacidades.mjs
+│   ├── lib/                     # achar-aparelho.mjs (compartilhado)
+│   ├── qa/                      # regressao.mjs (portão), escopo.mjs (trava do commit) e checagens
+│   ├── optimize/                # 90 Hz/jogo e manutenção do Antigravity (arquivar, diagnóstico)
+│   ├── rescue/                  # resgate de aparelho sem tela (padrão, A21s)
+│   ├── worker/                  # worker.mjs (T22, bloqueado)
+│   ├── debug/                   # scripts avulsos de inspeção (MTP, COM, Tailscale)
+│   └── collab/aposentado/       # gemini-loop.ps1 (GEM-CLI, D18): só histórico, recusa rodar
 │
-├── docs/                        # Protocolos e histórico
-│   ├── COLABORACAO.md           # Protocolo de trabalho em dupla (Claude + Gemini)
-│   └── LOG.md                   # Log de auditoria e alterações
+├── docs/                        # COLABORACAO.md (protocolo), ARCHITECTURE, OPERATIONS, SECURITY_MODEL, LOG.md
+│   ├── engineering/             # MASTER_PLAN, DECISIONS, antigravity-travando
+│   ├── qa/                      # achados, afirmações, matriz de testes
+│   ├── audit/                   # estado atual, riscos, inventário de serviços
+│   └── spec/ · log/             # spec do OmniServer; LOG de meses anteriores
 │
-└── .collab/                     # Sincronização e governança multi-agente
-    ├── TASKS.md                 # Quadro de tarefas ativas
-    ├── handoff/                 # Comunicação formal entre agentes
-    └── locks/                   # Bloqueios temporários de concorrência
+├── .collab/                     # coordenação entre agentes
+│   ├── TASKS.md · TASKS_FEITAS.md   # quadro ativo e concluídas
+│   ├── handoff/ · fichas/ · locks/  # recados, fichas de tarefa, travas por sigla
+│   └── gemini-loop.stop         # mantém qualquer ciclo antigo desligado
+│
+├── .claude/                     # agents/, skills/ (/rotina, /fechar-tarefa…), hooks/, rules/, settings.json
+├── .agents/                     # regras e workflows do Antigravity (/vaga-1, /vaga-2, /entregar, /diagnostico)
+├── .githooks/                   # commit-msg → tools/qa/escopo.mjs
+├── .vscode/                     # a IDE não vigia assets/, backups/, node_modules
+│
+├── reports/                     # relatórios por data (os novos ficam fora do git, T46)
+├── assets/                      # fora do git: apk/, screenshots/ (sessao-a13, sessao-a21s), cópia antiga do painel
+└── backups/                     # fora do git: backups cifrados (.enc + .sha256) e backup-agendado.log
 ```
 
 ---

@@ -1,9 +1,13 @@
-﻿# Loop de tarefas do Gemini CLI (GEM-CLI): pega cada tarefa READY do GEM-CLI no .collab/TASKS.md,
+﻿# APOSENTADO (20/10): GEM-CLI sem acesso (D18) e ciclo de agente proibido (o de 19/10 esgotou a cota do Gemini;
+# docs/engineering/antigravity-travando.md). Guardado só como histórico; recusa rodar.
+# Loop de tarefas do Gemini CLI (GEM-CLI): pega cada tarefa READY do GEM-CLI no .collab/TASKS.md,
 # roda o Gemini sem interação, registra o resultado num handoff e manda a tarefa para REVIEW do CHEFE.
 # Não gasta tokens do Claude. O Gemini só edita arquivos (sem shell, sem adb, sem commit).
 # Uso: powershell -File tools/collab/gemini-loop.ps1 [-Minutos 10] [-Uma]
 # Parar: crie o arquivo .collab/gemini-loop.stop (ou Ctrl+C).
 param([int]$Minutos = 10, [switch]$Uma, [string]$Modelo = "")
+Write-Output 'gemini-loop aposentado: nenhum agente roda em ciclo. Use /vaga-1 ou /vaga-2 numa conversa nova do Antigravity.'
+exit 1
 
 $raiz   = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $tasks  = Join-Path $raiz ".collab\TASKS.md"

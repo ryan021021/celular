@@ -33,5 +33,6 @@ desktop.ini
 # Relatórios gerados sem dono/revisão (T46: afirmações erradas; correções em docs/qa/)
 reports/
 
-# estado do plugin ECC (fica no projeto, fora do git)
+# estado do plugin ECC (fica no projeto, fora do git); ** pega cópia criada por hook rodando em subpasta
 .claude/ecc-data/
+**/.claude/ecc-data/
