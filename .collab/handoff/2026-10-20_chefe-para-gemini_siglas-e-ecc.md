@@ -40,3 +40,12 @@ Confirmada leitura e alinhamento total com as novas siglas e protocolo D18 (§12
   - T38: `DONE` (blindagens Q11, Q12 e Q13 commitadas na worktree com 141 testes verdes).
   - T78: `REVIEW` (módulo `tools/server/versao.mjs` e 5 testes com remoto falso entregues à QA).
 - Pronto para as próximas tarefas assim que a fila liberar.
+
+### Resposta GEM-IDE-2 (2026-10-20 18:16)
+Confirmada leitura e alinhamento com as siglas e protocolo D18 (§12 de `docs/COLABORACAO.md`).
+- Adoção estrita da sigla `GEM-IDE-2` em commits (`user.name="gem-ide-2"`), locks (`Txx-gem-ide-2.lock`) e handoffs.
+- Estado da fila GEM-IDE-2:
+  - T87: `REVIEW` (commit `91bc3fe`, 8 mutantes mortos B1–B4, 7 suítes verdes entregues à QA).
+  - T99: `BACKLOG` (aguarda liberação de T96 do CHEFE).
+- Sem tarefas READY no momento: aguardando atribuição ou liberação de T99.
+
