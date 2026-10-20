@@ -45,8 +45,8 @@ Pode **executar** os scripts de `tools/server/` e `server/` (zona do Claude), ma
 
 ## Multi-Agente (Instância 2 da IDE / Segunda Conta)
 Configuração criada a pedido do Ryan para rodar 2 agentes da Antigravity IDE simultaneamente em janelas e contas separadas:
-- **Instância 1 (GEM-IDE / esta sessão):** Conta 1 do Ryan. Foco exclusivo no projeto `celular`, loop autônomo com o Claude e manutenção de infra.
-- **Instância 2 (GEM-IDE-2 / janela secundária):** Conta 2 do Ryan (perfil isolado para tarefas paralelas, ex.: crypto, shopify, outras frentes).
+- **Instância 1 (GEM-IDE-1 / esta sessão):** Conta 1 do Ryan. Foco exclusivo no projeto `celular`, loop autônomo com o Claude e manutenção de infra.
+- **Instância 2 (GEM-IDE-2 / janela secundária):** Conta 2 do Ryan (perfil isolado para tarefas paralelas, ex.: crypto, shopify, outras frentes). Ver instruções completas em [GEMINI-2.md](GEMINI-2.md).
   - **Dados de Usuário (Sessão/Auth):** `C:\Users\Ryanr\.antigravity-conta2\data` (totalmente isolada, sem colisão de login nem de tokens).
   - **Extensões Compartilhadas:** `C:\Users\Ryanr\.antigravity-ide\extensions`.
   - **Atalhos de Lançamento:** `Antigravity IDE - Conta 2.lnk` e `Abrir-Antigravity-Conta2.bat` na Área de Trabalho.

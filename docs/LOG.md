@@ -137,3 +137,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-20 00:50 · claude (BACK) · T81 instalada no A15 (backup a15-20261020-001725 antes; cron netguard */5 ativo; 1a rodada: ok; painel e alertas rodando)
 - 2026-10-20 00:18 · claude (ORQ) · T82: connect.ps1, backup.sh e preflight.mjs usam o achador; testes com IP do perfil errado; ao vivo no A15 ok; REVIEW (CHEFE)
 - 2026-10-20 01:15 · gemini-2 · Entrada oficial do 2º Agente Gemini (Instância 2) na equipe; handoff de apresentação ao Claude CHEFE registrado · .collab/handoff/2026-10-20_gemini2-para-chefe_apresentacao.md
+- 2026-10-20 01:35 · gem-ide-1 · Criado GEMINI-2.md com config e escopo do 2º agente (GEM-IDE-2), atualizados AGENTS.md e GEMINI.md, e aberto handoff para o CHEFE · GEMINI-2.md, AGENTS.md, GEMINI.md, .collab/handoff/2026-10-20_gem-ide-1-para-chefe_doc-gemini-2.md
