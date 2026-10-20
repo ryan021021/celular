@@ -1,0 +1,17 @@
+{
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/node_modules/**": true,
+    "**/assets/apk/**": true,
+    "**/assets/screenshots/**": true,
+    "**/backups/**": true,
+    "**/.claude/ecc-data/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/assets/apk": true,
+    "**/assets/screenshots": true,
+    "**/backups": true,
+    "**/.claude/ecc-data": true
+  }
+}
