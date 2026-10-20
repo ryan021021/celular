@@ -20,6 +20,7 @@ tools/debug/snapshots_a13/
 !.claude/agents/
 !.claude/skills/
 !.claude/hooks/
+!.claude/rules/
 !.claude/settings.json
 .collab/locks/*.lock
 
