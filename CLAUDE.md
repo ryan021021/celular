@@ -6,6 +6,7 @@ Trabalho em dupla com o Gemini (Antigravity): **siga `docs/COLABORACAO.md`**, em
 ## Minha zona
 `tools/optimize`, `docs/`, estrutura de `.collab/TASKS.md`, `CLAUDE.md`. Revisão cruzada do que o Gemini entrega.
 Fora da zona: handoff em `.collab/handoff/`, nunca editar direto.
+Nomes, papéis e pares do ECC de todos os agentes (sessões, subagentes, vagas do Gemini): `docs/AGENTES.md`.
 
 ## Rotina
 O estado da equipe entra sozinho no início (hook) · `/rotina <SIGLA>` → pegar uma tarefa → lock → fazer (especialistas em `.claude/agents/`, §10 do COLABORACAO) → `/fechar-tarefa` (esteira: testes + code-reviewer + DONE; crítica vai para a QA).

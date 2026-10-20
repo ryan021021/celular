@@ -74,6 +74,8 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes (D19): **Haiku** para busca, testes e limpeza (`code-explorer`, `verificador`, `code-simplifier`); **Sonnet** para julgamento e risco (`code-reviewer`, `security-reviewer`, `silent-failure-hunter`, `android-adb`, `termux-infra`), como no §10. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
+**Quadro único de nomes, papéis e pares do ECC: `docs/AGENTES.md`** (T90; a regressão confere o quadro contra `.claude/agents/`, passo "agentes"). Esta seção e o §12 explicam o porquê.
+
 Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto isolado, ferramentas mínimas, modelo barato onde dá), skills em `.claude/skills/` e uma trava em `.claude/hooks/`. Fica no git e vale para toda sessão Claude aberta na raiz do projeto.
 
 | Subagente | Modelo | Ferramentas | Quando usar |
@@ -86,6 +88,7 @@ Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto
 | `termux-infra` | sonnet | Bash/edita | runit, sshd, deploy, backup, egress (tem memória do projeto) |
 | `security-reviewer` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
 | `silent-failure-hunter` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
+| `tdd-guide` | sonnet | edita | código novo ou bug: teste que falha, correção mínima, prova por mutação (T90) |
 
 Reforço de 20/10 (ideias do ECC, adaptadas): `code-reviewer` e `security-reviewer` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `code-reviewer` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC entram só nos passos e nas condições da tabela do §12 (D20); fora dela, só com pedido do Ryan.
 

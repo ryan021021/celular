@@ -54,7 +54,7 @@ celular/
 │   ├── debug/                   # aplicar_tweaks_ocultos, reativar_apps_essenciais; avulsos/ (MTP, COM, Tailscale, relatórios de 18/10)
 │   └── collab/aposentado/       # gemini-loop.ps1 (GEM-CLI, D18): só histórico, recusa rodar
 │
-├── docs/                        # COLABORACAO.md (protocolo), ARCHITECTURE, OPERATIONS, SECURITY_MODEL, LOG.md
+├── docs/                        # COLABORACAO.md (protocolo), AGENTES.md (quadro de agentes), ARCHITECTURE, OPERATIONS, SECURITY_MODEL, LOG.md
 │   ├── engineering/             # MASTER_PLAN, DECISIONS, antigravity-travando
 │   ├── qa/                      # achados, afirmações, matriz de testes
 │   ├── audit/                   # estado atual, riscos, inventário de serviços

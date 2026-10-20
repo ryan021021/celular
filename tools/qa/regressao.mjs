@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { DESKTOP } from "./regras.mjs";
 import { varrerArquivos } from "./alegacoes.mjs";
 import { validarPerfis } from "./perfis.mjs";
+import { validarAgentes } from "./agentes.mjs";
 import { comShDoGit } from "./sh-do-git.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -177,6 +178,13 @@ varrerSegredos("repositório raiz", rastreados, ROOT);
   const perfis = validarPerfis();
   const achados = perfis.flatMap(p => p.erros.map(e => `${p.arquivo}: ${e}`));
   registrar("perfis", "profiles/*.json contra schema.json", achados.length === 0, { resumo: `${perfis.length} perfil(is), ${achados.length} erro(s)`, achados });
+}
+
+// 8. agentes: .claude/agents/*.md contra docs/AGENTES.md (T90)
+{
+  const agentes = validarAgentes();
+  const achados = agentes.flatMap(a => a.erros.map(e => `${a.arquivo}: ${e}`));
+  registrar("agentes", ".claude/agents/*.md contra docs/AGENTES.md", achados.length === 0, { resumo: `${agentes.length} item(ns), ${achados.length} erro(s)`, achados });
 }
 
 // resumo
