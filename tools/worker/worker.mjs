@@ -147,11 +147,18 @@ function run(api, { cmd, args, cwd }, prompt, timeoutMs, leaseId) {
   });
 }
 
-async function cycle(cfg, api, dry) {
+// Prazo da tarefa no PC: 30 s antes do prazo do A13, nunca abaixo de 60 s; sem timeoutMs válido usa 5 min (Math.max(60_000, NaN) era NaN)
+export function prazoMs(task) {
+  const t = Number(task?.timeoutMs) || 300_000;
+  return Math.max(60_000, t - 30_000);
+}
+
+export async function cycle(cfg, api, dry) {
   const hb = await api("/api/worker/heartbeat", { adapters: ["worker-pc"], version: VERSION });
   if (hb.status !== 200) throw new Error(`heartbeat recusado (${hb.status})`);
   if (hb.body.paused) return logar("[worker] kill switch ligado no A13: nada a fazer");
   const c = await api("/api/worker/claim");
+  if (c.status !== 200) throw new Error(`claim recusado (${c.status})`);
   const task = c.body.task;
   if (!task) return;
   logar(`[worker] tarefa ${task.id} (${task.profile})`);
@@ -162,9 +169,10 @@ async function cycle(cfg, api, dry) {
   else if (dry) res = { ok: true, output: `dry-run: recebido no PC (${task.profile}), nada executado` };
   else {
     const dir = prepareDir(cfg.workdir, task.profile);
-    res = await run(api, buildRunner(task.profile, dir), task.prompt, Math.max(60_000, task.timeoutMs - 30_000), task.leaseId);
+    res = await run(api, buildRunner(task.profile, dir), task.prompt, prazoMs(task), task.leaseId);
   }
   const r = await api("/api/worker/result", { id: task.id, leaseId: task.leaseId, ...fitResult(res) });
+  if (r.status !== 200) throw new Error(`resultado da tarefa ${task.id} não entregue (${r.status}); o A13 vai devolvê-la à fila pelo prazo`);
   logar(`[worker] resultado ${res.ok ? "ok" : "falha"} entregue (${r.status})`);
 }
 

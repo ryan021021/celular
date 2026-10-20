@@ -239,3 +239,79 @@ test("G5: saída acima de 256 KB com código 0 não vira falha (runProcess avisa
   assert.equal(r.ok, true);
   assert.match(r.output, /saída cortada em 256 KB/);
 });
+
+// ---- T85 (auditoria A4, B6): isolamento do agente provado com listas LITERAIS, não com a constante do código ----
+const DENY_LITERAL = [
+  "Read(**/.env)", "Read(**/.env.*)", "Read(~/.ssh/**)", "Read(~/.claude/**)", "Read(~/servidor/**)",
+  "Read(~/shared/**)", "Read(~/opt/**)", "Read(~/.termux/**)", "Read(**/*.pem)", "Read(**/*.key)", "Read(**/*.token)",
+  "Edit(~/servidor/**)", "Write(~/servidor/**)",
+  "Bash(curl:*)", "Bash(wget:*)", "Bash(ssh:*)", "Bash(scp:*)", "Bash(rm -rf:*)", "Bash(git push:*)",
+];
+
+test("T85: prepareWorkdir grava no settings.json do perfil exatamente as regras de bloqueio (lista literal)", async () => {
+  const { prepareWorkdir, DENY_RULES } = await import("../adapters.mjs");
+  const { resolve } = await import("node:path");
+  assert.deepEqual(DENY_RULES, DENY_LITERAL);
+  const raiz = mkdtempSync(join(tmpdir(), "agentes-"));
+  const dir = prepareWorkdir("edicao", { allowedTools: ["Read(./**)"] }, raiz);
+  assert.equal(dir, resolve(raiz, "edicao"));
+  const s = JSON.parse(readFileSync(join(dir, ".claude", "settings.json"), "utf8"));
+  assert.deepEqual(s.permissions.deny, DENY_LITERAL);
+  assert.deepEqual(s.permissions.allow, ["Read(./**)"]);
+  assert.equal(s.env.DISABLE_AUTOUPDATER, "1");
+  // perfil sem allowedTools não ganha permissão nenhuma por padrão
+  const dir2 = prepareWorkdir("leitura", {}, raiz);
+  assert.deepEqual(JSON.parse(readFileSync(join(dir2, ".claude", "settings.json"), "utf8")).permissions.allow, []);
+  assert.throws(() => prepareWorkdir("../fora", {}, raiz), /inválido/);
+  assert.throws(() => prepareWorkdir("a/b", {}, raiz), /inválido/);
+});
+
+test("T85: com o kill switch ligado o worker não recebe tarefa (claim vazio) e volta a receber ao liberar", async t => {
+  const { app, call } = await setup(t);
+  const { task } = await (await call("/api/tasks", { method: "POST", json: { profile: "pc", prompt: "no PC" } })).json();
+  await call("/api/pause", { method: "POST" });
+  const pausado = await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} });
+  assert.equal(pausado.status, 200);
+  assert.equal((await pausado.json()).task, null, "entregou tarefa com o kill switch ligado");
+  assert.equal(app.store.get(task.id).status, "queued");
+  assert.equal(app.store.get(task.id).attempts, 0);
+  await call("/api/resume", { method: "POST" });
+  assert.equal((await (await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} })).json()).task.id, task.id);
+});
+
+test("T85: erro e saída que o worker devolve passam pelo redact (token admin, token do worker, chave sk-ant) em toda tentativa", async t => {
+  const { app, call } = await setup(t);
+  const { task } = await (await call("/api/tasks", { method: "POST", json: { profile: "pc", prompt: "x" } })).json();
+  const chaveFalsa = ["sk-ant", "api03", "abcdefghijklmnop"].join("-"); // montada em pedaços: o teste não carrega um segredo literal
+  const vazamento = `falhou com ${ADMIN} e ${WORKER} e ${chaveFalsa}`;
+  const devolve = async () => {
+    const c = await (await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} })).json();
+    assert.equal(c.task.id, task.id);
+    const r = await call("/api/worker/result", { method: "POST", token: WORKER, json: { id: c.task.id, leaseId: c.task.leaseId, ok: false, error: vazamento, output: vazamento } });
+    assert.equal(r.status, 200);
+  };
+  const limpo = campo => { for (const s of [ADMIN, WORKER, "sk-ant-api03"]) assert.ok(!campo.includes(s), `${s} apareceu em: ${campo}`); };
+  await devolve(); // 1ª tentativa: volta para a fila com o erro gravado
+  assert.equal(app.store.get(task.id).status, "queued");
+  limpo(app.store.get(task.id).error); limpo(app.store.get(task.id).output);
+  await new Promise(r => setTimeout(r, 10));
+  await devolve(); // 2ª: esgota as tentativas e falha de vez
+  const final = app.store.get(task.id);
+  assert.equal(final.status, "failed");
+  limpo(final.error); limpo(final.output);
+  assert.match(final.error, /\[segredo\]/, "o erro não foi mascarado");
+  // e o que o admin lê pela API também
+  limpo(JSON.stringify(await (await call(`/api/tasks/${task.id}`)).json()));
+});
+
+test("T85: /result do worker com corpo ruim é 400, de tarefa que não é dele é 409, e token de worker não cria tarefa", async t => {
+  const { app, call } = await setup(t);
+  const { task } = await (await call("/api/tasks", { method: "POST", json: { profile: "pc", prompt: "x" } })).json();
+  const c = await (await call("/api/worker/claim", { method: "POST", token: WORKER, json: {} })).json();
+  for (const json of [{}, { id: c.task.id }, { id: c.task.id, leaseId: c.task.leaseId, ok: "sim" }, { id: 1, leaseId: "x", ok: true }]) {
+    assert.equal((await call("/api/worker/result", { method: "POST", token: WORKER, json })).status, 400, JSON.stringify(json));
+  }
+  assert.equal((await call("/api/worker/result", { method: "POST", token: WORKER, json: { id: c.task.id, leaseId: "outro", ok: true } })).status, 409);
+  assert.equal(app.store.get(task.id).status, "running", "um leaseId errado fechou a tarefa");
+  assert.equal((await call("/api/worker/result", { method: "GET", token: WORKER })).status, 403);
+});

@@ -20,17 +20,17 @@ export const DENY_RULES = [
   "Bash(curl:*)", "Bash(wget:*)", "Bash(ssh:*)", "Bash(scp:*)", "Bash(rm -rf:*)", "Bash(git push:*)",
 ];
 
-export function profileDir(name) {
+export function profileDir(name, root = AGENTS_ROOT) {
   if (!/^[a-z0-9-]{1,32}$/.test(name)) throw new Error("nome de perfil inválido");
-  const dir = resolve(AGENTS_ROOT, name);
+  const dir = resolve(root, name);
   // portátil (Windows usa "\"): o caminho relativo não pode subir nem ser absoluto (achado R3 da QA)
-  const rel = relative(AGENTS_ROOT, dir);
+  const rel = relative(resolve(root), dir);
   if (!rel || rel.startsWith("..") || isAbsolute(rel)) throw new Error("perfil fora de ~/agentes");
   return dir;
 }
 
-export function prepareWorkdir(name, profile) {
-  const dir = profileDir(name);
+export function prepareWorkdir(name, profile, root = AGENTS_ROOT) {
+  const dir = profileDir(name, root);
   mkdirSync(join(dir, ".claude"), { recursive: true });
   const settings = { permissions: { allow: profile.allowedTools || [], deny: DENY_RULES }, env: { DISABLE_AUTOUPDATER: "1" } };
   writeFileSync(join(dir, ".claude", "settings.json"), JSON.stringify(settings, null, 2));
