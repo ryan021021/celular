@@ -40,7 +40,12 @@ export function parseArgs(argv = process.argv.slice(2)) {
       args.acao = 'listar';
     } else if (arg === '--voltar' || arg === '-v') {
       args.acao = 'voltar';
-      args.commit = argv[++i];
+      const prox = argv[i + 1];
+      if (prox && !prox.startsWith('-')) {
+        args.commit = argv[++i];
+      } else {
+        args.commit = null;
+      }
     } else if (arg === '--confirmar') {
       args.confirmar = true;
     } else if (arg === '--json') {
@@ -209,6 +214,54 @@ export async function executarRollback({
     throw new Error(`Commit inválido ou não encontrado no repositório local: '${commitAlvo}'`);
   }
 
+  // 1.1 Exigir que o commit pertença ao histórico do branch de destino (ancestral de refs/heads/<branch>)
+  let isAncestor = false;
+  try {
+    git(['merge-base', '--is-ancestor', fullHash, `refs/heads/${perfilInfo.branch}`], localRepo);
+    isAncestor = true;
+  } catch {
+    // Tenta também sem o prefixo refs/heads/
+    try {
+      git(['merge-base', '--is-ancestor', fullHash, perfilInfo.branch], localRepo);
+      isAncestor = true;
+    } catch {
+      isAncestor = false;
+    }
+  }
+
+  if (!isAncestor) {
+    throw new Error(
+      `Commit '${commitAlvo}' (${shortHash}) não pertence ao histórico do branch '${perfilInfo.branch}'. Rollback recusado.`
+    );
+  }
+
+  // 1.2 Consultar o commit ativo anterior no aparelho via ls-remote (se acessível)
+  let commitAtivoAnterior = null;
+  if (perfilInfo.remote) {
+    try {
+      const lsSaida = git(
+        ['ls-remote', perfilInfo.remote, `refs/heads/${perfilInfo.branch}`],
+        localRepo,
+        8000
+      );
+      if (lsSaida) {
+        const partes = lsSaida.split(/\s+/);
+        if (partes[0]) {
+          commitAtivoAnterior = partes[0];
+        }
+      }
+    } catch {
+      commitAtivoAnterior = null;
+    }
+  }
+
+  const idPerfil = perfilInfo.perfil?.id || perfilInfo.perfil || 'aparelho';
+  const linhaDesfazer = commitAtivoAnterior
+    ? `node tools/server/versao.mjs --perfil ${idPerfil} --voltar ${commitAtivoAnterior} --confirmar`
+    : null;
+  const avisoDeploy =
+    'Atenção: o próximo deploy (deploy.ps1) enviará o branch local atual e poderá desfazer este rollback se o repositório local não for alinhado com a versão revertida.';
+
   const comandoPush = ['push', '-f', perfilInfo.remote, `${fullHash}:refs/heads/${perfilInfo.branch}`];
 
   // 2. Sem --confirmar: comportamento DRY-RUN estrito
@@ -216,12 +269,15 @@ export async function executarRollback({
     return {
       executado: false,
       modo: 'dry-run',
-      perfil: perfilInfo.perfil.id,
+      perfil: idPerfil,
       commitAlvo: {
         hash: fullHash,
         shortHash,
         assunto,
       },
+      commitAtivoAnterior,
+      linhaDesfazer,
+      avisoDeploy,
       comando: `git -C ${localRepo} ${comandoPush.join(' ')}`,
       mensagem:
         'Operação em DRY-RUN. Nenhum comando de force-push foi enviado ao aparelho. Use --confirmar para aplicar o rollback.',
@@ -239,12 +295,15 @@ export async function executarRollback({
   return {
     executado: true,
     modo: 'confirmado',
-    perfil: perfilInfo.perfil.id,
+    perfil: idPerfil,
     commitAlvo: {
       hash: fullHash,
       shortHash,
       assunto,
     },
+    commitAtivoAnterior,
+    linhaDesfazer,
+    avisoDeploy,
     saida: saidaPush,
   };
 }
@@ -306,14 +365,25 @@ Opções:
         console.log(`\n[DRY-RUN] Simulação de Rollback para o aparelho '${res.perfil}':`);
         console.log(`  Commit Alvo: ${res.commitAlvo.shortHash} - ${res.commitAlvo.assunto}`);
         console.log(`  Hash Completo: ${res.commitAlvo.hash}`);
+        if (res.commitAtivoAnterior) {
+          console.log(`  Versão ativa atual: ${res.commitAtivoAnterior.slice(0, 7)}`);
+        }
         console.log(`  Comando a executar:\n    ${res.comando}`);
-        console.log(`\nAVISO: Nenhum force-push foi executado. O aparelho continua na versão atual.`);
+        console.log(`\nAVISO: ${res.avisoDeploy}`);
         console.log(`Para aplicar o rollback via post-receive hook, execute com a flag --confirmar:\n`);
         console.log(`  node tools/server/versao.mjs --perfil ${res.perfil} --voltar ${args.commit} --confirmar\n`);
       } else {
         console.log(`\n[SUCESSO] Rollback executado com sucesso no aparelho '${res.perfil}':`);
         console.log(`  Commit Ativo: ${res.commitAlvo.shortHash} - ${res.commitAlvo.assunto}`);
-        if (res.saida) console.log(`  Saída do hook:\n${res.saida}`);
+        if (res.commitAtivoAnterior) {
+          console.log(`  Versão anterior no ar: ${res.commitAtivoAnterior.slice(0, 7)}`);
+        }
+        if (res.linhaDesfazer) {
+          console.log(`\nPara desfazer este rollback e re-aplicar a versão anterior:`);
+          console.log(`  ${res.linhaDesfazer}`);
+        }
+        console.log(`\nAVISO: ${res.avisoDeploy}`);
+        if (res.saida) console.log(`\nSaída do hook:\n${res.saida}`);
       }
     } catch (err) {
       console.error(`\n[ERRO] Falha no rollback: ${err.message}\n`);

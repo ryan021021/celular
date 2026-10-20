@@ -32,6 +32,10 @@ test('T78 - parseArgs: interpreta flags corretamente', () => {
   assert.equal(args2.commit, 'abc1234');
   assert.equal(args2.confirmar, true);
   assert.equal(args2.json, true);
+
+  const args3 = parseArgs(['--perfil', 'a15', '--voltar', '--confirmar']);
+  assert.equal(args3.commit, null, 'não deve engolir --confirmar como commit');
+  assert.equal(args3.confirmar, true);
 });
 
 test('T78 - carregarPerfil: rejeita perfil ausente ou inexistente', () => {
@@ -102,6 +106,28 @@ test('T78 - ciclo completo com repositório e remoto falso: listar e rollback', 
     assert.equal(listagem.commitsLocais[0].noAr, true); // v2 é o mais recente e está no ar
     assert.equal(listagem.commitsLocais[1].noAr, false);
 
+    // Cria branch isolado com commit que NÃO pertence ao histórico de 'celular'
+    gitCmd(['checkout', '-b', 'outra-branch'], localDir);
+    writeFileSync(join(localDir, 'arquivo-outra.txt'), 'versao outra');
+    gitCmd(['add', 'arquivo-outra.txt'], localDir);
+    gitCmd(['commit', '-m', 'feat: commit em outro branch'], localDir);
+    const hashOutra = gitCmd(['rev-parse', 'HEAD'], localDir);
+    gitCmd(['checkout', 'celular'], localDir);
+
+    // Tentativa de rollback para commit de outro branch DEVE ser rejeitada
+    await assert.rejects(
+      async () => {
+        await executarRollback({
+          perfilInfo: perfilFake,
+          commitAlvo: hashOutra,
+          confirmar: true,
+          localRepo: localDir,
+          git: obterGitPadrao(execFileSync),
+        });
+      },
+      /não pertence ao histórico do branch/
+    );
+
     // 5. Teste de executarRollback SEM --confirmar (DRY-RUN)
     const dryRunResult = await executarRollback({
       perfilInfo: perfilFake,
@@ -115,6 +141,7 @@ test('T78 - ciclo completo com repositório e remoto falso: listar e rollback', 
     assert.equal(dryRunResult.modo, 'dry-run');
     assert.equal(dryRunResult.commitAlvo.hash, hashV1);
     assert.ok(dryRunResult.comando.includes('push -f'));
+    assert.ok(dryRunResult.avisoDeploy && dryRunResult.avisoDeploy.includes('deploy.ps1'));
 
     // VERIFICAÇÃO CRÍTICA DE SEGURANÇA: o remoto continua em v2, NUNCA foi alterado
     const remoteRefAposDryRun = gitCmd(['rev-parse', 'refs/heads/celular'], remoteDir);
@@ -132,6 +159,10 @@ test('T78 - ciclo completo com repositório e remoto falso: listar e rollback', 
     assert.equal(rollbackConfirmado.executado, true);
     assert.equal(rollbackConfirmado.modo, 'confirmado');
     assert.equal(rollbackConfirmado.commitAlvo.hash, hashV1);
+    assert.equal(rollbackConfirmado.commitAtivoAnterior, hashV2, 'deve registrar o commit ativo anterior');
+    assert.ok(rollbackConfirmado.linhaDesfazer && rollbackConfirmado.linhaDesfazer.includes(hashV2));
+    assert.ok(rollbackConfirmado.linhaDesfazer.includes('--confirmar'));
+    assert.ok(rollbackConfirmado.avisoDeploy && rollbackConfirmado.avisoDeploy.includes('deploy.ps1'));
 
     // Agora o remoto DEVE estar em v1 após confirmação
     const remoteRefAposRollback = gitCmd(['rev-parse', 'refs/heads/celular'], remoteDir);
