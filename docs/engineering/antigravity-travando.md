@@ -36,3 +36,12 @@ Se o agente ficar "working" por mais de 5 minutos sem saída nova: clique **Stop
 - Sem navegador do agente nem gravação; sem gerar `.webp`, vídeo ou APK dentro do repositório (fica fora, em `scratch`).
 - No máximo 2 janelas da IDE (uma por vaga), cada uma só na pasta `celular`.
 - Parar no primeiro erro e escrever o que viu no handoff, em vez de tentar de novo em silêncio.
+
+## MCPs do Antigravity (20/10)
+**O que os logs mostraram:** a IDE carrega todos os servidores MCP antes de liberar o agente ("eagerly loading all tools"). A configuração ativa (`~/.gemini/config/mcp_config.json`) subia tudo com `npx -y ...@latest` (consulta a rede a cada abertura) e incluía o `chrome-devtools-mcp`, que abre um Chrome e não conseguiu ser encerrado no recarregamento (`did not return within 100ms after SIGKILL`). Na configuração da IDE (`~/.gemini/antigravity-ide/mcp_config.json`) o `context7` apontava para um arquivo inexistente e havia dois servidores do Hermes (`hermes-agent`, `hermes-mcp-gateway`, D11: Hermes fica desligado) e o `code-review-graph` (índice do projeto inteiro).
+
+**O que foi feito (só nesses 2 arquivos; nenhum projeto foi tocado; cópia `.bak-20261020` ao lado de cada um):**
+- `config/mcp_config.json`: versões fixas (`context7@4.4.4`, `sequential-thinking@2.0.0`, `chrome-devtools-mcp@1.11.0`) e `chrome-devtools-mcp` com `"disabled": true`.
+- `antigravity-ide/mcp_config.json`: `context7`, `hermes-agent`, `hermes-mcp-gateway` e `code-review-graph` com `"disabled": true` (o `context7` continua ativo pela outra configuração).
+
+**Reativar um servidor:** mude `"disabled": true` para `false` (ou apague a linha) e recarregue a IDE. **Desfazer tudo:** `Copy-Item <arquivo>.bak-20261020 <arquivo> -Force`. Vale depois de fechar e abrir a IDE; para confirmar, o log deve parar de citar `chrome-devtools-mcp` e `hermes`.
