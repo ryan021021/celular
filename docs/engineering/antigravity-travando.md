@@ -77,3 +77,9 @@ Se o agente ficar "working" por mais de 5 minutos sem saída nova: clique **Stop
 - O `superpowers` continuava entrando pelo `GEMINI.md` do próprio plugin (`@./skills/using-superpowers/SKILL.md`, ~20 mil caracteres, manda "invocar skill antes de responder"); o `enabled: false` no `config.json` não vale para ele. Pasta movida para `~/.gemini/config/plugins-desligados/superpowers` (desfazer: mover de volta).
 - A IDE abriu **sem pasta** ("no active workspace"), então as regras de `.agents/` não entram: abrir sempre `celular` (File → Open Folder).
 - **Saída:** trocar o modelo no painel para outro de cota diferente (ex.: Claude Opus 4.6 (Thinking), que já aparece na lista) ou esperar o limite do Gemini renovar.
+
+## Sexta rodada (20/10): o agente se diagnostica
+- `tools/optimize/antigravity-diagnostico.ps1` (7 testes, 7 mutantes mortos) **só lê** e imprime uma linha `ALERTA:` por problema conhecido: resposta do modelo acima de 60 s (cota), conversa com mais de 500 passos, turbo/JS/acesso fora do workspace, pasta do `superpowers`, MCP pesado ativo, erro de checkpoint no `ls-main.log` mais recente. Sempre sai com 0.
+- No Antigravity: conversa nova → `/diagnostico` (`.agents/workflows/diagnostico.md`). O agente roda o script uma vez, explica cada ALERTA com o que o Ryan clica e para; não muda configuração.
+- Achado na primeira execução real: às 13:26 o `chrome-devtools-mcp` voltou ativo (o `chrome-devtools-plugin` se registra de novo mesmo com `enabled: false`). Feito: `disabled: true` de novo (cópia `mcp_config.json.bak-20261020c`) e pasta do plugin movida para `~/.gemini/config/plugins-desligados`. Desfazer: mover a pasta de volta e copiar o `.bak`.
+- Continuam para o Ryan no painel: turbo ligado, acesso fora do workspace ALLOW, JS do navegador TURBO, 26 erros de checkpoint (modelo) e ~50–65 s por resposta no Gemini 3.8 Flash (High).
