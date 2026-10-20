@@ -55,3 +55,24 @@ test('alegacoes: varrerArquivos integra varredura em disco com caminhos reais', 
     rmSync(tmp, { recursive: true, force: true });
   }
 });
+
+const FRASE = 'Construímos uma infraestrutura de alto desempenho.';
+
+test('B8: título ## e item * de documento .md com superlativo acusam; em código .js o * de comentário segue ignorado', () => {
+  assert.equal(checarConteudo('docs/x.md', `## ${FRASE}`).length, 1);
+  assert.equal(checarConteudo('docs/x.md', `* ${FRASE}`).length, 1);
+  assert.equal(checarConteudo('docs/x.md', `- ${FRASE}`).length, 1);
+  assert.equal(checarConteudo('public/a.js', ` * ${FRASE}`).length, 0);
+  assert.equal(checarConteudo('public/a.js', `// ${FRASE}`).length, 0);
+});
+
+test('B8: VERIFIED só vale com evidência de verdade (comando, arquivo ou rota), não com crases soltas', () => {
+  const tem = t => checarConteudo('docs/x.md', t).some(a => a.padrao === 'verified_sem_evidencia');
+  assert.equal(tem('| rota | VERIFIED | `ok` |'), true);
+  assert.equal(tem('| rota | VERIFIED | `` |'), true);
+  assert.equal(tem('| rota | VERIFIED | `node --test a.test.mjs` |'), false);
+  assert.equal(tem('| rota | VERIFIED | `server/x.mjs` |'), false);
+  assert.equal(tem('| rota | VERIFIED | `GET /api/x` |'), false);
+  assert.equal(tem('| rota | VERIFIED | `/api/x` |'), false);
+  assert.equal(tem('| rota | VERIFIED | `/x` |'), false);
+});

@@ -54,12 +54,15 @@ export function checarConteudo(caminho, conteudo) {
   linhas.forEach((linha, idx) => {
     // Ignora comentários de código e cabeçalhos explicativos
     const limpa = linha.trim();
-    if (!limpa || limpa.startsWith('//') || limpa.startsWith('*') || limpa.startsWith('#')) return;
+    // em .md, # é título e * é item de lista (texto de verdade); em código são comentário
+    const ehMd = /\.md$/i.test(caminho);
+    if (!limpa || limpa.startsWith('//') || (!ehMd && (limpa.startsWith('*') || limpa.startsWith('#')))) return;
 
     for (const p of PADROES_ALEGACOES) {
       if (p.id === 'verified_sem_evidencia') {
         if (/\bVERIFIED(_WORKING)?\b/i.test(linha)) {
-          const temEvidencia = /(`[^`]+`|\.test\.[cm]?js|\bGET\b|\bPOST\b|https?:\/\/)/i.test(linha);
+          // crases só valem com comando, caminho ou arquivo dentro; `ok` ou `` não provam nada
+          const temEvidencia = /(`[^`]*(\/|\.[a-z]{2,4}\b|^\s*(node|npm|git|curl|bash|adb)\b)[^`]*`|\.test\.[cm]?js|\bGET\b|\bPOST\b|https?:\/\/)/i.test(linha);
           if (!temEvidencia) {
             achados.push({
               arquivo: caminho.replace(/\\/g, '/'),

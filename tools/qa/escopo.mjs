@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const SEMPRE = [/^\.collab\//, /^docs\/LOG\.md$/, /^docs\/log\//];
 const CODIGO = /\.(ps1|psm1|sh|bat|cmd|mjs|js|cjs|py)$|(^|\/)(run|finish)$/;
 const TRAVAS = /^(tools\/qa\/(escopo\.mjs|test\/escopo\.test\.mjs)|\.claude\/hooks\/adb-guard(\.test)?\.mjs)$/; // contêm os padrões, não comandos
-const PERIGOS = [
+export const PERIGOS = [
   [/\bpm\s+(uninstall|clear|disable(-user)?|hide|suspend)\b/, 'pm destrutivo'],
   [/\badb\b[^\n]*\buninstall\b/, 'adb uninstall'],
   [/\bcmd\s+package\s+compile\b/, 'compile (derrubou o A13)'],
@@ -78,7 +78,10 @@ export function fila(diff, ids) {
 }
 
 function textosTarefas(r) {
-  return ['.collab/TASKS.md', '.collab/TASKS_FEITAS.md'].map(f => { try { return readFileSync(`${r}/${f}`, 'utf8'); } catch { return ''; } });
+  // TASKS.md ausente/ilegível é erro (trava); só o arquivo de tarefas feitas pode faltar
+  const tasks = readFileSync(`${r}/.collab/TASKS.md`, 'utf8');
+  let feitas = ''; try { feitas = readFileSync(`${r}/.collab/TASKS_FEITAS.md`, 'utf8'); } catch { /* opcional */ }
+  return [tasks, feitas];
 }
 
 function conferir(ids, arquivos, diff, textos) {
@@ -133,5 +136,11 @@ function modoReview() {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const [modo, arg] = process.argv.slice(2);
   try { process.exit(modo === '--msg' ? modoMsg(arg) : modoReview()); }
-  catch (e) { console.error(`escopo: não conferiu (${e.message.split('\n')[0]}), commit liberado`); process.exit(0); }
+  catch (e) {
+    // falha fechada: se a conferência quebrar o commit não passa; só "OK-RYAN:" na mensagem libera
+    let liberado = false;
+    if (modo === '--msg') { try { liberado = /OK-RYAN:/.test(readFileSync(arg, 'utf8')); } catch { /* mensagem ilegível: não libera */ } }
+    console.error(`escopo: não conferiu (${e.message.split('\n')[0]}), commit ${liberado ? 'liberado por OK-RYAN' : 'TRAVADO'}`);
+    process.exit(liberado ? 0 : 1);
+  }
 }

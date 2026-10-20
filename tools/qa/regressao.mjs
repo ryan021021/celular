@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import { DESKTOP } from "./regras.mjs";
 import { varrerArquivos } from "./alegacoes.mjs";
 import { validarPerfis } from "./perfis.mjs";
+import { resumoNodeTest, veredito } from "./veredito.mjs";
 import { validarAgentes } from "./agentes.mjs";
 import { comShDoGit } from "./sh-do-git.mjs";
 
@@ -58,19 +59,12 @@ function rodar(cmd, args, { cwd, limite = LIMITE, env } = {}) {
   });
 }
 
-/** Lê o resumo do node --test (ℹ tests/pass/fail/skipped) e os nomes dos testes que falharam. */
-function resumoNodeTest(out) {
-  const n = k => Number((out.match(new RegExp(`^ℹ ${k} (\\d+)`, "m")) || [])[1] ?? NaN);
-  const falhas = [...out.matchAll(/^\s*✖ (.+?) \(\d/gm)].map(m => m[1]).filter(s => s !== "failing tests:");
-  return { testes: n("tests"), passou: n("pass"), falhou: n("fail"), pulados: n("skipped"), cancelados: n("cancelled"), falhas: [...new Set(falhas)].slice(0, 20) };
-}
-
 async function suite(grupo, nome, cwd, arquivos) {
   const r = await rodar(process.execPath, ["--test", ...arquivos], { cwd });
   const s = resumoNodeTest(r.out);
-  const ok = !r.travou && r.code === 0 && s.falhou === 0 && s.testes > 0;
+  const { ok, motivo } = veredito(r, s, grupo === "painel" ? "painel" : nome);
   const resumo = r.travou ? `TRAVOU (> ${LIMITE / 1000} s)` : `${s.passou}/${s.testes} ok${s.pulados ? `, ${s.pulados} pulado(s)` : ""}${s.falhou ? `, ${s.falhou} falha(s)` : ""} em ${(r.ms / 1000).toFixed(1)} s`;
-  registrar(grupo, nome, ok, { resumo, ...s, travou: r.travou, ms: r.ms, saida: ok ? undefined : r.out.slice(-3000) });
+  registrar(grupo, nome, ok, { resumo: ok ? resumo : `${resumo}${motivo ? ` · ${motivo}` : ""}`, ...s, travou: r.travou, ms: r.ms, saida: ok ? undefined : r.out.slice(-3000) });
 }
 
 const rastreados = git(["ls-files"]).split("\n").filter(Boolean);
