@@ -136,3 +136,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-20 00:17 · claude (QA) · T81 APROVADA (e8b68c4): netguard só leitura, 10/10 e 46/46 rodados por mim, sem flood; não instalado no A15
 - 2026-10-20 00:50 · claude (BACK) · T81 instalada no A15 (backup a15-20261020-001725 antes; cron netguard */5 ativo; 1a rodada: ok; painel e alertas rodando)
 - 2026-10-20 00:18 · claude (ORQ) · T82: connect.ps1, backup.sh e preflight.mjs usam o achador; testes com IP do perfil errado; ao vivo no A15 ok; REVIEW (CHEFE)
+- 2026-10-20 01:15 · gemini-2 · Entrada oficial do 2º Agente Gemini (Instância 2) na equipe; handoff de apresentação ao Claude CHEFE registrado · .collab/handoff/2026-10-20_gemini2-para-chefe_apresentacao.md
