@@ -115,6 +115,28 @@ test("T81: sem internet o ntfy falha mas o aviso local sai, e o pendente não re
   const r2 = await rodar({ dir: a.dir, run: a.run, fetchImpl: ntfyFora, probeFetch: resp(302) });
   assert.equal(r2.aviso, null);
   assert.equal(locais(a).length, 1, "não repete a notificação local");
+
+  // Rede volta ao normal (204) e ntfy volta a responder:
+  const ntfyVoltou = async (url, opts) => {
+    if (opts?.method === "POST") { a.envios.push(JSON.parse(opts.body)); return { status: 200, ok: true }; }
+    return resp(204)(url, opts);
+  };
+  const r3 = await rodar({ dir: a.dir, run: a.run, fetchImpl: ntfyVoltou, probeFetch: resp(204) });
+  assert.equal(r3.enviado, true, "deve reenviar aviso pendente quando a rede volta");
+  assert.equal(a.envios.length, 1, "deve ter enviado 1 aviso ntfy acumulado");
+  assert.match(a.envios[0].message, /aviso atrasado: ficou sem internet/, "mensagem deve indicar atraso");
+  assert.equal(a.ler().pendente, null, "pendente deve ser limpo após reenvio bem-sucedido (mata M11)");
+
+  // Na segunda leitura com 204 (CONFIRMAR = 2), dispara o aviso de que a rede voltou
+  const r4 = await rodar({ dir: a.dir, run: a.run, fetchImpl: ntfyVoltou, probeFetch: resp(204) });
+  assert.equal(r4.aviso.tipo, "voltou");
+  assert.equal(a.ler().pendente, null);
+
+  // Na terceira leitura com 204: rede estabilizada, nenhum novo aviso gerado nem reenvio do pendente
+  const r5 = await rodar({ dir: a.dir, run: a.run, fetchImpl: ntfyVoltou, probeFetch: resp(204) });
+  assert.equal(r5.aviso, null);
+  assert.equal(a.envios.length, 2, "deve ter apenas o atrasado e o voltou, sem duplicar");
+  assert.equal(a.ler().pendente, null);
 });
 
 test("T81: é só leitura: nenhum comando muda o Wi-Fi", async () => {

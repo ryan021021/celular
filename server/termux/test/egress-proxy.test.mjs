@@ -1,7 +1,7 @@
 // Rodar com: node --test server/termux/test/*.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import { connect } from "node:net";
+import { connect, createServer } from "node:net";
 import { EventEmitter } from "node:events";
 import { allowed, createProxy, parseAllow } from "../egress-proxy.mjs";
 
@@ -67,5 +67,51 @@ test("cliente destruído prematuramente antes do erro: não lança exceção (G1
   });
   await new Promise(r => setTimeout(r, 100));
   assert.ok(true);
+});
+
+test("túnel com eco real: dados bidirecionais fluem cliente <-> upstream (mata M2)", async t => {
+  const echoServer = createServer(socket => socket.pipe(socket));
+  await new Promise(r => echoServer.listen(0, "127.0.0.1", r));
+  const echoPort = echoServer.address().port;
+  t.after(() => echoServer.close());
+
+  const connectFn = (port, host, onConnect) => {
+    return connect(echoPort, "127.0.0.1", onConnect);
+  };
+
+  const { port } = await startProxy(t, connectFn);
+
+  const client = connect(port, "127.0.0.1");
+  t.after(() => client.destroy());
+
+  const payload = "ECO_TEST_BYTES_12345";
+  const resposta = await new Promise((resolve, reject) => {
+    client.on("connect", () => {
+      client.write("CONNECT api.anthropic.com:443 HTTP/1.1\r\nHost: api.anthropic.com:443\r\n\r\n");
+    });
+
+    let handshakeConcluido = false;
+    let acumulado = "";
+
+    client.on("data", chunk => {
+      const txt = chunk.toString();
+      if (!handshakeConcluido) {
+        if (txt.includes("200 Connection Established")) {
+          handshakeConcluido = true;
+          client.write(payload);
+        }
+      } else {
+        acumulado += txt;
+        if (acumulado.includes(payload)) {
+          resolve(acumulado);
+        }
+      }
+    });
+
+    client.on("error", reject);
+    setTimeout(() => reject(new Error("Timeout aguardando eco no túnel")), 2000);
+  });
+
+  assert.match(resposta, new RegExp(payload), "Payload enviado deve ser retornado pelo eco do túnel");
 });
 

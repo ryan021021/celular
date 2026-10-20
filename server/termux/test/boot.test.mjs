@@ -2,14 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, dirname } from "node:path";
+import { join, dirname, delimiter } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { comShDoGit } from "../../../tools/qa/sh-do-git.mjs";
 
 // Rodar com: node --test server/termux/test/boot.test.mjs  (nada no aparelho: tudo em pasta temporária, com runsv/sshd/crond falsos)
 const aqui = dirname(fileURLToPath(import.meta.url));
-const BOOT = join(aqui, "..", "boot.sh");
-const START = join(aqui, "..", "start-services.sh");
+const fw = p => p.replace(/\\/g, "/");
+const BOOT = fw(join(aqui, "..", "boot.sh"));
+const START = fw(join(aqui, "..", "start-services.sh"));
+const ENV = comShDoGit(process.env);
 
 // Ambiente falso do Termux. Cada comando registra a sua chamada em `chamadas`, na ordem em que acontece.
 // `pgrep -x <nome>` acha o processo só se existir o arquivo up-<nome>; sshd/crond falsos criam esse arquivo.
@@ -25,25 +28,25 @@ function ambiente({ runsvSobe = true, painelSaudavel = true, comPainel = false }
   if (comPainel) mkdirSync(join(prefix, "var", "service", "server-box"));
 
   // start-services.sh do servidor (registra a chamada; a lógica do painel é testada à parte)
-  writeFileSync(join(home, "servidor", "start-services.sh"), `echo start-services >> "${chamadas}"\nexit 0\n`);
+  writeFileSync(join(home, "servidor", "start-services.sh"), `echo start-services >> "${fw(chamadas)}"\nexit 0\n`);
 
   // runsvdir falso, lido pelo boot.sh via . "$PREFIX/etc/profile.d/start-services.sh"
   const runsv = runsvSobe
-    ? `echo runsv >> "${chamadas}"\ntouch "${raiz}/up-sshd"\necho sshd-runit >> "${chamadas}"\ntouch "${raiz}/up-crond"\necho crond-runit >> "${chamadas}"\n`
+    ? `echo runsv >> "${fw(chamadas)}"\ntouch "${fw(raiz)}/up-sshd"\necho sshd-runit >> "${fw(chamadas)}"\ntouch "${fw(raiz)}/up-crond"\necho crond-runit >> "${fw(chamadas)}"\n`
     : "";
   writeFileSync(join(prefix, "etc", "profile.d", "start-services.sh"), runsv);
 
   const cmd = (nome, corpo) => writeFileSync(join(bin, nome), `#!/bin/sh\n${corpo}\n`, { mode: 0o755 });
-  cmd("termux-wake-lock", `echo wake-lock >> "${chamadas}"`);
+  cmd("termux-wake-lock", `echo wake-lock >> "${fw(chamadas)}"`);
   cmd("sleep", "exit 0");
-  cmd("pgrep", `[ -f "${raiz}/up-$2" ] && exit 0 || exit 1`);
+  cmd("pgrep", `[ -f "${fw(raiz)}/up-$2" ] && exit 0 || exit 1`);
   // reserva: o boot.sh só chama sshd/crond quando o runit não subiu
-  cmd("sshd", `echo sshd-reserva >> "${chamadas}"; touch "${raiz}/up-sshd"`);
-  cmd("crond", `echo crond-reserva >> "${chamadas}"; touch "${raiz}/up-crond"`);
-  cmd("curl", painelSaudavel ? "exit 0" : "exit 1");
-  cmd("sv", `echo "sv $*" >> "${chamadas}"`);
+  cmd("sshd", `echo sshd-reserva >> "${fw(chamadas)}"; touch "${fw(raiz)}/up-sshd"`);
+  cmd("crond", `echo crond-reserva >> "${fw(chamadas)}"; touch "${fw(raiz)}/up-crond"`);
+  cmd("curl", `echo "curl $*" >> "${fw(chamadas)}"\n` + (painelSaudavel ? "exit 0" : "exit 1"));
+  cmd("sv", `echo "sv $*" >> "${fw(chamadas)}"`);
 
-  const env = { ...process.env, HOME: home, PREFIX: prefix, SVDIR: join(prefix, "var", "service"), RAIZ: raiz, PATH: `${bin}:${process.env.PATH}` };
+  const env = { ...ENV, HOME: fw(home), PREFIX: fw(prefix), SVDIR: fw(join(prefix, "var", "service")), RAIZ: fw(raiz), PATH: `${fw(bin)}${delimiter}${ENV.PATH || process.env.PATH}` };
   const rodar = script => spawnSync("sh", [script], { env, encoding: "utf8", timeout: 30000 });
   const lista = () => (existsSync(chamadas) ? readFileSync(chamadas, "utf8") : "").split("\n").filter(Boolean);
   return { home, rodar, lista };
@@ -80,12 +83,15 @@ test("boot cria ~/servidor/logs antes de chamar start-services", () => {
   assert.ok(existsSync(join(amb.home, "servidor", "logs")));
 });
 
-test("start-services: reinicia o painel só quando /health não responde", () => {
+test("start-services: reinicia o painel só quando /health não responde (mata M12)", () => {
   const caiu = ambiente({ painelSaudavel: false, comPainel: true });
   assert.equal(caiu.rodar(START).status, 0);
+  assert.ok(caiu.lista().some(l => l.startsWith("curl") && l.includes("http://127.0.0.1:8080/health")), "curl deve verificar a rota /health na porta 8080");
   assert.ok(caiu.lista().includes("sv restart server-box"), caiu.lista().join(" | "));
 
   const ok = ambiente({ painelSaudavel: true, comPainel: true });
   assert.equal(ok.rodar(START).status, 0);
+  assert.ok(ok.lista().some(l => l.startsWith("curl") && l.includes("http://127.0.0.1:8080/health")), "curl deve verificar a rota /health na porta 8080");
   assert.ok(!ok.lista().some(l => l.startsWith("sv restart")), ok.lista().join(" | "));
 });
+

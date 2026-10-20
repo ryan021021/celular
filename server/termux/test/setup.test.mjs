@@ -6,12 +6,14 @@ import { join, dirname, delimiter, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { comShDoGit } from "../../../tools/qa/sh-do-git.mjs";
 
 // T76: setup.sh idempotente. Nada no aparelho: HOME e PREFIX temporários, com pkg/sv-enable/sv/sshd/crontab falsos.
 // Rodar com: node --test server/termux/test/setup.test.mjs
 const aqui = dirname(fileURLToPath(import.meta.url));
 const SETUP = join(aqui, "..", "setup.sh");
 const fw = p => p.replace(/\\/g, "/");
+const ENV = comShDoGit(process.env);
 const PACOTES = ["openssh", "termux-services", "termux-api", "cronie", "nodejs", "nano", "curl", "git", "rclone"];
 const SERVICOS = ["server-box", "alertas", "agentops", "sftp", "egress"];
 const CRON_ALHEIO = "0 3 * * * echo meu-cron-que-nao-e-do-projeto";
@@ -42,7 +44,14 @@ fi
 exit 0`);
   cmd("sv-enable", `echo "sv-enable $1" >> "${fw(chamadas)}"; mkdir -p "$PREFIX/var/service/$1"; touch "$PREFIX/var/service/$1/habilitado"`);
   cmd("sv", `echo "sv $*" >> "${fw(chamadas)}"`);
-  cmd("sshd", `if [ "$1" = "-t" ]; then exit 0; fi; echo sshd >> "${fw(chamadas)}"; touch "${fw(raiz)}/up-sshd"`);
+  cmd("sshd", `if [ "$1" = "-t" ]; then
+  echo "sshd -t" >> "${fw(chamadas)}"
+  if [ -n "$FAKE_SSHD_T_FALHA" ]; then echo "erro sshd_config" >&2; exit 1; fi
+  exit 0
+fi
+echo "sshd $*" >> "${fw(chamadas)}"
+touch "${fw(raiz)}/up-sshd"`);
+  cmd("chmod", `echo "chmod $*" >> "${fw(chamadas)}"; /bin/chmod "$@" 2>/dev/null || true`);
   cmd("pgrep", `[ -f "${fw(raiz)}/up-$2" ] && exit 0 || exit 1`);
   cmd("pkill", "exit 1");
   cmd("sleep", "exit 0");
@@ -54,7 +63,7 @@ D="$(cat)"; printf '%s
 
   const rodar = (extra = {}) => spawnSync("bash", [fw(SETUP)], {
     encoding: "utf8",
-    env: { ...process.env, HOME: fw(home), PREFIX: fw(prefix), PATH: `${fw(bin)}${delimiter}${process.env.PATH}`, ...extra },
+    env: { ...ENV, HOME: fw(home), PREFIX: fw(prefix), PATH: `${fw(bin)}${delimiter}${ENV.PATH || process.env.PATH}`, ...extra },
   });
   return { raiz, home, prefix, chamadas, rodar };
 }
@@ -85,6 +94,12 @@ test("T76: instalação limpa instala os pacotes, habilita os serviços, o cron 
   assert.ok(existsSync(join(a.prefix, "etc", "ssh", "sshd_config.d", "10-servidor.conf")));
   assert.deepEqual(cron(a).sort(), [CRON_ALHEIO, "*/5 * * * * sh $HOME/servidor/watchdog.sh", "*/5 * * * * node $HOME/servidor/netguard.mjs >> $HOME/servidor/logs/netguard.log 2>&1", "0 4 * * 0 pkg clean -y >> $HOME/servidor/logs/clean.log 2>&1"].sort());
   assert.equal(readFileSync(join(a.home, ".ssh", "authorized_keys"), "utf8"), CHAVE, "chave autorizada intacta");
+  const logChamadas = readFileSync(a.chamadas, "utf8");
+  assert.match(logChamadas, /sshd -t/, "deve testar configuração do sshd com sshd -t (M10a)");
+  assert.match(logChamadas, /sv restart sshd/, "deve reiniciar sshd após atualizar configuração (M10a)");
+  for (const s of SERVICOS) {
+    assert.match(logChamadas, new RegExp(`chmod \\+x .*${s}/run`), `chmod +x deve ser chamado para ${s} (M10b)`);
+  }
   assert.match(r.stdout, /^OK\./m);
 });
 
@@ -150,3 +165,12 @@ test("T76: sem authorized_keys o login por senha não é alterado e o aviso apar
   assert.match(r.stdout, /sem ~\/\.ssh\/authorized_keys/);
   assert.ok(!existsSync(join(a.prefix, "etc", "ssh", "sshd_config.d", "10-servidor.conf")), "não tranca o acesso");
 });
+
+test("T76: se sshd -t falha, sv restart sshd não é executado (mata M10a)", () => {
+  const a = ambiente({ comChave: true });
+  const r = a.rodar({ FAKE_SSHD_T_FALHA: "1" });
+  const logChamadas = readFileSync(a.chamadas, "utf8");
+  assert.match(logChamadas, /sshd -t/);
+  assert.doesNotMatch(logChamadas, /sv restart sshd/, "não deve reiniciar sshd se a config estiver inválida");
+});
+

@@ -181,3 +181,55 @@ test('aparelho sem resposta por SSH: erro claro, sem relatório vazio', async ()
   const exec = async () => ({ ok: false, erro: 'saída 255' });
   await assert.rejects(coletarSsh({ id: 'a15', network: { ip: '192.168.1.164', ssh_port: 8022, ssh_user: 'u0_a304', ssh_key: '~/.ssh/id_ed25519' } }, { executor: exec }), /não respondeu/);
 });
+
+test('compararPerfil: detecta RAM fora do perfil e acusa falha (mata M15)', () => {
+  const perfil = {
+    hardware: {
+      architecture: 'arm64-v8a',
+      ram_total: '4 GB (3.63 GB física)'
+    }
+  };
+  const relatorioDivergente = {
+    capacidades: [
+      { capability_id: 'cpu.arch_kernel', value: 'aarch64' },
+      { capability_id: 'memory.ram_physical_mb', value: 2048 }
+    ],
+    compatibilidade: { perfil: 'android-termux-constrained' }
+  };
+  const res = compararPerfil(relatorioDivergente, perfil);
+  assert.equal(res.ok, false, 'Comparação com RAM diferente de 5% deve falhar');
+  const achadoRam = res.achados.find(a => a.campo === 'RAM física (MB)');
+  assert.ok(achadoRam, 'Deve conter achado de RAM física');
+  assert.equal(achadoRam.ok, false);
+});
+
+test('compararPerfil: detecta arquitetura incompatível e valida perfil compatível', () => {
+  const perfil = {
+    hardware: {
+      architecture: 'x86_64',
+      ram_total: '4 GB (3.63 GB física)'
+    }
+  };
+  const relatorio = {
+    capacidades: [
+      { capability_id: 'cpu.arch_kernel', value: 'aarch64' },
+      { capability_id: 'memory.ram_physical_mb', value: 3716 }
+    ],
+    compatibilidade: { perfil: 'android-termux-constrained' }
+  };
+  const resIncompativel = compararPerfil(relatorio, perfil);
+  assert.equal(resIncompativel.ok, false);
+  const achadoArch = resIncompativel.achados.find(a => a.campo === 'arquitetura');
+  assert.equal(achadoArch.ok, false);
+
+  const perfilOk = {
+    hardware: {
+      architecture: 'arm64-v8a',
+      ram_total: '4 GB (3.63 GB física)'
+    }
+  };
+  const resOk = compararPerfil(relatorio, perfilOk);
+  assert.equal(resOk.ok, true);
+  assert.ok(resOk.achados.every(a => a.ok));
+});
+

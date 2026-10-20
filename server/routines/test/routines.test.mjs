@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { validateRoutineContract } from '../contract.mjs';
 import {
   healthCheckRoutine,
@@ -261,3 +264,128 @@ test('Rotina backup_verify: valida metadados sem tocar no arquivo', async () => 
   assert.equal(noDir.ok, false);
   assert.equal(noDir.status, 'NO_BACKUP_DIR');
 });
+
+test('Timeout §5.3: aborta rotina que excede o tempo limite (mata M1)', async () => {
+  const hangingRoutine = {
+    ...healthCheckRoutine,
+    id: 'hanging_routine',
+    timeoutMs: 50,
+    action: async () => new Promise(() => {}) // nunca resolve
+  };
+
+  const scheduler = createScheduler({ routines: [hangingRoutine] });
+  const res = await scheduler.runRoutine('hanging_routine');
+  assert.equal(res.ok, false);
+  assert.match(res.error, /Timeout de 50ms excedido/);
+  const state = scheduler.getRoutineState('hanging_routine');
+  assert.equal(state.status, 'FAILED');
+  assert.equal(state.consecutiveFailures, 1);
+});
+
+test('Scheduler: pausa e retoma execução de rotinas', async () => {
+  const dummyRoutine = {
+    ...healthCheckRoutine,
+    id: 'dummy_routine',
+    action: async () => ({ ok: true })
+  };
+  const scheduler = createScheduler({ routines: [dummyRoutine] });
+  assert.equal(scheduler.isPaused, false);
+  scheduler.pause();
+  assert.equal(scheduler.isPaused, true);
+  const resPaused = await scheduler.runRoutine('dummy_routine');
+  assert.equal(resPaused.skipped, true);
+  assert.equal(resPaused.reason, 'scheduler paused');
+
+  scheduler.resume();
+  assert.equal(scheduler.isPaused, false);
+  const resResumed = await scheduler.runRoutine('dummy_routine');
+  assert.equal(resResumed.ok, true);
+});
+
+test('Rotina disk_check: cobre ramos de aviso, crítico e saudável', async () => {
+  // Aviso (< 15%)
+  const warn = await diskCheckRoutine.action({ getDiskUsage: async () => ({ totalBytes: 1000, freeBytes: 100 }) });
+  assert.equal(warn.ok, true);
+  assert.equal(warn.status, 'WARNING');
+  assert.equal(warn.alert, 'Armazenamento baixo (<15%)');
+
+  // Crítico (< 5%)
+  const crit = await diskCheckRoutine.action({ getDiskUsage: async () => ({ totalBytes: 1000, freeBytes: 40 }) });
+  assert.equal(crit.ok, false);
+  assert.equal(crit.status, 'CRITICAL');
+  assert.equal(crit.alert, 'Armazenamento em nível crítico (<5%)');
+
+  // Saudável
+  const ok = await diskCheckRoutine.action({ getDiskUsage: async () => ({ totalBytes: 1000, freeBytes: 500 }) });
+  assert.equal(ok.ok, true);
+  assert.equal(ok.status, 'HEALTHY');
+  assert.equal(ok.alert, null);
+});
+
+test('Rotina battery_check: cobre ramos de bateria baixa, superaquecimento e normal', async () => {
+  // Bateria baixa (<= 15% e desplugado)
+  const low = await batteryCheckRoutine.action({
+    getBatteryStatus: async () => ({ percent: 12, plugged: false, tempC: 30 })
+  });
+  assert.equal(low.ok, false);
+  assert.equal(low.status, 'LOW_BATTERY');
+  assert.match(low.alert, /Bateria baixa/);
+
+  // Superaquecimento (>= 45C)
+  const hot = await batteryCheckRoutine.action({
+    getBatteryStatus: async () => ({ percent: 80, plugged: true, tempC: 47.5 })
+  });
+  assert.equal(hot.ok, false);
+  assert.equal(hot.status, 'THERMAL_THROTTLED');
+  assert.match(hot.alert, /Temperatura elevada/);
+
+  // Normal
+  const norm = await batteryCheckRoutine.action({
+    getBatteryStatus: async () => ({ percent: 85, plugged: true, tempC: 32 })
+  });
+  assert.equal(norm.ok, true);
+  assert.equal(norm.status, 'NORMAL');
+  assert.equal(norm.alert, null);
+});
+
+test('Rotina backup_verify: cobre ausência de backups, arquivo corrompido/vazio, desatualizado e válido', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'backup-verify-'));
+  try {
+    // Diretório vazio (sem backups)
+    const semBackups = await backupVerifyRoutine.action({ backupDir: dir });
+    assert.equal(semBackups.ok, false);
+    assert.equal(semBackups.status, 'NO_BACKUPS_FOUND');
+
+    // Backup vazio ou < 100 bytes
+    writeFileSync(join(dir, 'backup-pequeno.tar.gz'), 'abc');
+    const vazio = await backupVerifyRoutine.action({ backupDir: dir });
+    assert.equal(vazio.ok, false);
+    assert.equal(vazio.status, 'EMPTY_OR_CORRUPT');
+
+    // Backup desatualizado (> maxAgeHours)
+    const agora = Date.now();
+    const conteudoValido = 'X'.repeat(500);
+    const arqAntigo = join(dir, 'backup-antigo.tar.gz');
+    writeFileSync(arqAntigo, conteudoValido);
+    const desatualizado = await backupVerifyRoutine.action({
+      backupDir: dir,
+      maxAgeHours: 48,
+      now: () => agora + (72 * 3600 * 1000)
+    });
+    assert.equal(desatualizado.ok, false);
+    assert.equal(desatualizado.status, 'OUTDATED');
+
+    // Backup válido
+    const valido = await backupVerifyRoutine.action({
+      backupDir: dir,
+      maxAgeHours: 48,
+      now: () => agora
+    });
+    assert.equal(valido.ok, true);
+    assert.equal(valido.status, 'VALID');
+    assert.equal(valido.latestBackup, 'backup-antigo.tar.gz');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
