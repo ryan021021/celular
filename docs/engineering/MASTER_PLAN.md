@@ -11,8 +11,10 @@ Registro de tarefas: `.collab/TASKS.md` · Decisões: `docs/engineering/DECISION
 | BACK | Claude Code (sessão "A13 server OS enterprise reengineering") | mensagens entre sessões | sim | sim | Backend/API do console, alertas |
 | FRONT | Claude Code (sessão "Home VPS control center reengineering") | mensagens entre sessões | sim | sim | Frontend do console |
 | QA | Claude Code (sessão "A13 home server architecture reengineering") | mensagens entre sessões | sim | só `docs/qa/`, `tools/qa/` | QA, release, revisão independente |
-| GEM-IDE | Gemini no Antigravity IDE | **só pela interface**: lê `.collab/` e `GEMINI.md`; o Ryan repassa pedidos | sim (ADB/SSH pelo IDE) | sim (zona dele) | `profiles/`, `README.md`, `tools/connect`, Tailscale (T9) |
-| GEM-CLI | Gemini CLI 0.61.0 no PC (`gemini`, login pessoal) | **indisponível**: `IneligibleTierError` em 19/10 ("This client is no longer supported for Gemini Code Assist for individuals… migrate to Antigravity") | — | — | Revisão independente passou para o GEM-IDE (T19) |
+| GEM-IDE-1 (antes GEM-IDE) | Gemini no Antigravity IDE, conta 1 | **só pela interface**: lê `.collab/` e `GEMINI.md`; o Ryan repassa pedidos | sim (ADB/SSH pelo IDE) | sim (zona dele) | `profiles/`, `README.md`, `tools/connect`, Tailscale (T9) |
+| GEM-IDE-2 | Gemini no Antigravity IDE, conta 2 (janela isolada, `GEMINI.md` "Multi-Agente") | idem; outras frentes (crypto, shopify) | sim | só com ordem do Ryan ou do CHEFE | não toca nos locks do `celular` por conta própria |
+| GEM-AG-1, GEM-AG-2 | os 2 agentes do Antigravity (ordem do Ryan, 20/10) | idem; sigla e lock próprios | sim | zona do Gemini (§1 do COLABORACAO) | tarefa READY com a sigla da vaga; nunca dois na mesma tarefa |
+| ~~GEM-CLI~~ | Gemini CLI 0.61.0 no PC (`gemini`, login pessoal) | **aposentado (D18)**: `IneligibleTierError` em 19/10 ("This client is no longer supported for Gemini Code Assist for individuals… migrate to Antigravity") | — | — | Revisão independente passou para o GEM-IDE-1 (T19) |
 | A13-CC | Claude Code 2.1.303 no A13 (assinatura Pro) | AgentOps, perfis `leitura`/`edicao` | só ferramentas do perfil | só `~/agentes/<perfil>` | Executor de tarefas leves |
 | PC-CC | Claude Code no PC via `tools/worker` | AgentOps, perfil `pc-claude` | não (só leitura da pasta) | não | Executor remoto (depois do teste da QA) |
 | HERMES | Hermes Agent no PC | — | — | — | **Desligado** no worker até haver toolset só de leitura (Q2) |

@@ -112,5 +112,25 @@ Os passos 3 e 4 são **automáticos** (20/10):
 - **Conferência das tarefas em REVIEW**: `node tools/qa/escopo.mjs --review` confere os commits de cada uma. Tarefa com FALHA volta para o dono.
 - **Fila protegida**: o mesmo hook trava o commit que apaga linha do `docs/LOG.md` (só acrescentar) ou que rebaixa o estado de uma tarefa que a mensagem não cita, o sinal de `TASKS.md` regravado de uma cópia velha. Antes de editar o TASKS, releia o arquivo e mude só a sua linha.
 5. **Registra** o veredito (APROVADO/REPROVADO + motivo) na linha da tarefa; só então vai a DONE.
-Auditoria do **Gemini (GEM-IDE)**: igual, porém sempre mais rígida — ele não é revisado por si mesmo e não roda nada no A13 sem lock. Entregas dele só chegam em `main` depois dessa conferência; o CHEFE lê o handoff e o diff, não a conversa.
+Auditoria do **Gemini (GEM-IDE-1/2 e GEM-AG-1/2, D18)**: igual, porém sempre mais rígida — nenhuma vaga é revisada por si mesma nem por outra vaga do Gemini, e nenhuma roda nada no A13 sem lock. O lock leva a sigla da vaga; duas vagas nunca na mesma tarefa nem nos mesmos arquivos. GEM-IDE-2 só trabalha no `celular` com ordem do Ryan ou do CHEFE. Entregas dele só chegam em `main` depois dessa conferência; o CHEFE lê o handoff e o diff, não a conversa.
 Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esforço de cada sessão conforme o §9, contexto > 200 mil → pedir `/compact`, sessão parada ou repetindo tarefa → reatribuir. Acesso amplo do Ryan não muda os limites: credenciais novas, gastos, roteador, exposição à internet e apagar dados continuam só com OK explícito dele.
+
+## 12. ECC neste projeto (20/10, pedido do Ryan, D18)
+**Onde mora:** plugin `ecc@ecc` 2.2.3 só em `.claude/settings.json` (plugin, marketplace, hooks no perfil `standard`, estado em `.claude/ecc-data`, fora do git). O global do Claude é `{}` e continua assim. O `spy` tem a própria cópia, por isso o `/ecc:configure-ecc` trava (dois escopos). **Não usar** `ecc install --target claude`/`antigravity`/`gemini` nem o `/ecc:configure-ecc`: gravam centenas de arquivos no global ou no `.agents/`. Mudar o perfil de hooks = editar `pluginConfigs` no `.claude/settings.json`.
+**Regras (rules) do ECC:** o plugin não distribui; não instalamos (viram contexto fixo em toda sessão e as nossas estão no `CLAUDE.md` e no §9). Se precisar de uma, copiar só o arquivo para `.claude/rules/` do projeto.
+**Quem usar em cada passo** (os nossos primeiro: baratos, em português e presos ao protocolo; o ECC entra onde o nosso não cobre):
+| Passo | Nosso | ECC |
+|---|---|---|
+| Planejar tarefa grande (3+ arquivos) | ficha em `.collab/fichas/` | `/ecc:plan` |
+| Código novo ou bug | — | skill `tdd-workflow`: teste que falha primeiro |
+| Rodar testes | `verificador` | skill `verification-loop` |
+| Revisar pelo diff | `revisor` | `ecc:code-reviewer` ou `/ecc:code-review` |
+| Auth, rede, segredos | `seguranca` | `ecc:security-reviewer` · `/ecc:security-scan` |
+| Falha silenciosa, teste fraco | `cacador-falhas` | `ecc:silent-failure-hunter` |
+| Limpar o código | `simplificador` | `ecc:code-simplifier` · `/ecc:refactor-clean` |
+| Build ou erro de compilação | — | `/ecc:build-fix` |
+| Contexto pesado | `/compact` (CLAUDE.md) | skill `context-budget` |
+| Fim de sessão longa | — | `/ecc:save-session` · `/ecc:resume-session` |
+**Hooks do ECC ligados:** GateGuard (pede fatos antes da 1ª edição/Bash), context-monitor, quality-gate e afins no `standard`. Desligados por `ECC_DISABLED_HOOKS`: mcp-health-check, plan-canvas e command-log (ruído e tokens). Para o ECC pesar menos: `ECC_GATEGUARD=off` no `env` do projeto.
+**Gemini:** os hooks e os agentes do ECC são do Claude Code; no Antigravity valem só as regras escritas em `GEMINI.md` e nos handoffs. Não copiar o ECC para `.agents/` nem `.gemini/`.
+**Conferir:** `node --test .claude/hooks/adb-guard.test.mjs .claude/hooks/estado-equipe.test.mjs` (o `node --test <pasta>` falha neste Node; passe os arquivos) · `node tools/qa/regressao.mjs` (ainda não roda os testes dos hooks: pedido à QA em `.collab/handoff/2026-10-20_chefe-para-qa_hooks-na-regressao.md`). O `ecc doctor` avisa "No ECC install-state files": normal, só existe em instalação manual.

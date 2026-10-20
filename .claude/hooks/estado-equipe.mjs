@@ -6,7 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 const raiz = process.env.CLAUDE_PROJECT_DIR || join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const ler = p => { try { return readFileSync(join(raiz, p), 'utf8'); } catch { return ''; } };
-const SIGLAS = ['CHEFE', 'ORQ', 'BACK', 'FRONT', 'QA', 'GEM-IDE', 'RYAN'];
+const SIGLAS = ['CHEFE', 'ORQ', 'BACK', 'FRONT', 'QA', 'GEM-IDE-1', 'GEM-IDE-2', 'GEM-AG-1', 'GEM-AG-2', 'RYAN'];
+const ANTIGAS = { 'GEM-IDE': 'GEM-IDE-1' }; // sigla usada até 20/10; linha antiga continua valendo
+const tem = (texto, s) => new RegExp(`(?<![\\w-])${s}(?![\\w-])`).test(texto);
 const out = [];
 
 try {
@@ -17,8 +19,10 @@ try {
     const [id, , agente, , , estado] = c.slice(1);
     const pend = c[c.length - 2] || '';
     const semNotas = agente.replace(/\([^)]*\)/g, '');
-    const donos = SIGLAS.filter(s => new RegExp(`\\b${s}\\b`).test(semNotas));
-    const revisor = (pend.match(/revisor[a]?:\s*([A-Z][\w-]*)/) || [])[1];
+    const donos = new Set(SIGLAS.filter(s => tem(semNotas, s)));
+    for (const [antiga, nova] of Object.entries(ANTIGAS)) if (tem(semNotas, antiga)) donos.add(nova);
+    const bruto = (pend.match(/revisor[a]?:\s*([A-Z][\w-]*)/) || [])[1];
+    const revisor = ANTIGAS[bruto] || bruto;
     if (estado === 'REVIEW' && revisor && fila[revisor]) fila[revisor].revisa.push(id);
     for (const d of donos) fila[d].faz.push(`${id}:${estado}`);
   }
