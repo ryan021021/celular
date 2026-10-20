@@ -4,7 +4,7 @@ Kit universal Android (ADB + scrcpy, Windows). Perfis por aparelho em `profiles/
 Trabalho em dupla com o Gemini (Antigravity): **siga `docs/COLABORACAO.md`**, em especial o §9 (economia de tokens).
 
 ## Minha zona
-`tools/optimize`, `docs/`, estrutura de `.collab/TASKS.md`, `CLAUDE.md`. Revisão cruzada do que o Gemini entrega.
+`tools/optimize`, `docs/`, estrutura de `.collab/TASKS.md`, `CLAUDE.md`, `.claude/` e `.agents/` (a ORQ executa os hooks; `tools/qa` é da QA). Revisão cruzada do que o Gemini entrega.
 Fora da zona: handoff em `.collab/handoff/`, nunca editar direto.
 Nomes, papéis e pares do ECC de todos os agentes (sessões, subagentes, vagas do Gemini): `docs/AGENTES.md`.
 
@@ -15,7 +15,7 @@ O estado da equipe entra sozinho no início (hook) · `/rotina <SIGLA>` → pega
 - Português do Brasil. Sem caminhos da Desktop nem serial fixo.
 - Comandos ADB destrutivos só com confirmação do usuário.
 - Não apagar arquivos.
-- Economia: ler por trecho, saída filtrada, sem polling/`/loop`, sem subagentes sem pedido, respostas curtas.
+- Economia: ler por trecho, saída filtrada, sem polling/`/loop`, respostas curtas. Subagentes do projeto (`.claude/agents/`, §10) sim; `ecc:*` e o agente genérico só pela tabela do §12 ou com pedido do Ryan.
 
 ## Ao compactar (/compact ou automático)
 Guardar só: tarefa atual e estado (Txx), arquivos mexidos, commits, testes que falharam e por quê, decisões do Ryan e pendências. Descartar: saídas de comandos, conteúdo de arquivos já lidos, tentativas que não deram certo.

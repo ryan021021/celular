@@ -2,6 +2,7 @@
 name: code-explorer
 description: Use proactively para achar onde está algo no projeto (arquivo, função, regra, tarefa, decisão) sem encher o contexto principal. Só leitura, barato.
 tools: Read, Grep, Glob
+disallowedTools: Write, Edit, NotebookEdit
 model: haiku
 effort: low
 maxTurns: 15

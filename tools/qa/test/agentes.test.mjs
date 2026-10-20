@@ -4,13 +4,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { validarAgentes } from '../agentes.mjs';
-
-// Contrato de validarAgentes(raiz): lista de { arquivo, erros[] } para
-//  - .claude/agents/*.md: frontmatter com name == nome do arquivo, description, tools, model (haiku|sonnet|opus), maxTurns numerico;
-//    agente de leitura (code-explorer, code-reviewer, security-reviewer, silent-failure-hunter, verificador) sem Edit/Write em tools
-//    e, os que revisam, com disallowedTools Write e Edit;
-//  - docs/AGENTES.md: cada agente do disco aparece entre crases, e cada `agente` listado na tabela "Subagentes" existe;
-//  - comando `/x` citado no quadro existe como .agents/workflows/x.md ou .claude/skills/x/SKILL.md (`/ecc:*` e ignorado).
+// Contrato de validarAgentes(raiz): lista de { arquivo, erros[] } para//  - .claude/agents/*.md: frontmatter com name == nome do arquivo, description, tools, model (haiku|sonnet|opus), maxTurns numerico;//    agente de leitura (code-explorer, code-reviewer, security-reviewer, silent-failure-hunter, verificador) sem Edit/Write em tools//    e, os que revisam, com disallowedTools Write e Edit;//  - docs/AGENTES.md: cada agente do disco aparece entre crases, e cada `agente` listado na tabela "Subagentes" existe;//  - comando `/x` citado no quadro existe como .agents/workflows/x.md ou .claude/skills/x/SKILL.md (`/ecc:*` e ignorado).
 
 const FM = (campos) => `---\n${Object.entries(campos).map(([k, v]) => `${k}: ${v}`).join('\n')}\n---\ncorpo\n`;
 const BOM = { description: 'faz coisa', tools: 'Read, Grep', model: 'haiku', maxTurns: 10 };
@@ -20,7 +14,6 @@ function grava(raiz, rel, texto) {
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, texto);
 }
-
 // projeto minimo valido: um agente de escrita (termux-infra) e um revisor (code-reviewer)
 function monta(ajusta = {}) {
   const raiz = mkdtempSync(join(tmpdir(), 'agentes-'));
@@ -42,7 +35,8 @@ function monta(ajusta = {}) {
   grava(raiz, 'docs/AGENTES.md', quadro);
   grava(raiz, '.agents/workflows/vaga-1.md', 'x');
   grava(raiz, '.agents/workflows/entregar.md', 'x');
-  grava(raiz, '.claude/skills/rotina/SKILL.md', 'x');
+  grava(raiz, '.claude/skills/rotina/SKILL.md', FM({ name: 'rotina', description: 'inicio de turno' }));
+  for (const [pasta, texto] of Object.entries(ajusta.skills ?? {})) grava(raiz, `.claude/skills/${pasta}/SKILL.md`, texto);
   return raiz;
 }
 
@@ -52,11 +46,11 @@ function erros(opcoes) {
   finally { rmSync(raiz, { recursive: true, force: true }); }
 }
 
-test('projeto coerente: nenhum erro, um item por agente do disco mais o do quadro', () => {
+test('projeto coerente: nenhum erro, um item por agente do disco, por skill e o do quadro', () => {
   const raiz = monta();
   try {
     const r = validarAgentes(raiz);
-    assert.equal(r.length, 3);
+    assert.equal(r.length, 4);
     assert.deepEqual(r.flatMap((a) => a.erros), []);
   } finally { rmSync(raiz, { recursive: true, force: true }); }
 });
@@ -110,4 +104,58 @@ test('quadro ausente e recusado, sem excecao', () => {
   rmSync(join(raiz, 'docs', 'AGENTES.md'));
   try { assert.match(validarAgentes(raiz).flatMap((a) => a.erros).join('\n'), /AGENTES\.md/); }
   finally { rmSync(raiz, { recursive: true, force: true }); }
+});
+
+test('skill com name diferente da pasta e recusada', () => {
+  const e = erros({ skills: { cola: FM({ name: 'outra', description: 'x' }) } });
+  assert.match(e.join('\n'), /skills\/cola.*name/i);
+});
+
+test('skill sem description ou sem frontmatter e recusada', () => {
+  assert.match(erros({ skills: { cola: FM({ name: 'cola', description: '' }) } }).join('\n'), /skills\/cola.*description/i);
+  assert.match(erros({ skills: { cola: 'so texto\n' } }).join('\n'), /skills\/cola.*frontmatter/i);
+});
+
+test('skill valida sem disable-model-invocation passa', () => {
+  assert.deepEqual(erros({ skills: { cola: FM({ name: 'cola', description: 'x' }) } }), []);
+});
+
+test('agente fora das listas fixas sem Edit/Write exige disallowedTools Write e Edit', () => {
+  const e = erros({ quadro: undefined, agentes: { novato: FM({ name: 'novato', ...BOM, tools: 'Read, Grep' }) } });
+  assert.match(e.join('\n'), /novato\.md.*disallowedTools/);
+});
+
+test('agente fora das listas com Edit ou Write nao exige disallowedTools', () => {
+  const e = erros({ agentes: { novato: FM({ name: 'novato', ...BOM, tools: 'Read, Write' }) } });
+  assert.doesNotMatch(e.join('\n'), /novato\.md.*disallowedTools/);
+});
+
+test('agente sem Edit/Write com disallowedTools completo passa a regra deduzida', () => {
+  const e = erros({ agentes: { novato: FM({ name: 'novato', ...BOM, tools: 'Read', disallowedTools: 'Edit, Write' }) } });
+  assert.doesNotMatch(e.join('\n'), /novato\.md.*disallowedTools/);
+});
+
+test('model diferente da coluna Modelo do quadro e recusado (sem diferenciar maiuscula)', () => {
+  const e = erros({ agentes: { 'termux-infra': FM({ name: 'termux-infra', ...BOM, tools: 'Read, Edit', model: 'haiku' }) } });
+  assert.match(e.join('\n'), /termux-infra\.md.*haiku.*sonnet/);
+  const ok = erros({ agentes: { 'termux-infra': FM({ name: 'termux-infra', ...BOM, tools: 'Read, Edit', model: 'sonnet' }) }, quadro: [
+    '## Subagentes', '| Agente | Modelo |', '|---|---|', '| `termux-infra` | Sonnet |', '| `code-reviewer` | SONNET |'].join('\n') });
+  assert.deepEqual(ok, []);
+});
+
+test('ferramenta fora da lista conhecida e recusada', () => {
+  const e = erros({ agentes: { 'termux-infra': FM({ name: 'termux-infra', ...BOM, tools: 'Read, Edit, Foo' }) } });
+  assert.match(e.join('\n'), /termux-infra\.md.*Foo/);
+});
+
+test('Agent ou Task em subagente e recusado (sem delegacao em cadeia)', () => {
+  for (const t of ['Agent', 'Task']) {
+    const e = erros({ agentes: { 'termux-infra': FM({ name: 'termux-infra', ...BOM, tools: `Read, Edit, ${t}` }) } });
+    assert.match(e.join('\n'), new RegExp(`termux-infra\.md.*${t}.*deleg`));
+  }
+});
+
+test('todas as ferramentas conhecidas sao aceitas em tools', () => {
+  const todas = 'Read, Grep, Glob, Bash, Edit, Write, NotebookEdit, WebFetch, WebSearch, PowerShell';
+  assert.deepEqual(erros({ agentes: { 'termux-infra': FM({ name: 'termux-infra', ...BOM, tools: todas, model: 'sonnet' }) } }), []);
 });

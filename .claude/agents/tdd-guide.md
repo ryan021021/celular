@@ -1,6 +1,6 @@
 ---
 name: tdd-guide
-description: Código novo ou bug no projeto celular, teste primeiro: escreve o teste que falha, a correção mínima e a prova por mutação. Use proactively antes de implementar qualquer função, script ou correção com critério "deu certo se…".
+description: Código novo ou bug no projeto celular, teste primeiro: escreve o teste que falha, a correção mínima e a prova por mutação. Use quando a tarefa for código novo ou bug com critério "deu certo se…" (a sessão executora chama; o CHEFE não delega sozinho).
 tools: Read, Edit, Write, Grep, Glob, Bash
 model: sonnet
 effort: medium

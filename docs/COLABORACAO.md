@@ -11,6 +11,8 @@ Funciona com git ou com outra ferramenta de versão (ver "Versionamento").
 | `server/panel/server-box/` (repo git) | **os dois**, cada um no seu branch `claude/*` / `gemini/*` | merge em `celular` só depois da revisão do outro (ver `server/panel/UPSTREAM.md`) |
 | `assets/` | quem gerar o arquivo | só adicionar, nunca sobrescrever |
 | `GEMINI.md`, `CLAUDE.md`, `AGENTS.md` | cada um edita só o seu | — |
+| `.claude/` (agentes, skills, hooks, settings), `.agents/` (regras do Antigravity) | **CHEFE** (a ORQ executa os hooks) | as vagas do Gemini **não** editam `.agents/`: pedem por handoff |
+| `tools/qa/` (regressão, escopo, validadores) | **QA** | o CHEFE mexe só com tarefa própria e avisa a QA |
 
 Regra: **só edite arquivos da sua zona.** Fora dela, use um handoff.
 
@@ -26,8 +28,9 @@ Antes de mexer em algo fora do óbvio, crie `.collab/locks/<nome>.lock` com:
 Apague o seu lock ao terminar. Lock com mais de 2 h é considerado abandonado (avise o usuário).
 
 ## 3. Quadro de tarefas
-`.collab/TASKS.md` é a fila. Cada agente pega uma tarefa mudando o campo `dono` e `status`
-(`todo` → `doing` → `review` → `done`). Uma tarefa = um dono. Nunca pegar tarefa `doing` de outro.
+`.collab/TASKS.md` é a fila. Cada agente pega a tarefa da sua sigla com lock e muda a coluna `Estado`
+(`BACKLOG` → `READY` → `IN_PROGRESS` → `TESTING`/`REVIEW` → `DONE`; `BLOCKED` quando depende de alguém).
+Uma tarefa = um dono. Nunca pegar tarefa `IN_PROGRESS` de outro.
 
 ## 3b. Fichas
 Tarefas operacionais (mexer no celular) ganham uma ficha em `.collab/fichas/` com: comando exato,
@@ -48,8 +51,9 @@ Nada de revisar o próprio código. (19/10, D16: em tarefa não crítica o subag
 Ao terminar uma tarefa, uma linha em `docs/LOG.md`: data, agente, o que mudou, arquivos.
 
 ## 7. Versionamento
-- Git (já instalado, 2.53): um branch por agente (`claude/<tarefa>`, `gemini/<tarefa>`), commits pequenos,
-  merge no `main` só após revisão cruzada. Ainda **não** foi iniciado (`git init` pendente).
+- Git ativo: commit pequeno direto no `main`, sempre com caminhos (`git commit -m "<SIGLA>: <Txx> ..." -- <arquivos>`),
+  porque o índice é compartilhado entre as sessões. A trava `commit-msg` confere o escopo pelo `Txx`.
+  Branch próprio só para sessão em worktree (`claude/*`) e para o `server-box`; o merge passa pelo CHEFE.
 - Se for usar outra ferramenta de versão, a regra de ouro continua: um dono por zona + locks + revisão.
 
 ## 8. Segurança
@@ -71,7 +75,7 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Opus com contexto curto (20/10, D19):** CHEFE e QA abrem sessão nova a cada onda (despacho, revisões, decisão) ou quando o contexto passa de ~100 mil, com o estado já em TASKS/handoff; o hook `SessionStart` repõe a fila. Cada turno do Opus reprocessa o contexto inteiro, então é a maior economia isolada.
 - **Uma tarefa por contexto:** terminou e fechou a tarefa (`/fechar-tarefa`)? Rode `/clear` antes da próxima, a menos que ela dependa do que acabou de ser feito. O estado fica em TASKS/LOG/commit, não no histórico.
 - **Plugins e conectores fora do projeto:** os plugins de Shopify/Trackbee ficam desligados neste projeto (`.claude/settings.json`). Conectores da conta (meta-ads, Hostinger, Gmail…) só o Ryan desliga.
-- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes (D19): **Haiku** para busca, testes e limpeza (`code-explorer`, `verificador`, `code-simplifier`); **Sonnet** para julgamento e risco (`code-reviewer`, `security-reviewer`, `silent-failure-hunter`, `android-adb`, `termux-infra`), como no §10. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
+- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** O modelo de cada sessão e de cada subagente está **só** em `docs/AGENTES.md` (fonte única; o validador `tools/qa/agentes.mjs` confere os arquivos de agente contra ele). Esforço médio para todos. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
 **Quadro único de nomes, papéis e pares do ECC: `docs/AGENTES.md`** (T90; a regressão confere o quadro contra `.claude/agents/`, passo "agentes"). Esta seção e o §12 explicam o porquê.
@@ -92,7 +96,7 @@ Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto
 
 Reforço de 20/10 (ideias do ECC, adaptadas): `code-reviewer` e `security-reviewer` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `code-reviewer` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC entram só nos passos e nas condições da tabela do §12 (D20); fora dela, só com pedido do Ryan.
 
-Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
+Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <evidência>` (a esteira decide REVIEW ou DONE), `/revisar-tarefa <Txx>`, `/despachar` (só o CHEFE) e o workflow `/diagnostico` do Antigravity.
 
 Trava (`adb-guard`): bloqueia comando ADB destrutivo (uninstall, clear, disable, reboot, compile, wm density, policy_control, rm -rf, fastboot). Só passa com o OK do Ryan e o marcador `# OK-RYAN: <motivo>` no comando. Teste: `node --test .claude/hooks/adb-guard.test.mjs`.
 

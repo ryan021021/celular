@@ -9,10 +9,4 @@ description: Só para o CHEFE do projeto celular — lê a fila da equipe e mand
 4. GEM-IDE-1 e GEM-IDE-2 (são só 2 Geminis): **sem ciclo** (o ciclo de 19/10 rodou a noite toda e deixou o modelo com ~3 min por resposta; cancelado, `.collab/gemini-loop.stop`). Deixe a tarefa READY com a sigla da vaga e dê ao Ryan a linha: "conversa nova na aba 1 (ou 2) e rode `/vaga-1` (ou `/vaga-2`)". Uma tarefa por conversa. **Nunca** ordene `Start-Sleep`, polling, "não pare" ou "confira de novo" a nenhum agente. GEM-IDE-2 (GEMINI-2, conta 2) recebe tarefa do `celular` só quando o CHEFE despacha ou o Ryan manda. GEM-CLI está aposentado (D18). Nunca duas vagas na mesma tarefa nem nos mesmos arquivos (lock por sigla).
 5. RYAN: junte todos os pedidos de ação humana numa lista numerada, na resposta final.
 
-Sessões:
-| Sigla | Título | id |
-|---|---|---|
-| ORQ | ORQ · infra e economia | local_11542123-024a-49b2-8b6b-4a864b878e44 |
-| BACK | BACK · servidor A15 | local_27089016-b63e-48ec-b463-eafcdbde9a99 |
-| FRONT | FRONT · console do painel | local_a08055c8-66d2-4916-b128-6a1d722899f7 |
-| QA | QA · revisão e testes | local_3295f0ab-04ae-4841-9d61-eb2b54e6ac00 |
+Sessões: ache o id pelo título no `list_sessions` (o título começa com a sigla: `ORQ ·`, `BACK ·`, `FRONT ·`, `QA ·`; a tabela completa está em `docs/AGENTES.md`). Não guarde ids aqui: a sessão recriada ganha id novo. Sessão arquivada com tarefa READY entra na lista do Ryan (passo 5) para ele decidir se desarquiva.

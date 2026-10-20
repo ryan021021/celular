@@ -99,6 +99,13 @@ test('OK do Ryan libera o script, mas marcador sem motivo e fora de lugar não l
   assert.equal(roda('adb reboot # ok ryan'), 2);
 });
 
+test('MCP desktop-commander: start_process (command) e interact_with_process (input) passam pela trava', () => {
+  const via = (nome, campo, cmd) => rodaCom(JSON.stringify({ tool_name: nome, tool_input: { [campo]: cmd } })).status;
+  assert.equal(via('mcp__desktop-commander__start_process', 'command', 'adb uninstall com.x'), 2);
+  assert.equal(via('mcp__desktop-commander__interact_with_process', 'input', 'adb reboot'), 2);
+  assert.equal(via('mcp__desktop-commander__interact_with_process', 'input', 'adb devices'), 0);
+});
+
 test('entrada vazia, sem comando ou com tool_input ausente falha aberta (exit 0)', () => {
   for (const e of ['', '{}', '{"tool_input":{}}', '{"tool_input":{"command":null}}']) assert.equal(rodaCom(e).status, 0, e);
 });

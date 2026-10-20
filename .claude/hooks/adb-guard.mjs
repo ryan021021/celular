@@ -1,10 +1,15 @@
-// PreToolUse (Bash/PowerShell): bloqueia comando ADB destrutivo sem OK do Ryan.
+// PreToolUse (Bash/PowerShell e terminal do desktop-commander): bloqueia comando ADB destrutivo sem OK do Ryan.
+// O MCP manda o comando em `command` (start_process) ou em `input` (interact_with_process).
 // Para liberar depois do OK explícito do Ryan, inclua no comando o marcador: # OK-RYAN: <motivo>
 // Falha aberta: qualquer erro de leitura deixa passar (exit 0) para não travar as sessões.
 import { readFileSync } from 'node:fs';
 
 let cmd = '';
-try { cmd = JSON.parse(readFileSync(0, 'utf8'))?.tool_input?.command ?? ''; } catch { process.exit(0); }
+try {
+  const entrada = JSON.parse(readFileSync(0, 'utf8'))?.tool_input;
+  cmd = entrada?.command ?? entrada?.input ?? '';
+} catch { process.exit(0); }
+if (typeof cmd !== 'string') process.exit(0);
 if (/#\s*OK-RYAN:\s*\S/.test(cmd)) process.exit(0);
 
 // Q10: scripts que mudam o aparelho chamando o adb por dentro (só quando executados, não em git/grep/cat).
