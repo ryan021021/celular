@@ -42,7 +42,7 @@ Quem recebe responde no mesmo arquivo e marca `RESOLVIDO` no topo.
 
 ## 5. Revisão cruzada
 Todo trabalho vai para `review`. O **outro** agente revisa antes de `done`.
-Nada de revisar o próprio código. (19/10, D16: em tarefa não crítica o subagente `revisor`, com contexto isolado, conta como o outro agente; tarefa crítica segue com a QA. Ver §10.)
+Nada de revisar o próprio código. (19/10, D16: em tarefa não crítica o subagente `code-reviewer`, com contexto isolado, conta como o outro agente; tarefa crítica segue com a QA. Ver §10.)
 
 ## 6. Log
 Ao terminar uma tarefa, uma linha em `docs/LOG.md`: data, agente, o que mudou, arquivos.
@@ -71,23 +71,23 @@ O limite do plano é compartilhado por todas as sessões. Contexto grande = cust
 - **Opus com contexto curto (20/10, D19):** CHEFE e QA abrem sessão nova a cada onda (despacho, revisões, decisão) ou quando o contexto passa de ~100 mil, com o estado já em TASKS/handoff; o hook `SessionStart` repõe a fila. Cada turno do Opus reprocessa o contexto inteiro, então é a maior economia isolada.
 - **Uma tarefa por contexto:** terminou e fechou a tarefa (`/fechar-tarefa`)? Rode `/clear` antes da próxima, a menos que ela dependa do que acabou de ser feito. O estado fica em TASKS/LOG/commit, não no histórico.
 - **Plugins e conectores fora do projeto:** os plugins de Shopify/Trackbee ficam desligados neste projeto (`.claude/settings.json`). Conectores da conta (meta-ads, Hostinger, Gmail…) só o Ryan desliga.
-- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes (D19): **Haiku** para busca, testes e limpeza (`explorador`, `verificador`, `simplificador`); **Sonnet** para julgamento e risco (`revisor`, `seguranca`, `cacador-falhas`, `android-adb`, `termux-infra`), como no §10. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
+- **Modelo/esforço (20/10, Ryan): quem codifica é barato, quem confere é o melhor.** Executores BACK, FRONT e ORQ = **Haiku**, esforço médio; QA = **Opus**, esforço médio (testa, revisa pelo diff e reprova); CHEFE = **Opus**, esforço médio (supervisiona e decide). Subagentes (D19): **Haiku** para busca, testes e limpeza (`code-explorer`, `verificador`, `code-simplifier`); **Sonnet** para julgamento e risco (`code-reviewer`, `security-reviewer`, `silent-failure-hunter`, `android-adb`, `termux-infra`), como no §10. Volume com especificação fechada e teste de aceite vai de preferência para as vagas do Gemini (fora da cota do Claude); quem decide se passou é a trava (`regressao.mjs`, `escopo.mjs`, `commit-msg`), não o modelo. Haiku: tarefas pequenas, uma por vez, sempre com a ficha ou os critérios "deu certo se…" da tarefa; nada de refatoração grande ou decisão de arquitetura (isso sobe para o CHEFE). Nada vai a DONE sem a revisão do QA ou do CHEFE. Nunca xhigh/max sem OK do Ryan. No máximo 2 sessões trabalhando ao mesmo tempo; as outras ficam paradas até o CHEFE chamar.
 
 ## 10. Time de especialistas (19/10, CHEFE)
 Montado no padrão atual da Anthropic: subagentes em `.claude/agents/` (contexto isolado, ferramentas mínimas, modelo barato onde dá), skills em `.claude/skills/` e uma trava em `.claude/hooks/`. Fica no git e vale para toda sessão Claude aberta na raiz do projeto.
 
 | Subagente | Modelo | Ferramentas | Quando usar |
 |---|---|---|---|
-| `explorador` | haiku | só leitura | "onde está X?" sem encher o contexto |
+| `code-explorer` | haiku | só leitura | "onde está X?" sem encher o contexto |
 | `verificador` | haiku | Bash sem editar | regressão e testes: devolve só o resumo e as falhas |
-| `revisor` | sonnet | Bash/leitura, sem editar | revisão cruzada pelo diff |
-| `simplificador` | haiku | edita | limpar o código da tarefa sem mudar o comportamento |
+| `code-reviewer` | sonnet | Bash/leitura, sem editar | revisão cruzada pelo diff |
+| `code-simplifier` | haiku | edita | limpar o código da tarefa sem mudar o comportamento |
 | `android-adb` | sonnet | ADB | diagnóstico, cadastro de aparelho, ajustes (tem memória do projeto) |
 | `termux-infra` | sonnet | Bash/edita | runit, sshd, deploy, backup, egress (tem memória do projeto) |
-| `seguranca` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
-| `cacador-falhas` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
+| `security-reviewer` | sonnet | só leitura | auditoria antes de deploy e quando mexer em auth ou rede |
+| `silent-failure-hunter` | sonnet | só leitura | erro engolido, fallback que finge sucesso, falta de timeout, teste fraco (scripts de serviço, deploy, rede) |
 
-Reforço de 20/10 (ideias do ECC, adaptadas): `revisor` e `seguranca` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `revisor` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC entram só nos passos e nas condições da tabela do §12 (D20); fora dela, só com pedido do Ryan.
+Reforço de 20/10 (ideias do ECC, adaptadas): `code-reviewer` e `security-reviewer` só reportam achado com `arquivo:linha` e cenário concreto, e revisão sem achado é válida; o `code-reviewer` roda `escopo.mjs --review`; o `android-adb` tem o roteiro de rede do A15. O plugin ECC (`ecc@ecc`) está ligado só neste projeto (`.claude/settings.json`), com os hooks no perfil standard e o GateGuard ligado (§12). A config global do Claude fica no padrão de fábrica. Os agentes do ECC entram só nos passos e nas condições da tabela do §12 (D20); fora dela, só com pedido do Ryan.
 
 Skills: `/rotina <SIGLA>` (início de turno com 1 comando), `/fechar-tarefa <Txx> <REVIEW|DONE> <evidência>`, `/revisar-tarefa <Txx>`.
 
@@ -97,7 +97,7 @@ Não usamos o "Agent Teams" experimental: custa mais e a coordenação já é fe
 
 ### Esteira automática (19/10, D16)
 - **Início de sessão:** o hook `SessionStart` injeta sozinho a fila por agente, os locks, os handoffs e o fim do LOG (`.claude/hooks/estado-equipe.mjs`, ~400 tokens). Para atualizar: `node .claude/hooks/estado-equipe.mjs`.
-- **Entrega:** `/fechar-tarefa <Txx> <evidência>` roda `verificador` e `revisor` em paralelo. Tarefa não crítica aprovada vai direto para DONE. Tarefa crítica (aparelho, `profiles/`, `server/termux`, `tools/server`, deploy, auth, rede, segredos) vai para REVIEW com a QA.
+- **Entrega:** `/fechar-tarefa <Txx> <evidência>` roda `verificador` e `code-reviewer` em paralelo. Tarefa não crítica aprovada vai direto para DONE. Tarefa crítica (aparelho, `profiles/`, `server/termux`, `tools/server`, deploy, auth, rede, segredos) vai para REVIEW com a QA.
 - **Distribuição:** o CHEFE usa `/despachar`, que só acorda sessão parada que tem trabalho.
 - **Gemini:** pedidos no fim do handoff aberto dele; o Ryan cola uma linha no Antigravity.
 
@@ -125,15 +125,27 @@ Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esfor�
 | Planejar | ficha em `.collab/fichas/` | `/ecc:plan` · `ecc:architect` | 3+ arquivos, decisão de arquitetura ou mexe em mais de uma zona; quem planeja é o CHEFE (Opus) |
 | Código novo ou bug | — | skill `tdd-workflow` · `ecc:tdd-guide` | sempre: teste que falha primeiro, depois a correção; vale para todos os executores e vagas do Gemini |
 | Rodar testes | `verificador` (Haiku) | skill `verification-loop` | nunca: o `verificador` basta |
-| Revisar pelo diff | `revisor` (Sonnet) | `ecc:typescript-reviewer` (nosso código é `.mjs`) · `/ecc:code-review` | diff com mais de ~300 linhas de JS, ou o `revisor` reprovou 2 vezes |
-| Auth, rede, segredos | `seguranca` (Sonnet) | `ecc:security-reviewer` · `/ecc:security-scan` | token, sshd, egress, painel exposto, antes de deploy; o scan roda 1 vez por semana ou antes de release |
-| Falha silenciosa, teste fraco | `cacador-falhas` (Sonnet) | `ecc:silent-failure-hunter` · `ecc:pr-test-analyzer` | script de serviço, deploy, backup, rede; ou o teste novo não tem prova por mutação |
-| Limpar o código | `simplificador` (Haiku) | `ecc:code-simplifier` · `/ecc:refactor-clean` | depois da tarefa verde; `/ecc:refactor-clean` só com pedido do CHEFE |
+| Revisar pelo diff | `code-reviewer` (Sonnet) | `ecc:typescript-reviewer` (nosso código é `.mjs`) · `/ecc:code-review` | diff com mais de ~300 linhas de JS, ou o `code-reviewer` reprovou 2 vezes |
+| Auth, rede, segredos | `security-reviewer` (Sonnet) | `ecc:security-reviewer` · `/ecc:security-scan` | token, sshd, egress, painel exposto, antes de deploy; o scan roda 1 vez por semana ou antes de release |
+| Falha silenciosa, teste fraco | `silent-failure-hunter` (Sonnet) | `ecc:silent-failure-hunter` · `ecc:pr-test-analyzer` | script de serviço, deploy, backup, rede; ou o teste novo não tem prova por mutação |
+| Limpar o código | `code-simplifier` (Haiku) | `ecc:code-simplifier` · `/ecc:refactor-clean` | depois da tarefa verde; `/ecc:refactor-clean` só com pedido do CHEFE |
 | Build ou erro de compilação | — | `/ecc:build-fix` · `ecc:build-error-resolver` | o painel (`server-box`) ou o `claude` no Termux não compila |
 | Teste de ponta a ponta do painel | — | `ecc:e2e-runner` | FRONT, tela nova do painel; roda no PC contra o A15, sem mexer no aparelho |
 | Documentação | CHEFE na própria tarefa | `/ecc:update-docs` · `ecc:doc-updater` | mudou comportamento e `docs/` ficou para trás |
 | Contexto pesado | `/compact` (CLAUDE.md) | skill `context-budget` | sessão passou de ~100 mil (§9) |
 | Fim de sessão longa | handoff + TASKS + LOG | `/ecc:save-session` · `/ecc:resume-session` | CHEFE e QA ao trocar de sessão (§9, D19) |
+
+**Agente do ECC de cada seção** (20/10, pedido do Ryan). Cada sessão tem um agente do ECC como padrão do seu trabalho; o apoio é o subagente enxuto do projeto. Os nomes sem `ecc:` são a versão barata do projeto (modelo fixo, em português); com `ecc:` é a versão completa do plugin, só quando a coluna "Escala quando" acima pede.
+| Seção (título da sessão) | Agente ECC padrão | Apoio do projeto |
+|---|---|---|
+| CHEFE · planeja e confere | `ecc:planner` (`ecc:architect` se mexe em arquitetura) | `code-reviewer`, `security-reviewer` |
+| ORQ · infra e economia | `ecc:harness-optimizer` | `termux-infra`, `verificador` |
+| BACK · servidor A15 | `ecc:tdd-guide` | `silent-failure-hunter`, `termux-infra` |
+| FRONT · console do painel | `ecc:e2e-runner` | `code-simplifier`, `verificador` |
+| QA · revisão e testes | `ecc:pr-test-analyzer` | `silent-failure-hunter`, `security-reviewer` |
+| GEM-IDE-1 e GEM-IDE-2 | sem ECC (não roda no Antigravity) | regras do `GEMINI.md`/`GEMINI-2.md` |
+
+**Renomeados em 20/10** (arquivos em `.claude/agents/`): `revisor` → `code-reviewer`, `seguranca` → `security-reviewer`, `cacador-falhas` → `silent-failure-hunter`, `explorador` → `code-explorer`, `simplificador` → `code-simplifier`. `verificador`, `android-adb` e `termux-infra` ficam (sem par no ECC). Valem a partir de uma sessão nova (a lista de subagentes é lida ao abrir). O campo `revisor:` da coluna Pendências do `TASKS.md` é o **papel** de quem revisa e não muda.
 
 **Não se aplica a este projeto** (não gaste turno): revisores de Go, Python, F#, C++, C#, Java, Kotlin, Rust, Swift, PHP, Ruby, Vue, React, Flutter, Django e FastAPI; `database-reviewer` (sem Postgres), `mle-reviewer` (sem ML), `harmonyos-app-resolver`, SEO e marketing. O `/code-review` do ECC vale para o JS do projeto; os revisores de linguagem só entram se a linguagem aparecer.
 **Hooks do ECC ligados:** GateGuard (pede fatos antes da 1ª edição/Bash), context-monitor, quality-gate e afins no `standard`. Desligados por `ECC_DISABLED_HOOKS`: mcp-health-check, plan-canvas e command-log (ruído e tokens). Para o ECC pesar menos: `ECC_GATEGUARD=off` no `env` do projeto.

@@ -47,7 +47,7 @@ try {
 
   const log = ler('docs/LOG.md').trim().split(/\r?\n/).slice(-3).map(l => `  ${l.slice(0, 170)}`);
   out.push('- LOG:', ...log);
-  out.push('Regras: §9/§10 do docs/COLABORACAO.md. Feche tarefa com /fechar-tarefa (testes + revisor + DONE).');
+  out.push('Regras: §9/§10 do docs/COLABORACAO.md. Feche tarefa com /fechar-tarefa (testes + code-reviewer + DONE).');
 } catch (e) {
   out.push(`(estado-equipe indisponível: ${e.message})`);
 }

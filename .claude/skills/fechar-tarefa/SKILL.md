@@ -1,6 +1,6 @@
 ---
 name: fechar-tarefa
-description: Esteira automática para entregar uma tarefa do projeto celular em um comando — testes (verificador) e revisão independente (revisor) em paralelo, depois TASKS/TASKS_FEITAS, LOG e commit.
+description: Esteira automática para entregar uma tarefa do projeto celular em um comando — testes (verificador) e revisão independente (code-reviewer) em paralelo, depois TASKS/TASKS_FEITAS, LOG e commit.
 argument-hint: "<Txx> <evidência curta>"
 ---
 Argumentos: $ARGUMENTS
@@ -8,16 +8,16 @@ Argumentos: $ARGUMENTS
 1. **Arquivos da tarefa:** os que você mudou (`git status --short` e `git diff --stat`) e a linha da tarefa (`grep '^| <Txx> ' .collab/TASKS.md`).
 2. **Em paralelo, numa mensagem só**, chame dois subagentes:
    - `verificador`: os testes ligados a esses arquivos mais a regressão.
-   - `revisor`: a tarefa, o diff desses arquivos e os "Arquivos autorizados" da linha.
+   - `code-reviewer`: a tarefa, o diff desses arquivos e os "Arquivos autorizados" da linha.
 2b. **Reforço só quando o diff pede** (na mesma mensagem do passo 2; tabela do §12):
-   - mexe em auth, token, sshd, rede, egress ou painel exposto → também `seguranca`;
-   - script de serviço, deploy, backup, rede, ou teste novo sem prova por mutação → também `cacador-falhas`;
-   - código novo ou bug sem teste que falhava antes → devolva ao autor (tdd-workflow), sem gastar revisor.
-   Tarefa comum não chama nenhum dos dois: o custo fica no `verificador` e no `revisor`.
+   - mexe em auth, token, sshd, rede, egress ou painel exposto → também `security-reviewer`;
+   - script de serviço, deploy, backup, rede, ou teste novo sem prova por mutação → também `silent-failure-hunter`;
+   - código novo ou bug sem teste que falhava antes → devolva ao autor (tdd-workflow), sem gastar code-reviewer.
+   Tarefa comum não chama nenhum dos dois: o custo fica no `verificador` e no `code-reviewer`.
 3. **Decida:**
    - VERMELHO ou REPROVADO: corrija e volte ao passo 2. No máximo 2 voltas; depois disso, avise o CHEFE.
-   - VERDE e APROVADO (ou com notas só cosméticas), numa tarefa **não crítica**: vira **DONE**. Mova a linha para o fim de `.collab/TASKS_FEITAS.md` com a evidência e `revisor (subagente): APROVADO`.
-   - Tarefa **crítica** (mexe no aparelho, `profiles/`, `server/termux`, `tools/server`, painel em produção, deploy, auth, rede ou segredos): vira **REVIEW** com `revisora: QA`, e o veredito do revisor vai na evidência.
+   - VERDE e APROVADO (ou com notas só cosméticas), numa tarefa **não crítica**: vira **DONE**. Mova a linha para o fim de `.collab/TASKS_FEITAS.md` com a evidência e `code-reviewer (subagente): APROVADO`.
+   - Tarefa **crítica** (mexe no aparelho, `profiles/`, `server/termux`, `tools/server`, painel em produção, deploy, auth, rede ou segredos): vira **REVIEW** com `revisora: QA`, e o veredito do code-reviewer vai na evidência.
 4. **LOG** (append, sem ler): `echo "- $(date '+%Y-%m-%d %H:%M') · <agente> · <Txx>: <até ~250 caracteres>" >> docs/LOG.md`
 5. **Commit** só dos seus arquivos: `git add -- <arquivos> .collab/TASKS.md .collab/TASKS_FEITAS.md docs/LOG.md` e `git -c user.name="<agente>" commit -m "<AGENTE>: <Txx> ..." -- <os mesmos>`. Nunca `add -A`, `reset --hard` nem `stash` sem tag.
 5b. Se o commit for recusado pela trava (§11, escopo ou perigo), corrija. Não use `OK-RYAN` por conta própria.
