@@ -61,7 +61,11 @@ function rodar(cmd, args, { cwd, limite = LIMITE, env } = {}) {
 
 async function suite(grupo, nome, cwd, arquivos) {
   const r = await rodar(process.execPath, ["--test", ...arquivos], { cwd });
-  const s = resumoNodeTest(r.out);
+  let s;
+  try { s = resumoNodeTest(r.out); } catch (e) {
+    registrar(grupo, nome, false, { resumo: `${e.message} · código de saída ${r.code}`, travou: r.travou, ms: r.ms, saida: r.out.slice(-3000) });
+    return;
+  }
   const { ok, motivo } = veredito(r, s, grupo === "painel" ? "painel" : nome);
   const resumo = r.travou ? `TRAVOU (> ${LIMITE / 1000} s)` : `${s.passou}/${s.testes} ok${s.pulados ? `, ${s.pulados} pulado(s)` : ""}${s.falhou ? `, ${s.falhou} falha(s)` : ""} em ${(r.ms / 1000).toFixed(1)} s`;
   registrar(grupo, nome, ok, { resumo: ok ? resumo : `${resumo}${motivo ? ` · ${motivo}` : ""}`, ...s, travou: r.travou, ms: r.ms, saida: ok ? undefined : r.out.slice(-3000) });

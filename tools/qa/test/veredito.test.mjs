@@ -32,7 +32,6 @@ test('travou, código ≠ 0, falha e zero testes continuam vermelhos', () => {
   assert.equal(veredito({ code: 0, travou: true }, s, 'x').ok, false);
   assert.equal(veredito({ code: 1, travou: false }, s, 'x').ok, false);
   assert.equal(veredito(ok0, resumoNodeTest(saida(4, 3, 1, 0)), 'x').ok, false);
-  assert.equal(veredito(ok0, resumoNodeTest('sem resumo'), 'x').ok, false);
   assert.equal(veredito(ok0, resumoNodeTest(saida(0, 0, 0, 0)), 'x').ok, false); // nada rodou
 });
 
@@ -45,4 +44,24 @@ test('regressao.mjs decide o verde de cada suíte só pelo veredito (sem conta p
 
 test('CRITICAS cobre backup/discovery (tools/server) e termux', () => {
   for (const n of ['tools/server', 'server/termux/test']) assert.ok(CRITICAS.some(re => re.test(n)), n);
+});
+
+const tap = (t, p, f, s) => `# tests ${t}\n# suites 0\n# pass ${p}\n# fail ${f}\n# cancelled 0\n# skipped ${s}\n# todo 0\n`;
+
+test('T127: o resumo TAP (Node 22 no CI) dá a mesma contagem que o spec', () => {
+  const spec = resumoNodeTest(`${saida(5, 3, 1, 1)}  ✖ quebra aqui (1.2ms)\n`);
+  const t = resumoNodeTest(`not ok 4 - quebra aqui\n${tap(5, 3, 1, 1)}`);
+  assert.deepEqual([t.testes, t.passou, t.falhou, t.pulados, t.cancelados], [spec.testes, spec.passou, spec.falhou, spec.pulados, spec.cancelados]);
+  assert.deepEqual(t.falhas, ['quebra aqui']);
+});
+
+test('T127: saída sem resumo falha alto, não vira NaN', () => {
+  assert.throws(() => resumoNodeTest('Error: Cannot find module x\n'), /resumo do node --test não encontrado/);
+  assert.throws(() => resumoNodeTest(''), /resumo do node --test não encontrado/);
+});
+
+test('T127: regressao.mjs vira etapa vermelha (e não quebra) quando o resumo some', async () => {
+  const { readFileSync } = await import('node:fs');
+  const src = readFileSync(new URL('../regressao.mjs', import.meta.url), 'utf8');
+  assert.match(src, /try \{ s = resumoNodeTest\(r\.out\); \} catch/);
 });

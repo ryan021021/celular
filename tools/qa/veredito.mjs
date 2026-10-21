@@ -5,11 +5,18 @@
 // O painel fica de fora: console.test.mjs pula o teste de link simbólico no Windows sem privilégio (roda no A13).
 export const CRITICAS = [/^tools\/server/, /^server\/termux/];
 
-/** Lê o resumo do node --test (ℹ tests/pass/fail/skipped) e os nomes dos testes que falharam. */
+/** Lê o resumo do node --test, no formato spec ("ℹ tests 5") ou TAP ("# tests 5", Node 22 sem terminal), e os nomes dos que falharam.
+ *  Sem resumo nenhum falha alto: NaN deixava o CI vermelho sem dizer por quê (T118). */
 export function resumoNodeTest(out) {
-  const n = k => Number((out.match(new RegExp(`^ℹ ${k} (\\d+)`, 'm')) || [])[1] ?? NaN);
-  const falhas = [...out.matchAll(/^\s*✖ (.+?) \(\d/gm)].map(m => m[1]).filter(s => s !== 'failing tests:');
-  return { testes: n('tests'), passou: n('pass'), falhou: n('fail'), pulados: n('skipped'), cancelados: n('cancelled'), falhas: [...new Set(falhas)].slice(0, 20) };
+  const n = k => {
+    const m = out.match(new RegExp(`^(?:ℹ|#) ${k} (\\d+)`, 'm'));
+    if (!m) throw new Error('resumo do node --test não encontrado');
+    return Number(m[1]);
+  };
+  const resumo = { testes: n('tests'), passou: n('pass'), falhou: n('fail'), pulados: n('skipped'), cancelados: n('cancelled') };
+  const nomes = [...out.matchAll(/^\s*✖ (.+?) \(\d/gm)].map(m => m[1]).filter(s => s !== 'failing tests:');
+  const tapFalhas = [...out.matchAll(/^\s*not ok \d+ - (.+?)(?: # .*)?$/gm)].map(m => m[1].trim());
+  return { ...resumo, falhas: [...new Set([...nomes, ...tapFalhas])].slice(0, 20) };
 }
 
 /** Verde só se terminou no prazo, saiu com 0, nada falhou, rodou algo e (em suíte crítica) nada foi pulado. */
