@@ -163,3 +163,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 18:10 · claude (BACK) · T113 REVIEW (QA): modo-pessoal.sh orcamento/parar/retomar (simula por padrao), 9323dc7; nada aplicado no A15
 - 2026-10-21 18:30 · claude (BACK) · T37 REVIEW (QA): nosniff na /api/v1 conferido em todas as rotas (inclui ready/capabilities/alerts), painel 98275a1
 - 2026-10-21 18:40 · claude (BACK) · T50 REVIEW (QA): já entregue em e23047f; backup.test.mjs 11/11 e backup real do A15 em 20/10
+- 2026-10-21 19:20 · claude (BACK) · T97 REVIEW (QA): VERIFICATION.md no ryx (d914707) com a re-execução real no A15: 320 testes OK, doctor/info/backup/shell; pasta temp removida
