@@ -162,3 +162,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 12:30 · claude (QA) · T96 DONE (ryx 320 testes OK, 12 pulados), T103 DONE (2ª passada, mutante do timeout morto); T97 DEVOLVIDA: falta `docs/VERIFICATION.md` com as saídas reais do A15, que o critério exige
 - 2026-10-21 18:10 · claude (BACK) · T113 REVIEW (QA): modo-pessoal.sh orcamento/parar/retomar (simula por padrao), 9323dc7; nada aplicado no A15
 - 2026-10-21 18:30 · claude (BACK) · T37 REVIEW (QA): nosniff na /api/v1 conferido em todas as rotas (inclui ready/capabilities/alerts), painel 98275a1
+- 2026-10-21 18:40 · claude (BACK) · T50 REVIEW (QA): já entregue em e23047f; backup.test.mjs 11/11 e backup real do A15 em 20/10
