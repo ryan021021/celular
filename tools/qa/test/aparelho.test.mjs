@@ -47,7 +47,7 @@ function falso({ sobrescreve = () => undefined, ryx = true } = {}) {
 }
 
 const rodar = (f, perfil = PERFIL, extra = {}) =>
-  testarAparelho(perfil, { raiz: "/repo", ryxDir: "/ryx", run: f.run, ...extra });
+  testarAparelho(perfil, { raiz: "/repo", ryxDir: "/ryx", run: f.run, autorizado: true, ...extra });
 const removeu = (f) => f.ssh().filter((c) => c.args[c.args.length - 1].includes("rm -rf"));
 
 test("caminho feliz: PASS, uma linha por suíte e limpeza só da pasta criada", async () => {
@@ -60,6 +60,24 @@ test("caminho feliz: PASS, uma linha por suíte e limpeza só da pasta criada", 
   assert.equal(rm.length, 1);
   assert.ok(rm[0].args[rm[0].args.length - 1].includes(DIR));
   assert.ok(f.chamadas.some((c) => c.cmd === "adb" && c.args.includes("--remove")), "remove o forward");
+});
+
+test("T124: sem a ordem do Ryan recusa antes de qualquer comando e diz o que rodaria", async () => {
+  const f = falso();
+  const r = await rodar(f, PERFIL, { autorizado: false });
+  assert.equal(f.chamadas.length, 0, "nem adb devices: nada toca o aparelho");
+  assert.equal(r.resultado, "BLOCKED");
+  assert.equal(r.recusado, true);
+  assert.match(r.motivo, /--autorizado-pelo-ryan/);
+  const plano = r.planejado.join("\n");
+  for (const trecho of ["mktemp", "tar", "rm -rf"]) assert.match(plano, new RegExp(trecho));
+});
+
+test("T124: sem informar `autorizado` o padrão também recusa", async () => {
+  const f = falso();
+  const r = await testarAparelho(PERFIL, { raiz: "/repo", run: f.run });
+  assert.equal(f.chamadas.length, 0);
+  assert.equal(r.recusado, true);
 });
 
 test("envia o que os testes leem: sh-do-git e deploy.ps1 com o server/termux, e o ryx inteiro sem .git", async () => {

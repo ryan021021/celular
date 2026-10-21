@@ -1,5 +1,7 @@
 // tools/qa/aparelho.mjs — T112: testes no aparelho por USB, em um comando.
-//   node tools/qa/aparelho.mjs [--perfil a15] [--ryx <pasta>] [--sem-ryx]
+//   node tools/qa/aparelho.mjs [--perfil a15] [--ryx <pasta>] [--sem-ryx] --autorizado-pelo-ryan
+// ATENÇÃO (diretriz de 21/10): o A15 é o celular pessoal do Ryan, só leitura. Esta ferramenta ESCREVE uma pasta
+// temporária no Termux, então sem --autorizado-pelo-ryan ela recusa (saída 2) antes de qualquer comando.
 // Acha o aparelho pelo serial do perfil, faz o forward da porta do sshd, confere a host key contra
 // `network.ssh_hostkey_sha256` (nunca `accept-new`), manda o código para uma pasta temporária do Termux,
 // roda `server/termux/test` (um arquivo por vez) e o `ryx`, e devolve JSON PASS/FAIL/BLOCKED.
@@ -19,6 +21,13 @@ const LINHAS_DE_SAIDA_NA_FALHA = 15;
 const PASTA_TEMPORARIA = /^\/[\w./-]*\/qa-aparelho\.[A-Za-z0-9]{6}$/;
 // o que os testes de server/termux leem fora da própria pasta (boot/setup/watchdog usam o sh-do-git; post-receive lê o deploy.ps1)
 const ENVIO_TERMUX = ["server/termux", "tools/qa/sh-do-git.mjs", "tools/server/deploy.ps1"];
+const PLANO_DE_ESCRITA = [
+  "adb forward tcp:0 tcp:<ssh_port> (só encaminha a porta, no PC)",
+  "ssh: mktemp -d $TMPDIR/qa-aparelho.XXXXXX (cria pasta no Termux)",
+  "tar | ssh tar -xf - (grava server/termux e o ryx nessa pasta)",
+  "ssh: node --test / python -m unittest dentro da pasta",
+  "ssh: rm -rf <só a pasta criada acima>",
+];
 const CAMPOS_DO_PERFIL = [
   ["serial", (p) => p.serial],
   ["network.ssh_port", (p) => p.network?.ssh_port],
@@ -107,10 +116,17 @@ function statusDaSuite(res, resumo) {
  * Roda a rodada inteira. `perfil` é o JSON de profiles/<id>.json; `run` troca o processo real por um falso.
  * Devolve { perfil, serial, resultado, motivo, passos[], suites[] }.
  */
-export async function testarAparelho(perfil, { raiz = RAIZ, ryxDir = null, run = executar } = {}) {
+export async function testarAparelho(perfil, { raiz = RAIZ, ryxDir = null, run = executar, autorizado = false } = {}) {
   const r = { perfil: perfil.id, serial: perfil.serial ?? null, resultado: "BLOCKED", motivo: null, passos: [], suites: [] };
   const passo = (nome, status, detalhe = "") => r.passos.push({ nome, status, detalhe });
   const bloquear = (motivo) => { r.motivo = motivo; r.resultado = "BLOCKED"; return r; };
+
+  // O A15 é o celular pessoal do Ryan: esta rodada ESCREVE nele (pasta temporária no Termux), então só com a ordem dele.
+  if (!autorizado) {
+    r.recusado = true;
+    r.planejado = PLANO_DE_ESCRITA;
+    return bloquear("recusado: esta rodada escreve uma pasta temporária no Termux do aparelho; só roda com --autorizado-pelo-ryan, dado pelo Ryan naquele momento");
+  }
 
   const faltando = CAMPOS_DO_PERFIL.filter(([, ler]) => !ler(perfil)).map(([nome]) => nome);
   if (faltando.length) return bloquear(`perfil sem ${faltando.join(", ")}`);
@@ -224,6 +240,7 @@ function lerArgumentos(argv) {
     if (argv[i] === "--perfil") a.perfil = argv[++i];
     else if (argv[i] === "--ryx") a.ryx = argv[++i];
     else if (argv[i] === "--sem-ryx") a.semRyx = true;
+    else if (argv[i] === "--autorizado-pelo-ryan") a.autorizado = true;
     else throw new Error(`argumento desconhecido: ${argv[i]}`);
   }
   if (!/^[a-z0-9_-]+$/.test(a.perfil ?? "")) throw new Error("--perfil inválido");
@@ -236,7 +253,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   try {
     const args = lerArgumentos(process.argv.slice(2));
     const perfil = JSON.parse(readFileSync(join(RAIZ, "profiles", `${args.perfil}.json`), "utf8"));
-    saida = await testarAparelho(perfil, { ryxDir: args.semRyx ? null : args.ryx });
+    saida = await testarAparelho(perfil, { ryxDir: args.semRyx ? null : args.ryx, autorizado: args.autorizado });
   } catch (e) {
     saida = { resultado: "BLOCKED", motivo: e.message, passos: [], suites: [] };
   }
