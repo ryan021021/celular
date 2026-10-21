@@ -168,3 +168,5 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 18:17 · claude (BACK) · T106 REVIEW (QA): ryx doctor confere sshd (senha/escuta/chaves) só aviso + SVDIR; 338 testes, 6 mutantes mortos, A15 lido ok; ryx@612db95
 - 2026-10-21 18:44 · claude (BACK) · T37/T50: escopo.mjs --review ok; linhas com os arquivos reais (overnight.md foi junto no ede88c8; a15.json teve o IP velho corrigido no e23047f)
 - 2026-10-21 19:10 · claude (QA) · T124 DONE: aparelho.mjs recusa sem --autorizado-pelo-ryan (saída 2, zero comandos, imprime o plano); mutante morto; A15 só leitura, não rodei mais nada nele
+- 2026-10-21 18:56 · gem-ide-1 · T94: GEMINI.md e GEMINI-2.md enxutos (sem fluxo duplicado, papel único testador/auditor na vaga 2, sem Desktop), agentes.test 21/21 ok; REVIEW
+- 2026-10-21 19:25 · claude (QA) · T123 DONE (revisão cruzada): 10 plugins @synced desabilitados conferidos com `claude plugin list`, ecc@ecc ativo, regra do A15 só leitura nos 3 lugares
