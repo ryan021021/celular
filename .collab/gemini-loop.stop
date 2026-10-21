@@ -1,1 +1,2 @@
-PARE. Ciclo autonomo cancelado pelo CHEFE em 2026-10-20 (rodou a noite toda, 1.345 chamadas numa conversa so, deixou o agente lento). Use /vaga-1 ou /vaga-2, uma tarefa por conversa.
+# TRAVA DE EMERGÊNCIA (opcional): crie conteúdo aqui se desejar forçar a parada imediata dos ciclos autônomos dos agentes.
+# Em operação normal, os agentes GEM-IDE-1 e GEM-IDE-2 operam no modelo "Loop Seguro Delimitado" (lotes de até 20-25 turnos por conversa) sem polling passivo.

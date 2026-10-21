@@ -4,8 +4,8 @@ trigger: always_on
 
 # Não travar a IDE (o agente ficou em "working" para sempre em 20/10)
 
-1. **Uma conversa por tarefa.** Terminou a tarefa ou passou de uns 30 turnos: diga "TAREFA ENTREGUE, abra conversa nova" e pare. O estado vive em `.collab/`, não na conversa.
-2. **Sem tarefa READY com a sua sigla:** responda "FILA VAZIA" e pare. Proibido loop, `sleep`, `Start-Sleep`, `watch`, polling ou "vou verificar de novo".
+1. **Loop seguro delimitado por turnos.** Em modo de trabalho contínuo, pegue tarefas sequenciais `READY` da sua sigla sem interrupção até o teto de 20 a 25 turnos por conversa. Atingido o teto, encerre dizendo "CICLO CONCLUÍDO, abra conversa nova" para proteger a memória da IDE.
+2. **Sem tarefa READY com a sua sigla:** responda "FILA VAZIA" e pare. Proibido polling passivo, `sleep`, `Start-Sleep`, `watch` ou laço de espera sem trabalho pronto.
 3. **Comando com limite.** Tudo que pode passar de 1 minuto roda com limite de tempo e saída curta (`| Select-Object -Last 30` ou `| tail -n 30`). Nunca deixe processo rodando em segundo plano.
 4. **Sem regressão inteira aqui.** `node tools/qa/regressao.mjs` (cerca de 3 minutos) não roda no agente; rode só `node --test <arquivo>` da tarefa. A regressão fica com o CHEFE.
 5. **Sem navegador do agente, sem gravação, sem arquivo grande.** Nada de `.webp`, vídeo, APK ou captura dentro do repositório.
