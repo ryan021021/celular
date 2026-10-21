@@ -17,10 +17,22 @@ done
 curto() { git -C "$REPO" rev-parse --short "$1" 2>/dev/null || echo "$1"; }
 registra() { echo "$(date '+%F %T') $(curto "$velho") -> $(curto "$novo") $1" >> "$LOG"; }
 
-reinicia() {
-  sv restart server-box >/dev/null 2>&1
-  [ -d "$SVDIR/alertas" ] && sv restart alertas >/dev/null 2>&1
-  i=0; until curl -sf -m 2 http://127.0.0.1:8080/health >/dev/null 2>&1 || [ $i -ge 15 ]; do sleep 1; i=$((i+1)); done
+# T122: /health 200 nao basta: um processo velho que sobrou (sv restart falhou) tambem responde 200. O painel local diz no /health
+# o commit que SUBIU ("commit":"<12 hex>"); so vale se for o esperado ($1). Painel sem o campo (versao antiga) so e aceito
+# no rollback ($2 = aceita-sem-commit), nunca para o commit novo.
+no_ar() {
+  corpo=$(curl -sf -m 2 http://127.0.0.1:8080/health 2>/dev/null) || return 1
+  rep=$(printf '%s' "$corpo" | sed -n 's/.*"commit" *: *"\([0-9a-f]*\)".*/\1/p')
+  if [ -z "$rep" ]; then [ "$2" = "aceita-sem-commit" ]; return; fi
+  [ ${#rep} -ge 7 ] || return 1 # prefixo de 1 a 6 caracteres casaria com muitos commits
+  case "$1" in "$rep"*) return 0 ;; esac
+  return 1
+}
+
+reinicia() { # $1 = commit que tem de estar no ar; $2 = aceita-sem-commit (so no rollback)
+  sv restart server-box >/dev/null 2>&1 || echo "[a13] aviso: sv restart server-box falhou"
+  if [ -d "$SVDIR/alertas" ]; then sv restart alertas >/dev/null 2>&1 || echo "[a13] aviso: sv restart alertas falhou"; fi
+  i=0; until no_ar "$1" "$2" || [ $i -ge 15 ]; do sleep 1; i=$((i+1)); done
   [ $i -lt 15 ]
 }
 
@@ -32,7 +44,7 @@ volta() { # $1 = motivo
     registra "ROLLBACK FALHOU ($1; git reset para o velho falhou)"
     exit 1
   fi
-  if reinicia; then
+  if reinicia "$velho" aceita-sem-commit; then
     echo "[a13] ROLLBACK ok: painel de volta em $(curto "$velho"). O push NAO entrou em producao."
     registra "ROLLBACK ($1)"
   else
@@ -51,9 +63,9 @@ if ! timeout 120 node --test test/*.test.mjs > "$HOME/servidor/logs/deploy-tests
 fi
 
 # 2) reinicia e confere o /health
-if reinicia; then
+if reinicia "$novo"; then
   echo "[a13] painel reiniciado com $(git -C "$REPO" log -1 --format='%h %s') (testes ok)"
   registra "ok"
 else
-  volta "painel nao respondeu /health em 15 s"
+  volta "painel nao respondeu /health com o commit novo em 15 s"
 fi

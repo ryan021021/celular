@@ -46,21 +46,31 @@ function montar({ comAlertas = true } = {}) {
   git(["reset", "-q", "--hard", velho], repo); // o aparelho roda o velho; o push traz o novo
 
   const chamadas = join(raiz, "chamadas.txt");
+  const processo = join(raiz, "processo-no-ar.txt"); // commit que o processo do painel (falso) esta rodando agora
+  writeFileSync(processo, `${velho}
+`);
   const falso = (nome, corpo) => writeFileSync(join(bin, nome), `#!/bin/sh\n${corpo}\n`, { mode: 0o755 });
   // git: o de verdade, mas o `reset` que termina no commit $FALHA_RESET_EM falha (simula disco cheio / repo travado)
   falso("git", `for a; do ult="$a"; done
 case " $* " in *" reset "*) if [ -n "$FALHA_RESET_EM" ] && [ "$ult" = "$FALHA_RESET_EM" ]; then echo "git falso: reset falhou" >&2; exit 1; fi ;; esac
 exec "$GIT_REAL" "$@"`);
-  falso("sv", `echo "sv $*" >> "$CHAMADAS"`);
+  // sv: `restart server-box` leva o "processo no ar" para o commit que a arvore tem agora; com SV_FALHA=1 o restart falha e o processo (velho) continua no ar
+  falso("sv", `echo "sv $*" >> "$CHAMADAS"
+case "$*" in "restart server-box") if [ "$SV_FALHA" = 1 ]; then echo "sv falso: timeout" >&2; exit 1; fi; "$GIT_REAL" -C "$REPO" rev-parse HEAD > "$PROCESSO" ;; esac`);
   falso("sleep", "exit 0");
   falso("node", `echo "node $*" >> "$CHAMADAS"; echo "# testes falsos"; [ "$TESTES_OK" = 1 ]`);
   // curl: o painel só "responde" quando a árvore está no commit $SAUDE_EM (assim o /health depende do que o hook deixou no repo)
-  // (lê o ref solto direto, sem subir outro processo: no Windows cada processo custa ~1 s e o hook espera até 15 voltas)
-  falso("curl", `echo "curl $*" >> "$CHAMADAS"; read -r atual < "$REPO/.git/refs/heads/celular"; [ "$atual" = "$SAUDE_EM" ]`);
+  // (T122: responde o commit do PROCESSO no ar, nao o da arvore. Sem subir git: no Windows cada processo custa ~1 s e o hook espera ate 15 voltas)
+  falso("curl", `echo "curl $*" >> "$CHAMADAS"; read -r no_ar < "$PROCESSO"
+[ -z "$SAUDE_EM" ] || [ "$no_ar" = "$SAUDE_EM" ] || exit 1
+if [ -n "$COMMIT_FIXO" ]; then printf '{"ok":true,"service":"server-box","commit":"%s"}
+' "$COMMIT_FIXO"
+elif [ "$no_ar" = "$SEM_COMMIT_EM" ]; then echo '{"ok":true,"service":"server-box"}'; else printf '{"ok":true,"service":"server-box","commit":"%.12s"}
+' "$no_ar"; fi`);
 
-  const rodar = ({ ref = "refs/heads/celular", old = velho, nova = novo, testesOk = true, saudeEm = novo, falhaResetEm = "" } = {}) => {
+  const rodar = ({ ref = "refs/heads/celular", old = velho, nova = novo, testesOk = true, saudeEm = novo, falhaResetEm = "", svFalha = false, semCommitEm = "", commitFixo = "" } = {}) => {
     const env = { ...process.env, HOME: fw(home), PREFIX: fw(prefix), REPO: fw(repo), CHAMADAS: fw(chamadas), GIT_REAL,
-      TESTES_OK: testesOk ? "1" : "0", SAUDE_EM: saudeEm, FALHA_RESET_EM: falhaResetEm, PATH: `${fw(bin)}:${process.env.PATH}` };
+      TESTES_OK: testesOk ? "1" : "0", SAUDE_EM: saudeEm, FALHA_RESET_EM: falhaResetEm, SV_FALHA: svFalha ? "1" : "0", SEM_COMMIT_EM: semCommitEm, COMMIT_FIXO: commitFixo, PROCESSO: fw(processo), PATH: `${fw(bin)}:${process.env.PATH}` };
     delete env.GIT_DIR;
     return spawnSync("sh", [fw(HOOK)], { input: `${old} ${nova} ${ref}\n`, env, encoding: "utf8", timeout: 150000, windowsHide: true });
   };
@@ -70,8 +80,9 @@ exec "$GIT_REAL" "$@"`);
   const log = () => ler(join(home, "servidor", "logs", "deploy.log"));
   const nomes = () => ler(chamadas);
   const limpar = () => { try { rmSync(raiz, { recursive: true, force: true }); } catch {} };
+  const processoNoAr = () => readFileSync(processo, "utf8").trim();
   const versao = () => readFileSync(join(repo, "versao.txt"), "utf8");
-  return { velho, novo, versao, rodar, cabeca, ramo, log, chamadas: nomes, limpar };
+  return { velho, novo, processo: processoNoAr, versao, rodar, cabeca, ramo, log, chamadas: nomes, limpar };
 }
 
 test("deploy ok: testes passam, painel reinicia, /health responde; fica no commit novo e o branch continua preso (G14)", t => {
@@ -105,7 +116,7 @@ test("/health do código novo não responde: rollback automático para o velho",
   const m = montar(); t.after(m.limpar);
   const r = m.rodar({ testesOk: true, saudeEm: m.velho }); // o novo passa nos testes mas o painel só responde no velho
   assert.equal(r.status, 1, `${r.stdout}\n${r.stderr}`);
-  assert.match(r.stdout, /FALHOU \(painel nao respondeu \/health em 15 s\)/);
+  assert.match(r.stdout, /FALHOU \(painel nao respondeu \/health com o commit novo em 15 s\)/);
   assert.match(r.stdout, /ROLLBACK ok/);
   assert.equal(m.cabeca(), m.velho);
   assert.match(m.log(), /ROLLBACK \(painel nao respondeu/);
@@ -118,6 +129,52 @@ test("rollback que também não sobe: ERRO GRAVE, exit 1 e o log não diz que de
   assert.match(r.stdout, /ERRO GRAVE: rollback tambem nao subiu/);
   assert.ok(!/ROLLBACK ok/.test(r.stdout));
   assert.match(m.log(), /ROLLBACK FALHOU \(testes falharam/);
+});
+
+// ---- T122: deploy ok só com o commit NOVO no ar (auditoria da T84: sv restart falho + processo velho respondendo 200) ----
+test("T122: sv restart falha e o processo VELHO segue respondendo /health 200: não é deploy ok, volta para o velho", t => {
+  const m = montar(); t.after(m.limpar);
+  const r = m.rodar({ testesOk: true, saudeEm: "", svFalha: true }); // /health sempre 200, mas o processo no ar continua no commit velho
+  assert.equal(r.status, 1, `${r.stdout}
+${r.stderr}`);
+  assert.match(r.stdout, /FALHOU \(painel nao respondeu \/health com o commit novo em 15 s\)/);
+  assert.ok(!/painel reiniciado com/.test(r.stdout), "disse que reiniciou o painel com o commit novo");
+  assert.match(m.log(), /ROLLBACK \(painel nao respondeu/);
+  assert.ok(!/-> [0-9a-f]+ ok\n/.test(m.log()), "registrou deploy ok com o processo velho no ar");
+  assert.equal(m.cabeca(), m.velho);
+});
+
+test("T122: /health 200 sem o campo commit (painel antigo ou git falhou) não vale para o commit novo", t => {
+  const m = montar(); t.after(m.limpar);
+  const r = m.rodar({ testesOk: true, saudeEm: "", semCommitEm: m.novo });
+  assert.equal(r.status, 1, `${r.stdout}
+${r.stderr}`);
+  assert.match(r.stdout, /FALHOU \(painel nao respondeu \/health com o commit novo/);
+  assert.equal(m.cabeca(), m.velho);
+});
+
+test("T122: /health que informa só um pedaço minúsculo do commit (1 caractere casaria com qualquer commit) não vale", t => {
+  const m = montar(); t.after(m.limpar);
+  const r = m.rodar({ testesOk: true, saudeEm: "", commitFixo: m.novo.slice(0, 1) });
+  assert.equal(r.status, 1, `${r.stdout}
+${r.stderr}`);
+  assert.match(r.stdout, /FALHOU \(painel nao respondeu \/health com o commit novo/);
+  assert.equal(m.cabeca(), m.velho);
+});
+
+test("T122: no rollback, painel velho que não informa commit é aceito (ROLLBACK ok)", t => {
+  const m = montar(); t.after(m.limpar);
+  const r = m.rodar({ testesOk: false, saudeEm: "", semCommitEm: m.velho });
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /ROLLBACK ok/);
+});
+
+test("T122: /health do novo reprova, rollback reinicia e o processo no ar volta a ser o commit velho", t => {
+  const m = montar(); t.after(m.limpar);
+  const r = m.rodar({ testesOk: true, saudeEm: m.velho });
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /ROLLBACK ok/);
+  assert.equal(m.processo(), m.velho, "o processo no ar não voltou ao commit velho");
 });
 
 test("o reset do rollback falha: não finge que voltou (ERRO GRAVE, log ROLLBACK FALHOU)", t => {
