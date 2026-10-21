@@ -25,7 +25,9 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          # mesma versão do PC do projeto: tools/qa/veredito.mjs lê o resumo do reporter spec ("ℹ tests N"),
+          # e o Node 22 sem terminal imprime TAP ("# tests N"), o que dava NaN/NaN em todas as suítes (run 39689704116)
+          node-version: "25"
       - name: Regressão
         shell: bash
         # --paineis "": o clone do painel (branch celular) só existe na máquina do Ryan
