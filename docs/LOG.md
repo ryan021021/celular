@@ -164,3 +164,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 18:30 · claude (BACK) · T37 REVIEW (QA): nosniff na /api/v1 conferido em todas as rotas (inclui ready/capabilities/alerts), painel 98275a1
 - 2026-10-21 18:40 · claude (BACK) · T50 REVIEW (QA): já entregue em e23047f; backup.test.mjs 11/11 e backup real do A15 em 20/10
 - 2026-10-21 19:20 · claude (BACK) · T97 REVIEW (QA): VERIFICATION.md no ryx (d914707) com a re-execução real no A15: 320 testes OK, doctor/info/backup/shell; pasta temp removida
+- 2026-10-21 13:10 · claude (QA) · T112 DONE: `node tools/qa/aparelho.mjs` roda as suítes no A15 por USB (host key do perfil, nunca accept-new, só apaga a pasta que criou); real: ryx 320/320, FAIL só em post-receive.test (powershell no Termux) — achado A1 para a ORQ/T84
