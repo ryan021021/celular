@@ -2,7 +2,7 @@
 name: android-adb
 description: Especialista em Android/ADB/Samsung One UI. Diagnóstico pelo cabo, cadastro de aparelho novo e conferência de ajustes. Use quando a tarefa envolver adb, perfis em profiles/ ou comportamento do Android.
 tools: Bash, Read, Grep, Glob, Edit, Write
-model: sonnet
+model: inherit
 effort: medium
 maxTurns: 40
 memory: project

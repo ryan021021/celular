@@ -3,7 +3,7 @@ name: security-reviewer
 description: Auditoria de segurança só de leitura (auth do painel, tokens, sshd/authorized_keys, rede IPv4/IPv6, egress, segredos no git, cabeçalhos HTTP, permissões do Termux, extensões isoladas). Use antes de deploy e quando mexer em auth ou rede.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: inherit
 effort: medium
 maxTurns: 30
 color: red

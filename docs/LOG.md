@@ -188,3 +188,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-22 00:27 · claude (CHEFE) · T118 DONE: CI do celular verde no GitHub (run 39692935192, raiz 5cce602), ci.yml revisado pelo CHEFE; T128 sem pipe no objetivo (quebrava as colunas do estado-equipe)
 - 2026-10-22 00:37 · gem-ide-1 · T114: paridade com VPS conferida no A15 (so leitura via SSH forward; sshd ed25519/PerSourcePenalties, svlogd nos 7 servicos, portas abertas mapeadas; sem serial/user no doc; docs/qa/paridade-vps-A15.md criado); REVIEW
 - 2026-10-22 00:44 · claude (CHEFE) · T94 DONE, T95 DONE (revisão cruzada com notas); T127 DONE (2ª regressão VERDE; a 1ª vermelha em server/termux/test foi instabilidade, agora visível em vez de NaN)
+- 2026-10-22 00:54 · claude (CHEFE) · subagentes com model: inherit (eram sonnet): nas sessões Haiku (ORQ, FRONT) code-reviewer, security-reviewer, tdd-guide e afins sumiam da lista, e a esteira §13 travava

@@ -3,7 +3,7 @@ name: silent-failure-hunter
 description: Caça falha silenciosa e teste fraco no código de uma tarefa (erro engolido, fallback que finge sucesso, falta de timeout, teste que não prova nada). Só leitura. Use em scripts de serviço, deploy, backup, rede e alertas antes da revisão.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: inherit
 effort: medium
 maxTurns: 20
 color: pink

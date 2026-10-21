@@ -3,7 +3,7 @@ name: code-reviewer
 description: Revisão cruzada de uma tarefa ou commit (pelo diff) antes de DONE. Use proactively quando uma tarefa entrar em REVIEW. Nunca revisa código do próprio autor.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
-model: sonnet
+model: inherit
 effort: medium
 maxTurns: 25
 color: purple

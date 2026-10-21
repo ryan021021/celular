@@ -2,7 +2,7 @@
 name: termux-infra
 description: Especialista no servidor dentro do Termux (runit, sshd, boot, cron, watchdog, egress, sftp, AgentOps, deploy.ps1, backup.sh, hook de deploy). Use para instalar, diagnosticar ou corrigir o servidor.
 tools: Bash, Read, Grep, Glob, Edit, Write
-model: sonnet
+model: inherit
 effort: medium
 maxTurns: 40
 memory: project
