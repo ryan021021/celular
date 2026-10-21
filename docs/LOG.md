@@ -172,3 +172,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 19:25 · claude (QA) · T123 DONE (revisão cruzada): 10 plugins @synced desabilitados conferidos com `claude plugin list`, ecc@ecc ativo, regra do A15 só leitura nos 3 lugares
 - 2026-10-21 19:50 · claude (QA) · T37 DONE, T50 DONE, T97 DONE (revisão cruzada): T37 mutante do SEC_HEADERS morto; T50 11/11, mutante do perfil morto, sobrevive a porta do perfil (sem asserção); T97 VERIFICATION.md confere com a minha rodada de 320 testes
 - 2026-10-21 19:16 · gem-ide-1 · T98: ryx regra 13 da carta (test_docs_sync.py 5/5, CLI e versões pyproject/init/changelog sincronizadas, 2 mutantes mortos), ryx@fbe192b; REVIEW
+- 2026-10-21 19:34 · gem-ide-1 · T100: ryx log estruturado JSON (RYX_LOG_FORMAT=json, hora/nível/módulo/mensagem mascarada, 25/25 testes ok), ryx@4cb222d; REVIEW
