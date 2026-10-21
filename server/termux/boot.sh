@@ -1,5 +1,7 @@
 #!/data/data/com.termux/files/usr/bin/sh
 # Copiar para ~/.termux/boot/boot.sh (Termux:Boot executa na inicializacao do aparelho).
+# Servidor parado de proposito (modo-pessoal.sh parar): nao sobe nada.
+[ -e "$HOME/servidor/parado" ] && exit 0
 termux-wake-lock
 
 # termux-services: sobe o runsvdir, que cuida de sshd e crond (habilitados com sv-enable)
