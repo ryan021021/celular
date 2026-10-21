@@ -26,7 +26,12 @@ reinicia() {
 
 volta() { # $1 = motivo
   echo "[a13] FALHOU ($1). Voltando para $(curto "$velho")..."
-  git -C "$REPO" reset -q --hard "$velho"
+  # T84: se o reset falhar a arvore continua no codigo novo; subir o painel e dizer "ROLLBACK ok" seria mentira
+  if ! git -C "$REPO" reset -q --hard "$velho"; then
+    echo "[a13] ERRO GRAVE: nao consegui voltar a arvore para $(curto "$velho"); o painel pode estar rodando o codigo reprovado."
+    registra "ROLLBACK FALHOU ($1; git reset para o velho falhou)"
+    exit 1
+  fi
   if reinicia; then
     echo "[a13] ROLLBACK ok: painel de volta em $(curto "$velho"). O push NAO entrou em producao."
     registra "ROLLBACK ($1)"

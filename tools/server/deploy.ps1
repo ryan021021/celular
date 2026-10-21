@@ -76,7 +76,8 @@ function Step-Start {
 }
 function Step-Test {
     Write-Host "[5/5] Rodando testes do server-box no celular ..." -ForegroundColor Cyan
-    Remote "cd ~/servidor/panel/server-box && node --test test/*.test.mjs 2>&1 | tail -n 8"
+    # T84: com `| tail` o codigo de saida era o do tail (sempre 0) e teste reprovado virava [PRONTO]. A saida vai para um arquivo, guardo o codigo do node, mostro o final e devolvo o codigo.
+    Remote "mkdir -p ~/servidor/logs && cd ~/servidor/panel/server-box && { timeout 180 node --test test/*.test.mjs > ~/servidor/logs/deploy-tests-pc.log 2>&1; r=`$?; tail -n 8 ~/servidor/logs/deploy-tests-pc.log; exit `$r; }"
 }
 function Step-Health {
     Write-Host "[ok?] Checando /health ..." -ForegroundColor Cyan

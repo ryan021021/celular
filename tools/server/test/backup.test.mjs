@@ -11,7 +11,7 @@ import { spawnSync } from "node:child_process";
 // Tudo (chave, backups, estado do aparelho falso) fica em pasta temporária. Precisa de bash, openssl, git, tar e sha256sum.
 // Rodar com: node --test tools/server/test/backup.test.mjs
 const aqui = dirname(fileURLToPath(import.meta.url));
-const BACKUP_SH = join(aqui, "..", "backup.sh");
+const BACKUP_SH = process.env.BACKUP_ALVO || join(aqui, "..", "backup.sh"); // BACKUP_ALVO: cópia quebrada do script, para a prova por mutação
 const fw = p => p.replace(/\\/g, "/");
 const ferramentas = spawnSync("bash", ["-c", "command -v openssl git tar sha256sum cygpath >/dev/null 2>&1 || command -v openssl git tar sha256sum >/dev/null 2>&1"], { windowsHide: true });
 const SEM_FERRAMENTAS = ferramentas.status !== 0 && "bash/openssl/git/tar/sha256sum não encontrados";
@@ -65,25 +65,38 @@ if (process.argv[i + 1] === "a15") { console.log(${JSON.stringify(achador)}); } 
   git(["bundle", "create", join(aparelho, "servidor", ".inventario", "server-box.bundle"), "--all"], repo);
   writeFileSync(join(aparelho, "servidor", ".inventario", "commit.txt"), "abc1234 painel falso\n");
 
-  // ssh falso: o comando do tar devolve a pasta do A15 falso; o do registro só grava o texto recebido
-  const registro = join(raiz, "registro-no-aparelho.txt"), argsSsh = join(raiz, "args-ssh.txt");
-  writeFileSync(join(bin, "ssh"), `#!/bin/sh
-for a; do alvo="$cmd"; cmd="$a"; done
-echo "$alvo" >> "$ARGS_SSH"
-case "$cmd" in
-  *"tar -czf"*) cd "$APARELHO" && tar -czf - servidor .termux .ssh etc var ;;
-  *backup-ultimo.json*) printf '%s' "$cmd" > "$REGISTRO" ;;
-  *) echo "ssh falso: comando inesperado" >&2; exit 2 ;;
-esac
-`, { mode: 0o755 });
+  // ssh falso (T84): LÊ o `tar -czf` que o backup.sh pediu e empacota só esses caminhos do A15 falso (um caminho tirado do pedido some do backup).
+  // SSH_MODO=255 imita o aparelho fora da rede no meio do tar: escreve um pedaço e sai com 255. O comando do registro só grava o texto recebido.
+  const registro = join(raiz, "registro-no-aparelho.txt"), argsSsh = join(raiz, "args-ssh.txt"), pedidos = join(raiz, "tar-pedido.txt");
+  writeFileSync(join(bin, "ssh-falso.mjs"), `import { spawnSync } from "node:child_process";
+import { appendFileSync, existsSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+const args = process.argv.slice(2), cmd = args.at(-1), alvo = args.at(-2);
+appendFileSync(process.env.ARGS_SSH, alvo + "\\n");
+if (cmd.includes("tar -czf")) {
+  const pedido = cmd.slice(cmd.indexOf("tar -czf")).split("\\n  rm -rf")[0].replace(/\\\\\\n/g, " ").split(/\\s+/).filter(Boolean).slice(3);
+  const caminhos = [];
+  for (let i = 0; i < pedido.length; i++) { if (pedido[i] === "-C") { i++; continue; } if (!pedido[i].startsWith("--exclude")) caminhos.push(pedido[i]); }
+  writeFileSync(process.env.TAR_PEDIDO, caminhos.join("\\n"));
+  const existentes = caminhos.filter(c => existsSync(join(process.env.APARELHO, c)));
+  if (process.env.SSH_MODO === "255") { process.stdout.write(Buffer.from("pedaco-do-tar-antes-da-queda")); process.exit(255); }
+  const r = spawnSync("sh", ["-c", 'cd "$APARELHO" && tar -czf - "$@"', "sh", ...existentes], { stdio: ["ignore", "inherit", "inherit"] });
+  process.exit(r.status ?? 1);
+} else if (cmd.includes("backup-ultimo.json")) {
+  writeFileSync(process.env.REGISTRO, cmd);
+} else { console.error("ssh falso: comando inesperado"); process.exit(2); }
+`);
+  writeFileSync(join(bin, "ssh"), `#!/bin/sh\nexec node "$FAKE_SSH_JS" "$@"\n`, { mode: 0o755 });
 
-  const env = { ...process.env, HOME: fw(home), SERVER_DEVICE: "a15", APARELHO: fw(aparelho), REGISTRO: fw(registro), ARGS_SSH: fw(argsSsh), PATH: `${fw(bin)}:${process.env.PATH}` };
+  const env = { ...process.env, HOME: fw(home), SERVER_DEVICE: "a15", APARELHO: fw(aparelho), REGISTRO: fw(registro), ARGS_SSH: fw(argsSsh), TAR_PEDIDO: fw(pedidos),
+    FAKE_SSH_JS: fw(join(bin, "ssh-falso.mjs")), PATH: `${fw(bin)}:${process.env.PATH}` };
   const script = fw(join(projeto, "tools", "server", "backup.sh"));
-  const rodar = (...args) => spawnSync("bash", [script, ...args], { env, encoding: "utf8", timeout: 180000, windowsHide: true });
+  const rodarComEnv = (extra, ...args) => spawnSync("bash", [script, ...args], { env: { ...env, ...extra }, encoding: "utf8", timeout: 180000, windowsHide: true });
+  const rodar = (...args) => rodarComEnv({}, ...args);
   const backups = join(projeto, "backups");
   const arquivoEnc = () => (existsSync(backups) ? readdirSync(backups).find(f => f.endsWith(".tar.gz.enc")) : undefined);
   const alvosSsh = () => (existsSync(argsSsh) ? readFileSync(argsSsh, "utf8") : "").split("\n").filter(Boolean).map(l => l.match(/\S+@\S+/)?.[0]);
-  return { raiz, home, aparelho, backups, registro, alvosSsh, env, script, rodar, arquivoEnc };
+  return { raiz, home, aparelho, backups, registro, alvosSsh, env, script, rodar, rodarComEnv, arquivoEnc };
 }
 
 test("backup do A15: cifra, confere sha256, restaura em pasta temporária e registra o backup (sem tocar no aparelho)", { skip: SEM_FERRAMENTAS }, () => {
@@ -177,4 +190,70 @@ test("T82: sem achador (ou se ele não achar), o backup segue com o IP do perfil
 ${r.stderr}`);
   assert.match(r.stdout, /achador nao encontrou o aparelho; usando o IP do perfil \(192\.0\.2\.15\)/);
   assert.ok(m.alvosSsh().every(a => a === "u0_a999@192.0.2.15"));
+});
+
+// ---- T84 (auditoria A3, M7b): o ssh falso lê o tar pedido e cai com 255; parcial nunca entra na retenção ----
+import { utimesSync } from "node:fs";
+
+/** 7 backups bons e antigos na pasta, com data de modificação crescente (o mais velho é 20260101). */
+function semearBackupsBons(backups) {
+  mkdirSync(backups, { recursive: true });
+  const nomes = [];
+  for (let d = 1; d <= 7; d++) {
+    const nome = `a15-2026010${d}-000000.tar.gz.enc`;
+    writeFileSync(join(backups, nome), `backup bom ${d}`);
+    writeFileSync(join(backups, `${nome}.sha256`), `x  ${nome}\n`);
+    const quando = new Date(Date.UTC(2026, 0, d));
+    utimesSync(join(backups, nome), quando, quando);
+    nomes.push(nome);
+  }
+  return nomes;
+}
+const encs = backups => (existsSync(backups) ? readdirSync(backups).filter(f => f.endsWith(".tar.gz.enc")).sort() : []);
+
+test("T84: o backup pede ao aparelho todos os caminhos de segredo e serviço (o ssh falso empacota só o que foi pedido)", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar();
+  assert.equal(m.rodar().status, 0);
+  const pedido = readFileSync(join(m.raiz, "tar-pedido.txt"), "utf8").split("\n");
+  for (const p of ["servidor", ".termux/boot", ".ssh/authorized_keys", "etc/ssh/ssh_host_ed25519_key", "var/service/server-box", "var/service/alertas",
+    "var/service/agentops", "var/service/sftp", "var/service/egress"]) assert.ok(pedido.includes(p), `o tar não pede ${p}: ${pedido}`);
+  // e o que foi pedido chegou ao backup: restaura e confere o serviço egress
+  const destino = join(m.raiz, "restaurado");
+  assert.equal(m.rodar("--restaurar", fw(join(m.backups, m.arquivoEnc())), fw(destino)).status, 0);
+  assert.ok(existsSync(join(destino, "var", "service", "egress", "run")));
+});
+
+test("T84: aparelho cai (ssh 255) no meio do tar: o backup falha, não deixa arquivo parcial nem registro, e os 7 backups bons continuam", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar();
+  const bons = semearBackupsBons(m.backups);
+  const r = m.rodarComEnv({ SSH_MODO: "255" });
+  assert.notEqual(r.status, 0, `${r.stdout}\n${r.stderr}`);
+  assert.ok(existsSync(join(m.raiz, "tar-pedido.txt")), "o ssh falso nem recebeu o pedido do tar: a falha veio de outro lugar");
+  assert.ok(!/restauracao conferida|^backup: /m.test(r.stdout), "anunciou um backup que não existe");
+  assert.deepEqual(encs(m.backups), bons, "um backup parcial entrou na pasta (e empurraria um bom para fora da retenção)");
+  assert.deepEqual(readdirSync(m.backups).filter(f => /parcial|\.tmp/.test(f)), [], "sobrou arquivo temporário do backup");
+  assert.ok(!existsSync(m.registro), "registrou no aparelho um backup que não existe");
+  assert.ok(existsSync(join(m.backups, `${bons[0]}.sha256`)));
+});
+
+test("T84: depois da queda, o backup seguinte funciona e a retenção apaga só o mais velho (continuam 7)", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar();
+  const bons = semearBackupsBons(m.backups);
+  assert.notEqual(m.rodarComEnv({ SSH_MODO: "255" }).status, 0);
+  const r = m.rodar();
+  assert.equal(r.status, 0, `${r.stdout}\n${r.stderr}`);
+  const depois = encs(m.backups);
+  assert.equal(depois.length, 7, depois.join(", "));
+  assert.ok(!depois.includes(bons[0]), "o mais velho não saiu da retenção");
+  assert.ok(depois.includes(bons[6]) && depois.some(f => !bons.includes(f)), "o backup novo ou o mais recente sumiu");
+  assert.ok(!existsSync(join(m.backups, `${bons[0]}.sha256`)), "o .sha256 do apagado ficou");
+});
+
+test("T84: restauração incompleta não deixa o backup ruim na pasta (nem entra na retenção)", { skip: SEM_FERRAMENTAS }, () => {
+  const m = montar({ sem: ["var/service/egress/run"] });
+  const bons = semearBackupsBons(m.backups);
+  const r = m.rodar();
+  assert.equal(r.status, 1, `${r.stdout}\n${r.stderr}`);
+  assert.match(r.stdout, /RESTAURACAO INCOMPLETA/);
+  assert.deepEqual(encs(m.backups), bons, "o backup incompleto ficou na pasta com nome definitivo");
 });

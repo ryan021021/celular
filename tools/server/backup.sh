@@ -30,7 +30,7 @@ if [ "${1:-}" != "--restaurar" ]; then
   else
     echo "achador nao encontrou o aparelho; usando o IP do perfil ($S_IP)"
   fi
-  SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 -i "$HOME/.ssh/id_ed25519" -p "${S_PORT:-8022}" "$S_USER@$S_IP")
+  SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -i "$HOME/.ssh/id_ed25519" -p "${S_PORT:-8022}" "$S_USER@$S_IP")
 fi
 decifra() { openssl enc -d "${CIFRA[@]}" -pass "file:$(win "$KEY")" -in "$(win "$1")"; }
 
@@ -43,6 +43,12 @@ mkdir -p "$KEYDIR" "$DEST"; chmod 700 "$KEYDIR"
 [ -f "$KEY" ] || { openssl rand -base64 48 > "$KEY"; chmod 600 "$KEY"; echo "chave nova criada em $KEY (guarde uma copia fora do PC)"; }
 
 NOME="$DEVICE-$(date +%Y%m%d-%H%M%S).tar.gz.enc"
+# T84: o backup nasce como .parcial e so ganha o nome definitivo depois da prova de restauracao. Se o aparelho cair no meio
+# (ssh 255) ou a prova falhar, o parcial e removido e nunca entra na retencao empurrando um backup bom para fora.
+PARCIAL="$DEST/$NOME.parcial"; TMP=""
+rm -f "$DEST"/"$DEVICE"-*.tar.gz.enc.parcial # sobra de uma execucao morta a forca (o trap nao roda com kill -9)
+limpa() { rm -f "$PARCIAL"; if [ -n "$TMP" ]; then rm -rf "$TMP"; fi; }
+trap limpa EXIT
 # No A13: inventario + arquivos de configuracao e segredos (sem logs, sem caches)
 "${SSH[@]}" 'set -e; cd $HOME
   I=servidor/.inventario; mkdir -p $I
@@ -55,15 +61,11 @@ NOME="$DEVICE-$(date +%Y%m%d-%H%M%S).tar.gz.enc"
     -C $PREFIX etc/ssh/ssh_host_ed25519_key etc/ssh/ssh_host_ed25519_key.pub etc/ssh/ssh_host_rsa_key etc/ssh/ssh_host_rsa_key.pub \
        etc/ssh/ssh_host_ecdsa_key etc/ssh/ssh_host_ecdsa_key.pub var/service/server-box var/service/alertas \
        var/service/agentops var/service/sftp var/service/egress
-  rm -rf $I' | openssl enc "${CIFRA[@]}" -pass "file:$(win "$KEY")" -out "$(win "$DEST/$NOME")"
+  rm -rf $I' | openssl enc "${CIFRA[@]}" -pass "file:$(win "$KEY")" -out "$(win "$PARCIAL")"
 
-(cd "$DEST" && sha256sum "$NOME" > "$NOME.sha256")
-echo "backup: $DEST/$NOME ($(du -h "$DEST/$NOME" | cut -f1))"
-
-# Prova de restauracao: confere integridade, decifra numa pasta temporaria e checa os arquivos essenciais
-(cd "$DEST" && sha256sum -c --quiet "$NOME.sha256") && echo "sha256 ok"
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-decifra "$DEST/$NOME" | tar -xzf - -C "$TMP"
+# Prova de restauracao (no parcial): decifra numa pasta temporaria e checa os arquivos essenciais
+TMP=$(mktemp -d)
+decifra "$PARCIAL" | tar -xzf - -C "$TMP"
 faltando=0
 for f in servidor/alertas.json servidor/painel.token servidor/start-services.sh servidor/watchdog.sh \
          servidor/panel/server-box/server.js servidor/.inventario/crontab.txt servidor/.inventario/server-box.bundle \
@@ -78,6 +80,12 @@ else
   echo "FALTANDO: historico git do painel"; faltando=1
 fi
 [ $faltando = 0 ] && echo "restauracao conferida: $(find "$TMP" -type f | wc -l) arquivos" || { echo "RESTAURACAO INCOMPLETA"; exit 1; }
+
+# So agora o backup ganha o nome definitivo (T84): ate aqui ele era apenas um .parcial
+mv "$PARCIAL" "$DEST/$NOME"
+(cd "$DEST" && sha256sum "$NOME" > "$NOME.sha256") || { rm -f "$DEST/$NOME" "$DEST/$NOME.sha256"; echo "ERRO: nao consegui gravar o sha256; backup descartado"; exit 1; }
+echo "backup: $DEST/$NOME ($(du -h "$DEST/$NOME" | cut -f1))"
+(cd "$DEST" && sha256sum -c --quiet "$NOME.sha256") && echo "sha256 ok"
 
 # Avisa o A13 que houve backup bom (o vigia de alertas pode cobrar quando ficar velho)
 # (só chega aqui depois da prova de restauração; "at" = epoch em ms, UTC; arquivo 600)
