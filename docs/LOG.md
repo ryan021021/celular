@@ -181,3 +181,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 20:50 · claude (QA) · T95 REVIEW: tools/qa/mutar.mjs (=== / > / < / throw numa cópia temporária, só "N mutantes, M mortos" + vivos com arquivo:linha); 8 testes; mutou a si mesmo 25/31
 - 2026-10-21 23:56 · claude (BACK) · T105 REVIEW (QA): ryx risco L0-L3 + hash do plano em permissions.py (decide() intacto), ADR-0002 aceita; 19 testes, 6 mutantes mortos; ryx@34c3378
 - 2026-10-21 20:25 · claude (QA) · T117 DONE (revisão cruzada, ADR do catálogo de apps): 7 regras de recusa conferidas; faltam regras de porta/rota repetida para a T125
+- 2026-10-22 00:07 · gem-ide-1 · T111: ryx estados de no e severidades no doctor (v2.1 §22, ryx@a705237, 21 testes verdes, 2 mutantes mortos com prova: heartbeat e medida vencida viram UNKNOWN e nunca HEALTHY, NO_COLOR e format_narrow 40 cols testados, NOTICE em logger.py); REVIEW
