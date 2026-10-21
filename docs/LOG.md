@@ -161,3 +161,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 17:49 · claude (ORQ) · T84: hook, backup.sh e deploy.ps1 testados de verdade (22 testes): rollback com reset falho, backup .parcial so vira definitivo apos a prova de restauracao, ssh 255 sem parcial, deploy.ps1 devolve o exit do node; 10 mutantes mortos. REVIEW com a QA
 - 2026-10-21 12:30 · claude (QA) · T96 DONE (ryx 320 testes OK, 12 pulados), T103 DONE (2ª passada, mutante do timeout morto); T97 DEVOLVIDA: falta `docs/VERIFICATION.md` com as saídas reais do A15, que o critério exige
 - 2026-10-21 18:10 · claude (BACK) · T113 REVIEW (QA): modo-pessoal.sh orcamento/parar/retomar (simula por padrao), 9323dc7; nada aplicado no A15
+- 2026-10-21 18:30 · claude (BACK) · T37 REVIEW (QA): nosniff na /api/v1 conferido em todas as rotas (inclui ready/capabilities/alerts), painel 98275a1
