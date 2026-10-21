@@ -1,0 +1,50 @@
+name: ci
+
+# CI do projeto celular (T118). O kit é feito para o Windows (Git Bash + PowerShell), então a regressão roda em windows-latest.
+# Nada aqui fala com aparelho: a regressão roda no PC e não altera nada do projeto.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  regressao:
+    # sintaxe (node/bash/PowerShell), suítes do repositório, varredura de segredos e regras do projeto
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Regressão
+        shell: bash
+        # --paineis "": o clone do painel (branch celular) só existe na máquina do Ryan
+        run: node tools/qa/regressao.mjs --paineis "" --json regressao.json
+      - name: Resultado em JSON
+        if: failure()
+        shell: bash
+        run: test -f regressao.json && cat regressao.json || true
+
+  shell:
+    # confere só a sintaxe dos scripts de shell no Linux (o Termux roda sh/bash de verdade)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: bash -n em todo .sh rastreado
+        run: |
+          status=0
+          for f in $(git ls-files '*.sh'); do
+            bash -n "$f" || { echo "sintaxe: $f"; status=1; }
+          done
+          exit "$status"
