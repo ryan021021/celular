@@ -174,3 +174,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 19:16 · gem-ide-1 · T98: ryx regra 13 da carta (test_docs_sync.py 5/5, CLI e versões pyproject/init/changelog sincronizadas, 2 mutantes mortos), ryx@fbe192b; REVIEW
 - 2026-10-21 19:34 · gem-ide-1 · T100: ryx log estruturado JSON (RYX_LOG_FORMAT=json, hora/nível/módulo/mensagem mascarada, 25/25 testes ok), ryx@4cb222d; REVIEW
 - 2026-10-21 20:05 · claude (QA) · T84 DONE, T113 DONE, T106 DONE (revisão cruzada): hook sem checar reset, piso/teto do modo pessoal e Match do sshd_config — 1 a 2 mutantes meus mortos em cada
+- 2026-10-21 20:25 · claude (QA) · T98 DONE, T100 DONE (revisão cruzada, ryx): docs_sync 5/5 com mutante da versão morto; log JSON com 3 mutantes mortos (sem redact, nível fixo, traceback)
