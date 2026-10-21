@@ -58,6 +58,7 @@ Ao terminar uma tarefa, uma linha em `docs/LOG.md`: data, agente, o que mudou, a
 
 ## 8. Segurança
 - Nunca rodar comandos destrutivos no celular (`wipe`, `uninstall`, factory reset) sem confirmação do usuário.
+- **A15 só leitura (21/10, diretriz do Ryan):** é o celular pessoal dele, de uso diário. Nenhum agente (Claude ou Gemini) escreve nele: nem pasta temporária no Termux, instalar/remover app, mudar ajuste, tocar arquivo pessoal, root, bootloader ou debloat. O que pode: ler configuração do servidor (`sshd -T`, lista de serviços) sem copiar dado pessoal. Teste de código usa mock, fixture ou teste unitário (T107). Escrita só com ordem do Ryan naquele momento, e a ordem vale para aquela ação.
 - Nunca colocar senhas, padrões de desbloqueio ou tokens em arquivos do projeto.
 
 ## 9. Economia de tokens (19/10, obrigatório)

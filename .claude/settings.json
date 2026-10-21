@@ -40,7 +40,17 @@
   "enabledPlugins": {
     "shopify-ai-toolkit@claude-plugins-official": false,
     "trackbee-claude-plugin@trackbee-claude-plugin": false,
-    "ecc@ecc": true
+    "ecc@ecc": true,
+    "cowork-plugin-management@synced": false,
+    "data@synced": false,
+    "design@synced": false,
+    "engineering@synced": false,
+    "enterprise-search@synced": false,
+    "marketing@synced": false,
+    "operations@synced": false,
+    "productivity@synced": false,
+    "small-business@synced": false,
+    "vpai@synced": false
   },
   "pluginConfigs": {
     "ecc@ecc": {

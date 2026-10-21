@@ -69,6 +69,8 @@ arquivos web (ex.: filebrowser; disponibilidade no Termux NOT VERIFIED).
 
 ## Testes no aparelho por USB
 
+**Suspenso por enquanto (diretriz do Ryan, 21/10): o A15 é o celular pessoal dele, só leitura.** A T112 só roda com `--autorizado-pelo-ryan` (T124); o portão do código é mock e fixture (T107). O que segue descreve a ferramenta, não a rotina.
+
 Um comando acha o aparelho pelo perfil, faz o forward, confere a host key contra o perfil (nunca
 `accept-new`), manda o código para uma pasta temporária do Termux, roda a suíte e devolve JSON com
 PASS/FAIL/BLOCKED por teste. É o que foi feito à mão na T97 e na T104 (T112).
@@ -84,7 +86,7 @@ PASS/FAIL/BLOCKED por teste. É o que foi feito à mão na T97 e na T104 (T112).
 1. O gargalo é a revisão. Daqui em diante o `code-reviewer` faz a primeira passada na esteira
    (`/fechar-tarefa`); a QA confere com mutante próprio, da tarefa mais antiga para a mais nova; o GEM-IDE-2
    também revisa tarefa de Claude (revisão cruzada, §11).
-2. Teste no aparelho vira portão para tudo que roda no Termux (depois da T112).
+2. Teste no aparelho é exceção com ordem do Ryan; o portão para o que roda no Termux é mock e fixture de aparelho (T107), e a conferência no A15 é só leitura (T114).
 3. Lint de verdade no PC: hoje o `ruff` não está instalado e o lint do `ryx` não roda (T119).
 4. GitHub privado com CI nos dois repositórios (T118): depende do login do `gh` e da ordem do Ryan.
 5. Painel novo do zero, **depois**: substitui as quatro cópias do `server-box`; só começa com

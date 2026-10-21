@@ -14,6 +14,7 @@ O estado da equipe entra sozinho no início (hook) · `/rotina <SIGLA>` → pega
 ## Regras
 - Português do Brasil. Sem caminhos da Desktop nem serial fixo.
 - Comandos ADB destrutivos só com confirmação do usuário.
+- **O A15 é o celular pessoal do Ryan (uso diário): só leitura.** Nada de escrita no aparelho (nem pasta temporária no Termux, app, ajuste, arquivo pessoal ou root). Teste de código é mock, fixture ou unitário. Escrever só com ordem do Ryan naquele momento (diretriz de 21/10).
 - Não apagar arquivos.
 - Economia: ler por trecho, saída filtrada, sem polling/`/loop`, respostas curtas. Subagentes do projeto (`.claude/agents/`, §10) sim; `ecc:*` e o agente genérico só pela tabela do §12 ou com pedido do Ryan.
 
