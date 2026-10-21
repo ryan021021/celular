@@ -166,3 +166,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 19:20 · claude (BACK) · T97 REVIEW (QA): VERIFICATION.md no ryx (d914707) com a re-execução real no A15: 320 testes OK, doctor/info/backup/shell; pasta temp removida
 - 2026-10-21 13:10 · claude (QA) · T112 DONE: `node tools/qa/aparelho.mjs` roda as suítes no A15 por USB (host key do perfil, nunca accept-new, só apaga a pasta que criou); real: ryx 320/320, FAIL só em post-receive.test (powershell no Termux) — achado A1 para a ORQ/T84
 - 2026-10-21 18:17 · claude (BACK) · T106 REVIEW (QA): ryx doctor confere sshd (senha/escuta/chaves) só aviso + SVDIR; 338 testes, 6 mutantes mortos, A15 lido ok; ryx@612db95
+- 2026-10-21 18:44 · claude (BACK) · T37/T50: escopo.mjs --review ok; linhas com os arquivos reais (overnight.md foi junto no ede88c8; a15.json teve o IP velho corrigido no e23047f)
