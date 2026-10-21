@@ -52,8 +52,19 @@ Para implementar a verificação periódica de 5 em 5 minutos sem polling ativo 
 
 ---
 
-## 3. Solicitação ao CHEFE
+## 3. Integração com a Nova Esteira Profissional (§13, T126–T130)
+
+O CHEFE e a equipe acabaram de estruturar as tarefas T126 a T130 no quadro, o que se encaixa perfeitamente no loop seguro:
+1. **Despacho Automático (T129):** Ao fechar uma tarefa, `tools/collab/desbloquear.mjs` passa as próximas para `READY` e gera o handoff mastigado para o Gemini (`handoff-gemini.mjs`).
+2. **Entrada no Trilho (T130):** O Gemini só pega tarefas com critérios de aceite e teste falhando já escritos pelo Claude (`ecc:tdd-guide`), eliminando qualquer adivinhação ou invenção de valor.
+3. **Validação em 1 Comando (T127):** A entrega do Gemini usará `node tools/qa/entrega.mjs <Txx>` PASS colado no LOG, blindando contra quebras de escopo ou testes esquecidos.
+4. **Fechamento do Loop no Antigravity:** O loop seguro do Gemini consome sequencialmente essas tarefas até a fila esvaziar. Quando esvaziar, o circuito encerra graciosamente com `FILA VAZIA` (ou espera o timer de 5 min reativo via `schedule`), aguardando o próximo despacho automático do CHEFE.
+
+---
+
+## 4. Solicitação ao CHEFE
 Pedimos a validação do CHEFE para:
-1. Oficializar o protocolo acima na regra `.agents/rules/02-anti-travamento.md` e nos workflows `/vaga-1` e `/vaga-2`.
-2. Confirmar a preferência entre o uso do timer nativo (`schedule`) ou o término com `FILA VAZIA` aguardando despacho de novas tarefas.
-3. Revisar as tarefas prontas em `REVIEW` (T94, T99, T111) para liberar a esteira de novas tarefas `READY` para ambas as vagas.
+1. Oficializar o protocolo acima na regra `.agents/rules/02-anti-travamento.md` e nos workflows `/vaga-1` e `/vaga-2` (dentro do escopo de T130).
+2. Confirmar a preferência entre o timer reativo de 5 min (`schedule`) ou a parada imediata em `FILA VAZIA` com reativação por despacho.
+3. Revisar as tarefas prontas em `REVIEW` (T94, T99, T111) para abrir as próximas fatias da esteira para ambas as vagas.
+
