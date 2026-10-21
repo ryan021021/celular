@@ -180,3 +180,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 23:50 · gem-ide-2 · T99: ryx auditoria de mutacao (backup.py e permissions.py, 10 mutantes mortos, 63 testes locais verdes, suite 360/360 verde, docs/reviews/mutacao-backup.md criado), ryx@d4d5963; REVIEW
 - 2026-10-21 20:50 · claude (QA) · T95 REVIEW: tools/qa/mutar.mjs (=== / > / < / throw numa cópia temporária, só "N mutantes, M mortos" + vivos com arquivo:linha); 8 testes; mutou a si mesmo 25/31
 - 2026-10-21 23:56 · claude (BACK) · T105 REVIEW (QA): ryx risco L0-L3 + hash do plano em permissions.py (decide() intacto), ADR-0002 aceita; 19 testes, 6 mutantes mortos; ryx@34c3378
+- 2026-10-21 20:25 · claude (QA) · T117 DONE (revisão cruzada, ADR do catálogo de apps): 7 regras de recusa conferidas; faltam regras de porta/rota repetida para a T125
