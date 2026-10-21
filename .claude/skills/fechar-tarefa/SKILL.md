@@ -5,12 +5,13 @@ argument-hint: "<Txx> <evidência curta>"
 ---
 Argumentos: $ARGUMENTS
 
-1. **Arquivos da tarefa:** os que você mudou (`git status --short` e `git diff --stat`) e a linha da tarefa (`grep '^| <Txx> ' .collab/TASKS.md`).
+1. **Arquivos da tarefa:** os que você mudou (`git status --short` e `git diff --stat`) e a linha da tarefa (`grep '^| <Txx> ' .collab/TASKS.md`), com o `porte:` e os critérios de aceite (§13).
+1b. **Portão de entrega:** se `tools/qa/entrega.mjs` existir, rode `node tools/qa/entrega.mjs <Txx>` antes de tudo. FAIL → corrija; não chame revisor com FAIL. Cole a linha final (PASS) na evidência.
 2. **Em paralelo, numa mensagem só**, chame dois subagentes:
    - `verificador`: os testes ligados a esses arquivos mais a regressão.
    - `code-reviewer`: a tarefa, o diff desses arquivos e os "Arquivos autorizados" da linha.
 2b. **Reforço só quando o diff pede** (na mesma mensagem do passo 2; tabela do §12):
-   - mexe em auth, token, sshd, rede, egress ou painel exposto → também `security-reviewer`;
+   - **sensível** (auth, token, sshd, rede, egress, segredo, caminho de arquivo, deploy, painel exposto) → também `security-reviewer`, com a mesma rubrica do `code-reviewer` (revisão dupla do `santa-method`, §13): os dois precisam aprovar;
    - script de serviço, deploy, backup, rede, ou teste novo sem prova por mutação → também `silent-failure-hunter`;
    - código novo ou bug sem teste que falhava antes, ou teste novo sem mutante morto → devolva ao autor (subagente `tdd-guide`), sem gastar code-reviewer.
    Tarefa comum não chama nenhum dos dois: o custo fica no `verificador` e no `code-reviewer`.

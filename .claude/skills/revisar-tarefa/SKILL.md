@@ -10,7 +10,8 @@ Argumentos: $ARGUMENTS
 3. **Em paralelo, numa mensagem só** (não confie no "passou" do autor, §11):
    - `verificador`: os testes da tarefa mais `node tools/qa/regressao.mjs`, e o critério "deu certo se…" da linha reproduzido;
    - `code-reviewer`: a tarefa, os commits e os arquivos autorizados, com o veredito no formato dele;
-   - reforço só quando o diff pede (tabela do §12): auth, token, sshd, rede, egress ou painel exposto → `security-reviewer`; serviço, deploy, backup, rede ou teste sem prova por mutação → `silent-failure-hunter`.
+   - reforço só quando o diff pede (tabela do §12): **sensível** (auth, token, sshd, rede, egress, segredo, caminho de arquivo, deploy, painel exposto) → `security-reviewer` com a mesma rubrica, sem ver o veredito do `code-reviewer` (revisão dupla do `santa-method`, §13); DONE só se os dois aprovarem. Serviço, deploy, backup, rede ou teste sem prova por mutação → `silent-failure-hunter`.
+   - confira também cada critério de aceite da linha (um por um, com o "como verificar") e o `porte:`: porte grande sem plano aprovado = REPROVADO.
 4. Registre na coluna Pendências da tarefa: `revisão <agente> <data>: <veredito> — <notas curtas>`.
    - VERDE e APROVADO → DONE: mova a linha para `.collab/TASKS_FEITAS.md`. Tarefa **crítica** (aparelho, `profiles/`, `server/termux`, `tools/server`, deploy, auth, rede, segredos) só vai a DONE com o veredito da **QA**; se você não é a QA, deixe em REVIEW com `revisora: QA`.
    - VERMELHO, REPROVADO ou notas que pedem mudança → deixe em REVIEW e avise o autor por uma mensagem curta com o motivo.

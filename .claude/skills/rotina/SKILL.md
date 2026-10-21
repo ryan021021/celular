@@ -11,6 +11,6 @@ node .claude/hooks/estado-equipe.mjs
 
 Depois:
 1. Na linha de "$ARGUMENTS" (a sua sigla): primeiro o que está em `revisar:`, depois IN_PROGRESS, depois a próxima READY.
-1b. Antes de codar: tarefa com 3+ arquivos ou mais de uma zona sem ficha → peça plano ao CHEFE (ele usa `/ecc:plan`), não invente. Código novo ou bug: escreva primeiro o teste que falha (subagente `tdd-guide` do projeto; ou a skill `ecc:tdd-workflow`). Cite os mutantes/critérios da linha da tarefa.
+1b. Antes de codar, leia o `porte:` da linha (§13 do COLABORACAO). Sem porte ou sem critérios de aceite → a tarefa não está READY: avise o CHEFE e pegue outra. Porte **grande** sem plano aprovado pelo CHEFE (`ecc:planner`/`/ecc:plan`) → não comece. Código novo ou bug: escreva primeiro o teste que falha (subagente `tdd-guide` do projeto; ou a skill `ecc:tdd-workflow`), um por critério de aceite.
 2. BLOCKED por ação humana: não insista; avise o CHEFE em uma linha.
 3. Nada para você: encerre o turno sem gastar mais nada (§9).

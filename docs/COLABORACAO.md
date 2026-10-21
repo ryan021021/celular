@@ -159,3 +159,31 @@ Saúde da equipe (1x por rodada, via `list_sessions`/`get_usage`): modelo/esfor�
 **Hooks do ECC ligados:** GateGuard (pede fatos antes da 1ª edição/Bash), context-monitor, quality-gate e afins no `standard`. Desligados por `ECC_DISABLED_HOOKS`: mcp-health-check, plan-canvas e command-log (ruído e tokens). Para o ECC pesar menos: `ECC_GATEGUARD=off` no `env` do projeto.
 **Gemini (2 vagas, D18/D20):** os hooks e os agentes do ECC são do Claude Code; no Antigravity valem só as regras escritas em `GEMINI.md`/`GEMINI-2.md` e nos handoffs. Não copiar o ECC para `.agents/` nem `.gemini/`. Papéis padrão (o Ryan pode trocar): **GEM-IDE-1** = código e tooling do `celular` (`tools/connect`, `rescue`, `debug`, `profiles/`), tarefas de teste com especificação fechada (ex.: T87), volume com receita pronta (testes novos, documentação, fixtures) e auditoria só de leitura (mutação, varredura de segredos, relatório via handoff); **GEM-IDE-2** = outras frentes do Ryan, no `celular` só com ordem. Todas seguem o mesmo método do ECC: teste que falha primeiro, achado com `arquivo:linha`, parar no primeiro erro. Quem confere o que o Gemini entrega é a trava + o `/fechar-tarefa` do CHEFE ou a QA; vaga não revisa vaga. Pacote de instruções: `.collab/handoff/arquivo/2026-10-20_chefe-para-gemini_equipe-e-fluxo.md`.
 **Conferir:** `node --test .claude/hooks/adb-guard.test.mjs .claude/hooks/estado-equipe.test.mjs` (o `node --test <pasta>` falha neste Node; passe os arquivos) · `node tools/qa/regressao.mjs` (já roda os testes dos hooks: pega todo `*.test.mjs` rastreado, por pasta; o pedido à QA em `2026-10-20_chefe-para-qa_hooks-na-regressao.md` partiu de uma premissa falsa). O `ecc doctor` avisa "No ECC install-state files": normal, só existe em instalação manual.
+
+## 13. Esteira profissional (22/10, pedido do Ryan, T126)
+Junta quatro peças do ECC num fluxo só, para Claude e Gemini. Onde houver conflito com §3–§5, vale esta seção.
+
+**Porte da tarefa** (`orch-pipeline`): quem cria a tarefa escreve `porte:` na coluna Pendências. Vale o maior sinal; segurança, deploy ou contrato público = no mínimo **padrão**.
+| Porte | Sinal | Passos obrigatórios |
+|---|---|---|
+| trivial | 1 arquivo, poucas linhas, óbvio | teste → código → `code-reviewer` |
+| pequena | 1 arquivo ou 1 função | idem, com critérios de aceite na linha |
+| padrão | 2–5 arquivos ou uma escolha real | plano curto na linha (fatias verticais) → TDD → revisão |
+| grande | muitos arquivos, dependência nova, API pública | plano do `ecc:planner` (ou `/ecc:plan`) **aprovado pelo CHEFE antes de qualquer código** (portão 1) → TDD por fatia → revisão |
+
+**Critério de saída de cada estado** (`team-agent-orchestration`). O quadro sem critério é "teatro de quadro".
+| Estado | Sai quando |
+|---|---|
+| BACKLOG → READY | 3–7 critérios de aceite, cada um com "como verificar" (`intent-driven-development`, captura rápida), dono, porte e dependências DONE |
+| READY → IN_PROGRESS | lock criado; grande só com plano aprovado |
+| IN_PROGRESS → REVIEW | `node tools/qa/entrega.mjs <Txx>` PASS (T127; até existir: `verificador` + `escopo.mjs --review`) e prova por mutação na evidência |
+| REVIEW → DONE | revisão independente aprovada (abaixo); nunca do próprio autor |
+| qualquer → BLOCKED | bloqueio com dono e próxima ação escritos |
+
+**Revisão:** comum = `code-reviewer`. **Sensível** (auth, token, sshd, rede, egress, segredo, caminho de arquivo, deploy, painel exposto) = **revisão dupla** (`santa-method`): QA e `security-reviewer` em paralelo, mesma rubrica, sem ver um ao outro, os dois aprovam. Até 2 voltas de correção; depois disso decide o Ryan.
+
+**Gemini:** só pega tarefa com critérios de aceite e o teste que falha já escrito pelo Claude (`ecc:tdd-guide`). Entrega = `entrega.mjs` PASS colado no LOG. Valor sem fonte vira BLOCKED, nunca inventado (T60). Regras em `.agents/` (T130).
+
+**Em seguida:** uma worktree por sessão, com merge só depois do PASS e da QA (T128), e despacho automático das tarefas desbloqueadas, com handoff pronto para o Gemini (T129).
+
+**Fim de cada passe do CHEFE:** mudanças no quadro · branches pendentes · evidência de teste · bloqueios com dono e próxima ação.
