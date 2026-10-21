@@ -171,3 +171,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-21 18:56 · gem-ide-1 · T94: GEMINI.md e GEMINI-2.md enxutos (sem fluxo duplicado, papel único testador/auditor na vaga 2, sem Desktop), agentes.test 21/21 ok; REVIEW
 - 2026-10-21 19:25 · claude (QA) · T123 DONE (revisão cruzada): 10 plugins @synced desabilitados conferidos com `claude plugin list`, ecc@ecc ativo, regra do A15 só leitura nos 3 lugares
 - 2026-10-21 19:50 · claude (QA) · T37 DONE, T50 DONE, T97 DONE (revisão cruzada): T37 mutante do SEC_HEADERS morto; T50 11/11, mutante do perfil morto, sobrevive a porta do perfil (sem asserção); T97 VERIFICATION.md confere com a minha rodada de 320 testes
+- 2026-10-21 19:16 · gem-ide-1 · T98: ryx regra 13 da carta (test_docs_sync.py 5/5, CLI e versões pyproject/init/changelog sincronizadas, 2 mutantes mortos), ryx@fbe192b; REVIEW
