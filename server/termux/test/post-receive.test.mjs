@@ -170,29 +170,33 @@ test("sem o serviço alertas instalado, o deploy reinicia só o painel", t => {
 // ---- deploy.ps1 (B5): o passo Test não pode mascarar a falha dos testes do painel com o exit do `tail` ----
 // Roda o deploy.ps1 de verdade (PowerShell) numa cópia do projeto; o `ssh` é um script falso que executa o comando remoto com `sh`
 // num HOME temporário, onde o `node` é falso. Nada sai do PC.
+// O `node` falso fica só no PATH do `sh` remoto: no PATH do PowerShell, o `& node` do deploy.ps1 achava o arquivo sem
+// extensão e o Windows abria "Select an app to open 'node'" a cada rodada.
+const SO_WINDOWS = process.platform !== "win32" && "deploy.ps1 só roda no Windows (PowerShell)";
 function montarDeploy() {
   const raiz = mkdtempSync(join(tmpdir(), "deploy-"));
   const ps1 = join(aqui, "..", "..", "..", "tools", "server", "deploy.ps1");
-  const proj = join(raiz, "proj"), bin = join(raiz, "bin"), home = join(raiz, "home");
+  const proj = join(raiz, "proj"), bin = join(raiz, "bin"), binRemoto = join(raiz, "bin-remoto"), home = join(raiz, "home");
   mkdirSync(join(proj, "tools", "server"), { recursive: true });
   mkdirSync(join(proj, "profiles"));
   mkdirSync(bin);
+  mkdirSync(binRemoto);
   mkdirSync(join(home, "servidor", "panel", "server-box", "test"), { recursive: true });
   writeFileSync(join(home, "servidor", "panel", "server-box", "test", "a.test.mjs"), "// falso\n");
   writeFileSync(join(proj, "tools", "server", "deploy.ps1"), readFileSync(ps1));
   writeFileSync(join(proj, "profiles", "a13.json"), JSON.stringify({ id: "a13", network: { ip: "10.0.0.9", ssh_port: 8022, ssh_user: "u0_teste", ssh_key: "~/.ssh/id_ed25519" } }));
   const cmdArq = join(raiz, "comando-remoto.sh");
   // ssh falso: guarda o comando remoto (último argumento) e roda com sh; o exit do sh é o exit do ssh
-  writeFileSync(join(bin, "ssh.ps1"), `[IO.File]::WriteAllText($env:CMD_ARQ, ($args[-1] -replace "\`r", "") + "\`n")\n& sh $env:CMD_ARQ\nexit $LASTEXITCODE\n`);
-  writeFileSync(join(bin, "node"), `#!/bin/sh\necho "# testes falsos: 1 falhou"\n[ "$TESTES_OK" = 1 ]\n`, { mode: 0o755 });
+  writeFileSync(join(bin, "ssh.ps1"), `[IO.File]::WriteAllText($env:CMD_ARQ, ($args[-1] -replace "\`r", "") + "\`n")\n$env:PATH = "$env:BIN_REMOTO;$env:PATH"\n& sh $env:CMD_ARQ\nexit $LASTEXITCODE\n`);
+  writeFileSync(join(binRemoto, "node"), `#!/bin/sh\necho "# testes falsos: 1 falhou"\n[ "$TESTES_OK" = 1 ]\n`, { mode: 0o755 });
   const rodar = ({ testesOk }) => spawnSync("powershell", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", join(proj, "tools", "server", "deploy.ps1"), "-Device", "a13", "-Step", "Test"], {
     encoding: "utf8", timeout: 120000, windowsHide: true,
-    env: { ...process.env, PATH: `${bin};${process.env.PATH}`, HOME: fw(home), CMD_ARQ: cmdArq, TESTES_OK: testesOk ? "1" : "0" },
+    env: { ...process.env, PATH: `${bin};${process.env.PATH}`, HOME: fw(home), CMD_ARQ: cmdArq, BIN_REMOTO: binRemoto, TESTES_OK: testesOk ? "1" : "0" },
   });
   return { rodar, comando: () => (existsSync(cmdArq) ? readFileSync(cmdArq, "utf8") : ""), limpar: () => { try { rmSync(raiz, { recursive: true, force: true }); } catch {} } };
 }
 
-test("deploy.ps1 -Step Test: testes do painel reprovados no aparelho fazem o deploy falhar (não mostra [PRONTO])", t => {
+test("deploy.ps1 -Step Test: testes do painel reprovados no aparelho fazem o deploy falhar (não mostra [PRONTO])", { skip: SO_WINDOWS }, t => {
   const d = montarDeploy(); t.after(d.limpar);
   const r = d.rodar({ testesOk: false });
   const saida = `${r.stdout}\n${r.stderr}`;
@@ -203,7 +207,7 @@ test("deploy.ps1 -Step Test: testes do painel reprovados no aparelho fazem o dep
   assert.notEqual(r.status, 0, saida);
 });
 
-test("deploy.ps1 -Step Test: testes passando fecham com [PRONTO] e mostram o resumo", t => {
+test("deploy.ps1 -Step Test: testes passando fecham com [PRONTO] e mostram o resumo", { skip: SO_WINDOWS }, t => {
   const d = montarDeploy(); t.after(d.limpar);
   const r = d.rodar({ testesOk: true });
   const saida = `${r.stdout}\n${r.stderr}`;
