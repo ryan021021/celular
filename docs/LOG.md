@@ -190,3 +190,4 @@ Entradas antigas: `docs/log/`. Ler só o fim (`tail -n 10`); acrescentar com app
 - 2026-10-22 00:44 · claude (CHEFE) · T94 DONE, T95 DONE (revisão cruzada com notas); T127 DONE (2ª regressão VERDE; a 1ª vermelha em server/termux/test foi instabilidade, agora visível em vez de NaN)
 - 2026-10-22 00:54 · claude (CHEFE) · subagentes com model: inherit (eram sonnet): nas sessões Haiku (ORQ, FRONT) code-reviewer, security-reviewer, tdd-guide e afins sumiam da lista, e a esteira §13 travava
 - 2026-10-22 00:55 · gem-ide-2 · T107: fixtures perfil A15 e testes de compatibilidade (profile_a15.json simulada, test_a15_profile 5/5 verdes), ryx@0fab184; REVIEW
+- 2026-10-22 · front · T75 → REVIEW (commit f29d976, revisora QA): capabilities lidas no aparelho com token pelo SSH; entrega FAIL só pelo 16404ea (liberado pelo CHEFE); 36/36.
