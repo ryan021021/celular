@@ -1,7 +1,7 @@
 // Diagnóstico do servidor (T69, OMNISERVER §20.3). Só leitura: não mexe no aparelho.
 //   node tools/diag/diag.mjs [--perfil a15] [--json]
-// Lê /health, /ready e /api/v1/capabilities do painel, e por SSH os serviços (runit), o disco,
-// a bateria (só termux-battery-status; sem ele, N/D com motivo) e o último backup. Cada item traz valor,
+// Lê /health e /ready do painel, e por SSH os serviços (runit), o disco, a bateria (só termux-battery-status;
+// sem ele, N/D com motivo), o último backup e as capabilities (curl no aparelho com o token; T75). Cada item traz valor,
 // unidade (disco em MB, bateria em %), fonte e estado (ok | aviso | falha | unknown).
 // Nada sai sem fonte. Código de saída: 0 ok · 1 aviso (inclui o que não deu para medir) · 2 falha.
 // Endpoints que ainda não existem (ready, capabilities da T62) ficam unknown e não mudam o código.
@@ -11,6 +11,7 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import os from "node:os";
 import { resolverPerfil, descreverAchado } from "../lib/achar-aparelho.mjs";
+import { SCRIPT_CAPACIDADES, itemCapacidades, textoContagem } from "./capacidades.mjs";
 
 const ESTADOS = ["ok", "aviso", "falha", "unknown"];
 const LIMITE_DISCO_MB = { aviso: 1024, falha: 256 };
@@ -67,12 +68,14 @@ export function formatarMB(mb) {
 function itensSsh(saida, erro, agora) {
   const fonteSsh = "SSH no aparelho (sh -s): sv status, df -Pk, termux-battery-status, backup-ultimo.json";
   const fonteBat = "termux-battery-status (Termux:API) no aparelho";
+  const fonteCaps = "SSH no aparelho: curl 127.0.0.1:8080/api/v1/capabilities com o token lido no aparelho";
   if (erro) {
     return [
       naoMedido("servicos", fonteSsh, `não medido: ${erro}`, true),
       naoMedido("disco", fonteSsh, `não medido: ${erro}`, true),
       naoMedido("bateria", fonteSsh, `não medido: ${erro}`),
       naoMedido("backup", fonteSsh, `não medido: ${erro}`, true),
+      naoMedido("capabilities", fonteCaps, `não medido: ${erro}`),
     ];
   }
   const d = interpretarSaidaSsh(saida);
@@ -112,6 +115,9 @@ function itensSsh(saida, erro, agora) {
         estado === "ok" ? null : `último backup com ${Math.round(horas)} h (limite ${IDADE_MAX_BACKUP_H} h)`, true));
     }
   }
+
+  // capabilities: lidas no aparelho com o token (T75); o PC só recebe o resultado, nunca o token
+  out.push(itemCapacidades(saida));
   return out;
 }
 
@@ -137,12 +143,6 @@ async function itensHttp(base, fetchFn) {
   else if (r.status === 404) out.push(naoMedido("ready", fonteR, "endpoint ausente (T62 ainda não entregue)"));
   else out.push(item("ready", r.status, r.status === 200 ? "ok" : r.status === 503 ? "falha" : "aviso", fonteR, r.status === 200 ? null : `HTTP ${r.status}`));
 
-  const c = await consulta("/api/v1/capabilities");
-  const fonteC = `HTTP GET ${base}/api/v1/capabilities (sem token)`;
-  if (c.erro) out.push(naoMedido("capabilities", fonteC, `não medido: ${c.erro}`));
-  else if (c.status === 404) out.push(naoMedido("capabilities", fonteC, "endpoint ausente (T62 ainda não entregue)"));
-  else if (c.status === 401) out.push(naoMedido("capabilities", fonteC, "precisa de token: leitura com token ainda não feita"));
-  else out.push(item("capabilities", c.status, c.status === 200 ? "ok" : "aviso", fonteC, c.status === 200 ? null : `HTTP ${c.status}`));
   return out;
 }
 
@@ -154,7 +154,8 @@ export async function diagnosticar({ perfil = null, fetchFn = fetch, sshFn = exe
   if (!perfil) {
     const motivo = "sem --perfil: sem SSH não há como medir serviços, disco ou backup";
     itens.push(naoMedido("servicos", "SSH no aparelho", motivo, true), naoMedido("disco", "SSH no aparelho", motivo, true),
-      naoMedido("bateria", "SSH no aparelho", motivo), naoMedido("backup", "SSH no aparelho", motivo, true));
+      naoMedido("bateria", "SSH no aparelho", motivo), naoMedido("backup", "SSH no aparelho", motivo, true),
+      naoMedido("capabilities", "SSH no aparelho", motivo));
   } else {
     const r = await sshFn(perfil);
     itens.push(...itensSsh(r.ok ? r.saida : "", r.ok ? null : r.erro, agora));
@@ -178,7 +179,7 @@ export function executarSsh(perfil, { timeoutMs = 20000 } = {}) {
     p.stdout.on("data", c => { if (out.length < 65536) out += c; });
     p.on("error", () => { clearTimeout(t); resolver({ ok: false, erro: "ssh não encontrado" }); });
     p.on("close", code => { clearTimeout(t); resolver(code === 0 ? { ok: true, saida: out } : { ok: false, erro: `ssh saiu com código ${code}` }); });
-    p.stdin.end(SCRIPT_DIAG);
+    p.stdin.end(SCRIPT_DIAG + SCRIPT_CAPACIDADES);
   });
 }
 
@@ -191,8 +192,10 @@ export function formatarTexto(rel) {
     const valor = i.valor === null ? "—"
       : typeof i.valor === "object" ? JSON.stringify(i.valor)
       : i.unidade === "MB" ? formatarMB(i.valor)
+      : i.unidade === "itens" ? `${i.valor} itens`
       : i.unidade ? `${i.valor}${i.unidade}` : String(i.valor);
-    linhas.push(`[${ROTULO[i.estado]}] ${i.id}: ${valor}`);
+    const contagem = i.contagem ? ` (${textoContagem(i.contagem)})` : "";
+    linhas.push(`[${ROTULO[i.estado]}] ${i.id}: ${valor}${contagem}`);
     linhas.push(`      fonte: ${i.fonte}${i.motivo ? ` · ${i.motivo}` : ""}`);
   }
   const resumo = rel.codigo === 0 ? "ok" : rel.codigo === 1 ? "aviso" : "falha";
